@@ -8,13 +8,31 @@ using static Unity.Collections.Unicode;
 
 public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 {
+
+    // Singleton Instance
+    public static BasicSpawner Instance { get; private set; }
+
     private NetworkRunner _runner;
+    public NetworkRunner Runner => _runner; // Giving access to runner from other scripts
 
     [SerializeField] public int unitCountPerPlayer = 5;
 
     [SerializeField] private NetworkPrefabRef _playerUnitPrefab;
 
     private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();
+
+    private void Awake()
+    {
+        // Singleton setup
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject); // Destroy duplicate object
+            return;
+        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject); // Preserve between scenes
+    }
 
     async void StartGame(GameMode mode)
     {
@@ -90,6 +108,8 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
                 Debug.LogError("Failed to spawn network unit object.");
                 return;
             }
+
+            networkUnitObject.GetComponent<Unit>().SetOwner(player); // Set unit owner directly (in case it may be given to other player) 
 
             unitList.Add(networkUnitObject);
 
