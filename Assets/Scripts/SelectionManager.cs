@@ -13,6 +13,7 @@ public class SelectionManager : MonoBehaviour
 
     // made it     [SerializeField]  for Debug porpouses
     [SerializeField] private List<Unit> _selectedUnits = new();
+    public List<Unit> SelectedUnits => _selectedUnits;
 
     public void Start()
     {

@@ -2,6 +2,7 @@ using Fusion;
 using Fusion.Sockets;
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using static Unity.Collections.Unicode;
@@ -18,6 +19,8 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] public int unitCountPerPlayer = 5;
 
     [SerializeField] private NetworkPrefabRef _playerUnitPrefab;
+    [SerializeField] private GameObject _DestinationMarkerPrefab;
+    [SerializeField] private SelectionManager _selectionManager;
 
     private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();
 
@@ -172,4 +175,32 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
+
+    public void SetDestinationPoint(Vector3 pointWorld)
+    {
+
+        // если есть хотя бы один выделенный объект
+        if (_selectionManager.SelectedUnits.Count == 0)
+            return;
+
+        // делаем instantiate _DestinationMarkerPrefab префабу в этой точке, и удаляем его через 2 секунды
+        var marker = Instantiate(_DestinationMarkerPrefab, pointWorld, Quaternion.identity);
+        Destroy(marker, 2);
+
+        Vector3 center = Vector3.zero;
+        foreach (var unit in _selectionManager.SelectedUnits)
+        {
+            center += unit.transform.position;
+        }
+        center /= _selectionManager.SelectedUnits.Count;
+
+        // Для каждого юнита устанавливаем цель с учётом смещения
+        foreach (var unit in _selectionManager.SelectedUnits)
+        {
+            Vector3 offset = unit.transform.position - center;
+            unit.SetTarget(pointWorld + offset);
+        }
+
+    }
+
 }

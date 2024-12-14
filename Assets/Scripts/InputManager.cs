@@ -27,5 +27,15 @@ public class InputManager : MonoBehaviour
         {
             selectionManager.EndSelection();
         }
+
+        // по правой кнопке запускать установку destinationPoint
+        if (Input.GetMouseButtonDown(1))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                BasicSpawner.Instance.SetDestinationPoint(hit.point);
+            }
+        }
     }
 }
