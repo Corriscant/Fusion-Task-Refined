@@ -20,6 +20,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     public NetworkRunner NetRunner => _NetRunner; // Giving access to runner from other scripts
 
     [SerializeField] public int unitCountPerPlayer = 5;
+    [SerializeField] public int unitAllowedOffset = 5;
 
     [SerializeField] private NetworkPrefabRef _UnitPrefab;
     [SerializeField] private GameObject _DestinationMarkerPrefab;

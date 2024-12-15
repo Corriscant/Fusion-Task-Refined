@@ -103,6 +103,7 @@ public class Unit : NetworkBehaviour
     {
         Vector3 offset = center - transform.position;
         // тут можно ограничить offset, чтобы юниты не были слишком далеко друг от друга
+        offset = Vector3.ClampMagnitude(offset, BasicSpawner.Instance.unitAllowedOffset); // ограничиваем смещение до 5 метров
         // найдем персональную позицию для Target этого юнита, с учетом того, что он смещен относительно центра выделенных юнитов
         Vector3 unitTargetPosition = bearingTargetPosition - offset;
         return unitTargetPosition;
@@ -115,14 +116,15 @@ public class Unit : NetworkBehaviour
         // 1. Обработка ввода
         if (GetInput(out NetworkInputData input))
         {
-            // Клиент выполняет предсказание
-            if (Object.HasInputAuthority && BasicSpawner.Instance.HasPendingTarget) 
+            // Клиент выполняет предсказание (if Host late to response)
+            if (Object.HasInputAuthority && BasicSpawner.Instance.HasPendingTarget)
             {
                 // find center of selected units
-                var center = BasicSpawner.Instance.GetCenterOfUnits( BasicSpawner.Instance.SelectionManagerLink.SelectedUnits );
+                var center = BasicSpawner.Instance.GetCenterOfUnits(BasicSpawner.Instance.SelectionManagerLink.SelectedUnits);
+                // getting target position for this unit, keeping offset from center
                 Vector3 unitTargetPosition = GetUnitTargetPosition(center, input.targetPosition);
 
-                // Клиент предсказывает движение без зависимости от HasTarget
+                // Клиент предсказывает движение 
                 if (CheckStop(unitTargetPosition))
                 {
                     Debug.Log($"Client predicts stop for unit {gameObject.name}");
@@ -130,10 +132,7 @@ public class Unit : NetworkBehaviour
                 }
                 else
                 {
-                 //   if (HasTarget)
-                    {
-                        direction = PredictClientDirection(input, unitTargetPosition);
-                    }
+                    direction = PredictClientDirection(input, unitTargetPosition);
                 }
             }
         }
@@ -161,6 +160,7 @@ public class Unit : NetworkBehaviour
 
     private Vector3 PredictClientDirection(NetworkInputData input, Vector3 unitTragetPosition)
     {
+      //  Debug.Log($"Client PredictClientDirection (BEFORE TIMESTAMP CHECK) {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
         if (input.timestamp > lastPredictedTimestamp) // Проверяем, новый ли это ввод
         {
             lastPredictedTimestamp = input.timestamp; // Обновляем метку времени
