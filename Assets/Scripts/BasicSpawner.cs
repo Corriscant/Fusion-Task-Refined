@@ -22,6 +22,12 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private GameObject _DestinationMarkerPrefab;
     [SerializeField] private SelectionManager _selectionManager;
 
+    // Client request to send destination point to the host
+    private Vector3 _pendingTargetPosition = Vector3.zero;
+    // Флаг наличия точки назначения
+    private bool _hasPendingTarget = false; 
+    public bool HasPendingTarget => _hasPendingTarget;
+
     private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();
 
     private void Awake()
@@ -144,20 +150,28 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     {
         var data = new NetworkInputData();
 
+        // Обрабатываем направление
         if (Input.GetKey(KeyCode.W))
             data.direction += Vector3.forward;
-
         if (Input.GetKey(KeyCode.S))
             data.direction += Vector3.back;
-
         if (Input.GetKey(KeyCode.A))
             data.direction += Vector3.left;
-
         if (Input.GetKey(KeyCode.D))
             data.direction += Vector3.right;
 
+        // Если есть новая цель
+        if (_hasPendingTarget)
+        {
+            data.targetPosition = _pendingTargetPosition;
+            data.timestamp = Time.time; // Метка времени
+            _hasPendingTarget = false; // Сбрасываем флаг после передачи
+        }
+
         input.Set(data);
     }
+
+
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }
@@ -176,6 +190,22 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
 
+    public void HandleDestinationInput(Vector3 targetPosition)
+    {
+        // если есть хотя бы один выделенный объект
+        if (_selectionManager.SelectedUnits.Count == 0)
+            return;
+
+        // делаем instantiate _DestinationMarkerPrefab префабу в этой точке, и удаляем его через 2 секунды
+        var marker = Instantiate(_DestinationMarkerPrefab, targetPosition, Quaternion.identity);
+        Destroy(marker, 2);
+        
+        Debug.Log($"Received destination input: {targetPosition}");
+        _pendingTargetPosition = targetPosition; // Сохраняем точку назначения
+        _hasPendingTarget = true; // Устанавливаем флаг
+    }
+
+    // Obsolete - Old way to set destination point
     public void SetDestinationPoint(Vector3 pointWorld)
     {
 
@@ -198,9 +228,8 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         foreach (var unit in _selectionManager.SelectedUnits)
         {
             Vector3 offset = unit.transform.position - center;
-            unit.SetTarget(pointWorld + offset);
+         //   unit.SetTarget(pointWorld + offset);
         }
 
     }
-
 }

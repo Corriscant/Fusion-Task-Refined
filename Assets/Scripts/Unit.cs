@@ -8,8 +8,12 @@ public class Unit : NetworkBehaviour
 
     public float speed = 5;
 
-    [Networked] private Vector3 TargetPosition { get; set; } // Позиция цели
-    [Networked] private bool HasTarget { get; set; } // Флаг активности цели
+    private float lastProcessedTimestamp = -1f; // Последний обработанный ввод
+    private float lastPredictedTimestamp = -1f; // Последний предсказанный ввод
+
+    [Networked] private Vector3 TargetPosition { get; set; } = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+    [Networked] private bool HasTarget { get; set; } = false;
+
 
     private bool _selected;
     public bool Selected
@@ -70,41 +74,95 @@ public class Unit : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        Debug.Log($"Unit {gameObject.name} | TargetPosition: {TargetPosition}, HasTarget: {HasTarget}, Position: {transform.position}");
+        Vector3 direction = Vector3.zero;
 
-        if (HasTarget)
+        // 1. Обработка ввода
+        if (GetInput(out NetworkInputData input))
         {
-            Debug.Log($"Unit {gameObject.name} is moving to target: {TargetPosition}");
-            Vector3 direction = (TargetPosition - transform.position).normalized;
-            _cc.Move(direction * speed * Runner.DeltaTime);
-
-            // Если достигли цели (игнорируем высоту)
-            if (Vector2.Distance(
-                    new Vector2(transform.position.x, transform.position.z),
-                    new Vector2(TargetPosition.x, TargetPosition.z)
-                ) < 1.0f)
+            if (Object.HasStateAuthority) // Хост обрабатывает Input
             {
-                ClearTarget(); // Цель достигнута
+                ProcessHostInput(input);
             }
+
+            if (Object.HasInputAuthority && BasicSpawner.Instance.HasPendingTarget) // Клиент выполняет предсказание
+            {
+                // Клиент предсказывает движение без зависимости от HasTarget
+                if (CheckStop(input.targetPosition))
+                {
+                    Debug.Log($"Client predicts stop for unit {gameObject.name}");
+                    direction = Vector3.zero; // Предсказание остановки
+                }
+                else
+                {
+                    if (HasTarget)
+                    {
+                        direction = PredictClientDirection(input);
+                    }
+                }
+            }
+        }
+
+        // 2. Движение для хоста
+        if (Object.HasStateAuthority && HasTarget)
+        {
+            direction = (TargetPosition - transform.position).normalized;
+
+            if (CheckStop(TargetPosition))
+            {
+                ClearTarget();
+                direction = Vector3.zero; // Остановка для хоста
+            }
+        }
+
+        // 3. Единый вызов Move
+        if (direction != Vector3.zero)
+        {
+            _cc.Move(direction * speed * Runner.DeltaTime);
         }
     }
 
-    public void SetTarget(Vector3 targetPosition)
-    {
-        Debug.Log($"Unit {gameObject.name} received new target: {targetPosition}");
 
-        if (Object.HasInputAuthority)
+    private void ProcessHostInput(NetworkInputData input)
+    {
+        if (input.timestamp > lastProcessedTimestamp) // Проверяем, новый ли это ввод
         {
-            Debug.Log("Unit has authority to set target.");
-            TargetPosition = targetPosition;
-            HasTarget = true; // Устанавливаем флаг
+            TargetPosition = input.targetPosition;
+            HasTarget = true;
+            lastProcessedTimestamp = input.timestamp; // Обновляем метку времени
+
+            Debug.Log($"Host processed new target for unit {gameObject.name}: {TargetPosition} at {input.timestamp}");
         }
+    }
+
+    private Vector3 PredictClientDirection(NetworkInputData input)
+    {
+        if (input.timestamp > lastPredictedTimestamp) // Проверяем, новый ли это ввод
+        {
+            lastPredictedTimestamp = input.timestamp; // Обновляем метку времени
+            Debug.Log($"Client predicting movement for unit {gameObject.name}: {input.targetPosition} at {input.timestamp}");
+            return (input.targetPosition - transform.position).normalized;
+        }
+
+        return Vector3.zero; // Никакого движения, если ввод не новый
+    }
+
+    private bool CheckStop(Vector3 target)
+    {
+        // Проверяем достижение цели (игнорируем высоту)
+        float distance = Vector2.Distance(
+            new Vector2(transform.position.x, transform.position.z),
+            new Vector2(target.x, target.z)
+        );
+
+        return distance < 1.0f;
     }
 
     private void ClearTarget()
     {
-        TargetPosition = Vector3.zero; // Сбрасываем позицию цели (можно оставить это для удобства)
+        Debug.Log($"Unit {gameObject.name} reached target: {TargetPosition}");
+        TargetPosition = Vector3.zero; // Сбрасываем данные о цели
         HasTarget = false; // Сбрасываем флаг
     }
+
 
 }

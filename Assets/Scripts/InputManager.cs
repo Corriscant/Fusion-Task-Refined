@@ -2,40 +2,46 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
-    [SerializeField] private SelectionManager selectionManager;
+    [SerializeField] private Camera mainCamera; // Камера для обработки кликов
+    [SerializeField] private SelectionManager selectionManager; // Менеджер выделения юнитов
 
-    private Vector2 _startMousePosition;
+    private void Update()
+    {
+        // Работа с рамкой выделения
+        HandleSelectionInput();
 
-    void Update()
+        // Проверяем нажатие правой кнопки мыши
+        if (Input.GetMouseButtonDown(1))
+        {
+            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                Vector3 targetPosition = hit.point;
+
+                // Передаём данные в BasicSpawner через синглтон
+                BasicSpawner.Instance.HandleDestinationInput(targetPosition);
+            }
+        }
+    }
+
+    private void HandleSelectionInput()
     {
         // Начало выделения
         if (Input.GetMouseButtonDown(0))
         {
-            _startMousePosition = Input.mousePosition;
-            selectionManager.StartSelection(_startMousePosition);
+            selectionManager.StartSelection(Input.mousePosition);
         }
 
-        // Изменение выделения
+        // Изменение рамки выделения
         if (Input.GetMouseButton(0))
         {
-            Vector2 currentMousePosition = Input.mousePosition;
-            selectionManager.UpdateSelection(currentMousePosition);
+            selectionManager.UpdateSelection(Input.mousePosition);
         }
 
         // Завершение выделения
         if (Input.GetMouseButtonUp(0))
         {
             selectionManager.EndSelection();
-        }
-
-        // по правой кнопке запускать установку destinationPoint
-        if (Input.GetMouseButtonDown(1))
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit))
-            {
-                BasicSpawner.Instance.SetDestinationPoint(hit.point);
-            }
         }
     }
 }
