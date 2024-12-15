@@ -124,15 +124,16 @@ public class Unit : NetworkBehaviour
 
     private void ProcessHostInput(NetworkInputData input)
     {
-        if (input.timestamp > lastProcessedTimestamp) // Проверяем, новый ли это ввод
+        if (input.timestamp > 0 && input.timestamp > lastProcessedTimestamp) // Проверяем валидность данных
         {
             TargetPosition = input.targetPosition;
             HasTarget = true;
-            lastProcessedTimestamp = input.timestamp; // Обновляем метку времени
+            lastProcessedTimestamp = input.timestamp;
 
             Debug.Log($"Host processed new target for unit {gameObject.name}: {TargetPosition} at {input.timestamp}");
         }
     }
+
 
     private Vector3 PredictClientDirection(NetworkInputData input)
     {
