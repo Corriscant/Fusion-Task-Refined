@@ -13,6 +13,7 @@ public class Unit : NetworkBehaviour
 
     [Networked] private Vector3 TargetPosition { get; set; } = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
     [Networked] private bool HasTarget { get; set; } = false;
+    [Networked] public float LastCommandTimestamp { get; set; } // Последний обработанный приказ
 
 
     private bool _selected;
@@ -67,7 +68,7 @@ public class Unit : NetworkBehaviour
         if (GetInput(out NetworkInputData data))
         {
             data.direction.Normalize();
-            _cc.Move(5 * data.direction * Runner.DeltaTime);
+            _cc.Move(5 * data.direction * NetRunner.DeltaTime);
         }
     }
     */
@@ -105,12 +106,14 @@ public class Unit : NetworkBehaviour
         // 2. Движение для хоста
         if (Object.HasStateAuthority && HasTarget)
         {
-            direction = (TargetPosition - transform.position).normalized;
-
             if (CheckStop(TargetPosition))
             {
                 ClearTarget();
                 direction = Vector3.zero; // Остановка для хоста
+            }
+            else
+            {
+                direction = (TargetPosition - transform.position).normalized;
             }
         }
 
@@ -156,6 +159,18 @@ public class Unit : NetworkBehaviour
         );
 
         return distance < 1.0f;
+    }
+
+    public void SetTarget(Vector3 targetPosition, float timestamp)
+    {
+        if (Object.HasStateAuthority && (timestamp > LastCommandTimestamp))
+        {
+            TargetPosition = targetPosition;
+            HasTarget = true;
+            LastCommandTimestamp = timestamp;
+
+            Debug.Log($"Unit {gameObject.name} received new target at {timestamp}");
+        }
     }
 
     private void ClearTarget()

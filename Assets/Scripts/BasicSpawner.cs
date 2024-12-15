@@ -2,6 +2,7 @@ using Fusion;
 using Fusion.Sockets;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -13,14 +14,15 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     // Singleton Instance
     public static BasicSpawner Instance { get; private set; }
 
-    private NetworkRunner _runner;
-    public NetworkRunner Runner => _runner; // Giving access to runner from other scripts
+    private NetworkRunner _NetRunner;
+    public NetworkRunner NetRunner => _NetRunner; // Giving access to runner from other scripts
 
     [SerializeField] public int unitCountPerPlayer = 5;
 
     [SerializeField] private NetworkPrefabRef _playerUnitPrefab;
     [SerializeField] private GameObject _DestinationMarkerPrefab;
     [SerializeField] private SelectionManager _selectionManager;
+    [SerializeField] private GameObject _HostManagerPrefab;
 
     // Client request to send destination point to the host
     private Vector3 _pendingTargetPosition = Vector3.zero;
@@ -29,6 +31,9 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     public bool HasPendingTarget => _hasPendingTarget;
 
     private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();
+
+    // List of commands came to Host
+    private Queue<Command> _commandQueue = new Queue<Command>();
 
     private void Awake()
     {
@@ -53,8 +58,8 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         // Create the Fusion runner and let it know that we will be providing user input
-        _runner = gameObject.AddComponent<NetworkRunner>();
-        _runner.ProvideInput = true;
+        _NetRunner = gameObject.AddComponent<NetworkRunner>();
+        _NetRunner.ProvideInput = true;
 
         // Create the NetworkSceneInfo from the current scene
         var scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex);
@@ -65,17 +70,24 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         // Start or join (depends on gamemode) a session with a specific name
-        await _runner.StartGame(new StartGameArgs()
+        await _NetRunner.StartGame(new StartGameArgs()
         {
             GameMode = mode,
             SessionName = "TestRoom",
             Scene = scene,
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
+
+        // running host manager
+        if (_NetRunner.IsServer)
+        {
+            _NetRunner.Spawn(_HostManagerPrefab, Vector3.zero, Quaternion.identity, null);
+        }
     }
+
     private void OnGUI()
     {
-        if (_runner == null)
+        if (_NetRunner == null)
         {
             if (GUI.Button(new Rect(0, 0, 200, 40), "Host"))
             {
@@ -164,9 +176,34 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         if (_hasPendingTarget)
         {
             data.targetPosition = _pendingTargetPosition;
-            data.timestamp = Time.time; // Метка времени
-            _hasPendingTarget = false; // Сбрасываем флаг после передачи
+            data.timestamp = Time.time;
+
+            if (_hasPendingTarget)
+            {
+                data.targetPosition = _pendingTargetPosition;
+                data.timestamp = Time.time;
+
+                data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
+                for (int i = 0; i < data.unitCount; i++)
+                {
+                    var networkObject = _selectionManager.SelectedUnits[i].GetComponent<NetworkObject>();
+                    if (networkObject != null)
+                    {
+                        data.unitIds[i] = networkObject.Id.Raw;
+                    }
+                    else
+                    {
+                        Debug.LogError($"Unit {_selectionManager.SelectedUnits[i].name} is missing a NetworkObject!");
+                    }
+                }
+
+                _hasPendingTarget = false;
+            }
+
+            _hasPendingTarget = false; // Сбрасываем флаг
         }
+
+
 
         input.Set(data);
     }
@@ -189,6 +226,94 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
+
+    public void ProcessCommandsFromNetwork()
+    {
+        // Эта логика вынесена из FixedUpdateNetwork()
+        // Получаем данные от всех активных игроков
+        foreach (var player in NetRunner.ActivePlayers)
+        {
+            if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
+            {
+                ReceiveCommand(player, input); // Добавляем команду в очередь
+            }
+        }
+
+        // Обрабатываем очередь команд
+        ProcessCommands();
+    }
+
+    private void ProcessCommands()
+    {
+        // Сортируем команды по времени
+        var sortedCommands = _commandQueue.OrderBy(c => c.Input.timestamp).ToList();
+
+        foreach (var command in sortedCommands)
+        {
+            for (int i = 0; i < command.Input.unitIds.Length; i++)
+            {
+                var unitId = command.Input.unitIds[i];
+                var unit = FindUnitById(unitId);
+                if (unit != null)
+                {
+                    // Игнорируем устаревшие команды
+                    if (command.Input.timestamp > unit.LastCommandTimestamp)
+                    {
+                        unit.SetTarget(command.Input.targetPosition, command.Input.timestamp);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Ignored outdated command for unit {unit.name} at {command.Input.timestamp}");
+                    }
+                }
+            }
+        }
+
+        _commandQueue.Clear(); // Очищаем очередь после обработки
+    }
+
+
+
+    private void ProcessCommand(Command command)
+    {
+        for (int i = 0; i < command.Input.unitIds.Length; i++)
+        {
+            var unitId = command.Input.unitIds[i];
+            var unit = FindUnitById(unitId);
+            if (unit != null)
+            {
+                unit.SetTarget(command.Input.targetPosition, command.Input.timestamp);
+            }
+        }
+
+        Debug.Log($"Processed command from player {command.Player} at {command.Input.timestamp}");
+    }
+
+    public void ReceiveCommand(PlayerRef player, NetworkInputData input)
+    {
+        var command = new Command
+        {
+            Player = player,
+            Input = input
+        };
+
+        _commandQueue.Enqueue(command); // Добавляем команду в очередь
+    }
+
+    private Unit FindUnitById(uint unitId)
+    {
+        // Предполагаем, что все юниты имеют NetworkObject
+        foreach (var unit in FindObjectsByType<Unit>(FindObjectsSortMode.None))
+        {
+            var networkObject = unit.GetComponent<NetworkObject>();
+            if (networkObject != null && networkObject.Id.Raw == unitId)
+            {
+                return unit;
+            }
+        }
+        return null;
+    }
+
 
     public void HandleDestinationInput(Vector3 targetPosition)
     {
@@ -232,4 +357,10 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         }
 
     }
+}
+
+public class Command
+{
+    public PlayerRef Player;         // ID клиента, от которого пришла команда
+    public NetworkInputData Input;  // Полная структура данных из NetworkInputData
 }
