@@ -27,7 +27,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     // Client request to send destination point to the host
     private Vector3 _pendingTargetPosition = Vector3.zero;
     // Флаг наличия точки назначения
-    private bool _hasPendingTarget = false; 
+    private bool _hasPendingTarget = false;
     public bool HasPendingTarget => _hasPendingTarget;
 
     private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();
@@ -162,7 +162,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     {
         var data = new NetworkInputData();
 
-        // Обрабатываем направление
+        // Обрабатываем направление (для управления камерой позднее)
         if (Input.GetKey(KeyCode.W))
             data.direction += Vector3.forward;
         if (Input.GetKey(KeyCode.S))
@@ -173,38 +173,26 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
             data.direction += Vector3.right;
 
         // Если есть новая цель
-        if (_hasPendingTarget)
+        if (HasPendingTarget)
         {
             data.targetPosition = _pendingTargetPosition;
             data.timestamp = Time.time;
 
-            if (_hasPendingTarget)
+            data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
+            for (int i = 0; i < data.unitCount; i++)
             {
-                data.targetPosition = _pendingTargetPosition;
-                data.timestamp = Time.time;
-
-                data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
-                for (int i = 0; i < data.unitCount; i++)
+                var networkObject = _selectionManager.SelectedUnits[i].GetComponent<NetworkObject>();
+                if (networkObject != null)
                 {
-                    var networkObject = _selectionManager.SelectedUnits[i].GetComponent<NetworkObject>();
-                    if (networkObject != null)
-                    {
-                        data.unitIds[i] = networkObject.Id.Raw;
-                    }
-                    else
-                    {
-                        Debug.LogError($"Unit {_selectionManager.SelectedUnits[i].name} is missing a NetworkObject!");
-                    }
+                    data.unitIds[i] = networkObject.Id.Raw;
                 }
-
-                _hasPendingTarget = false;
+                else
+                {
+                    Debug.LogError($"Unit {_selectionManager.SelectedUnits[i].name} is missing a NetworkObject!");
+                }
             }
-
-            _hasPendingTarget = false; // Сбрасываем флаг
+            _hasPendingTarget = false;
         }
-
-
-
         input.Set(data);
     }
 
@@ -227,7 +215,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
 
-    public void ProcessCommandsFromNetwork()
+    public void HostProcessCommandsFromNetwork()
     {
         // Эта логика вынесена из FixedUpdateNetwork()
         // Получаем данные от всех активных игроков
@@ -235,22 +223,23 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         {
             if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
             {
-                ReceiveCommand(player, input); // Добавляем команду в очередь
+                HostReceiveCommand(player, input); // Добавляем команду в очередь
             }
         }
 
         // Обрабатываем очередь команд
-        ProcessCommands();
+        HostProcessCommands();
     }
 
-    private void ProcessCommands()
+    private void HostProcessCommands()
     {
         // Сортируем команды по времени
         var sortedCommands = _commandQueue.OrderBy(c => c.Input.timestamp).ToList();
 
         foreach (var command in sortedCommands)
         {
-            for (int i = 0; i < command.Input.unitIds.Length; i++)
+           // for (int i = 0; i < command.Input.unitIds.Length; i++)
+            for (int i = 0; i < command.Input.unitCount; i++)
             {
                 var unitId = command.Input.unitIds[i];
                 var unit = FindUnitById(unitId);
@@ -272,24 +261,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         _commandQueue.Clear(); // Очищаем очередь после обработки
     }
 
-
-
-    private void ProcessCommand(Command command)
-    {
-        for (int i = 0; i < command.Input.unitIds.Length; i++)
-        {
-            var unitId = command.Input.unitIds[i];
-            var unit = FindUnitById(unitId);
-            if (unit != null)
-            {
-                unit.SetTarget(command.Input.targetPosition, command.Input.timestamp);
-            }
-        }
-
-        Debug.Log($"Processed command from player {command.Player} at {command.Input.timestamp}");
-    }
-
-    public void ReceiveCommand(PlayerRef player, NetworkInputData input)
+    public void HostReceiveCommand(PlayerRef player, NetworkInputData input)
     {
         var command = new Command
         {
@@ -324,7 +296,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         // делаем instantiate _DestinationMarkerPrefab префабу в этой точке, и удаляем его через 2 секунды
         var marker = Instantiate(_DestinationMarkerPrefab, targetPosition, Quaternion.identity);
         Destroy(marker, 2);
-        
+
         Debug.Log($"Received destination input: {targetPosition}");
         _pendingTargetPosition = targetPosition; // Сохраняем точку назначения
         _hasPendingTarget = true; // Устанавливаем флаг
@@ -353,7 +325,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         foreach (var unit in _selectionManager.SelectedUnits)
         {
             Vector3 offset = unit.transform.position - center;
-         //   unit.SetTarget(pointWorld + offset);
+            //   unit.SetTarget(pointWorld + offset);
         }
 
     }

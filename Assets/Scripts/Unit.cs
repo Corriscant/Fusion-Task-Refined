@@ -82,7 +82,15 @@ public class Unit : NetworkBehaviour
         {
             if (Object.HasStateAuthority) // Хост обрабатывает Input
             {
-                ProcessHostInput(input);
+                // Only units that were addressed in input pocked will process it
+                for (int i = 0; i < input.unitCount; i++)
+                {
+                    if (input.unitIds[i] == GetComponent<NetworkObject>().Id.Raw)
+                    {
+                        ProcessHostInput(input);
+                        break;
+                    }
+                }
             }
 
             if (Object.HasInputAuthority && BasicSpawner.Instance.HasPendingTarget) // Клиент выполняет предсказание

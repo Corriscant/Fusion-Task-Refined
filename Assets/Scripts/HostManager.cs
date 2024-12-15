@@ -11,7 +11,7 @@ public class HostManager : NetworkBehaviour
         // Вызываем у спавнера обработку команд
         if (BasicSpawner.Instance != null)
         {
-            BasicSpawner.Instance.ProcessCommandsFromNetwork();
+            BasicSpawner.Instance.HostProcessCommandsFromNetwork();
         }
     }
 }
