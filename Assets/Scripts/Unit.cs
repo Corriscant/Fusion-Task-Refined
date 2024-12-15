@@ -1,5 +1,8 @@
 using Fusion;
+using NUnit.Framework;
 using UnityEngine;
+using System.Collections.Generic;
+using UnityEngine.Windows;
 
 public class Unit : NetworkBehaviour
 {
@@ -8,7 +11,6 @@ public class Unit : NetworkBehaviour
 
     public float speed = 5;
 
-    private float lastProcessedTimestamp = -1f; // Последний обработанный ввод
     private float lastPredictedTimestamp = -1f; // Последний предсказанный ввод
 
     [Networked] private Vector3 TargetPosition { get; set; } = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
@@ -73,6 +75,39 @@ public class Unit : NetworkBehaviour
     }
     */
 
+    // функция формирующая список unit затронутых в input 
+    public static List<Unit> GetUnitsInInput(NetworkInputData input)
+    {
+        List<Unit> units = new();
+        for (int i = 0; i < input.unitCount; i++)
+        {
+            // бежим по всем объектам в сцене, с компонентами NetworkObject и сравниваем их Id с Id из input
+            foreach (var obj in FindObjectsByType<NetworkObject>(FindObjectsSortMode.None))
+            {
+                if (obj.Id.Raw == input.unitIds[i])
+                {
+                    var unit = obj.GetComponent<Unit>();
+                    if (unit != null)
+                    {
+                        units.Add(unit);
+                    }
+                }
+            }
+        }
+        return units;
+    }
+
+
+    // функция находит unitTargetPosition, с учетом смещения себя относительно центра группы юнитов
+    public Vector3 GetUnitTargetPosition(Vector3 center, Vector3 bearingTargetPosition)
+    {
+        Vector3 offset = center - transform.position;
+        // тут можно ограничить offset, чтобы юниты не были слишком далеко друг от друга
+        // найдем персональную позицию для Target этого юнита, с учетом того, что он смещен относительно центра выделенных юнитов
+        Vector3 unitTargetPosition = bearingTargetPosition - offset;
+        return unitTargetPosition;
+    }
+
     public override void FixedUpdateNetwork()
     {
         Vector3 direction = Vector3.zero;
@@ -80,32 +115,24 @@ public class Unit : NetworkBehaviour
         // 1. Обработка ввода
         if (GetInput(out NetworkInputData input))
         {
-            if (Object.HasStateAuthority) // Хост обрабатывает Input
+            // Клиент выполняет предсказание
+            if (Object.HasInputAuthority && BasicSpawner.Instance.HasPendingTarget) 
             {
-                // Only units that were addressed in input pocked will process it
-                for (int i = 0; i < input.unitCount; i++)
-                {
-                    if (input.unitIds[i] == GetComponent<NetworkObject>().Id.Raw)
-                    {
-                        ProcessHostInput(input);
-                        break;
-                    }
-                }
-            }
+                // find center of selected units
+                var center = BasicSpawner.Instance.GetCenterOfUnits( BasicSpawner.Instance.SelectionManagerLink.SelectedUnits );
+                Vector3 unitTargetPosition = GetUnitTargetPosition(center, input.targetPosition);
 
-            if (Object.HasInputAuthority && BasicSpawner.Instance.HasPendingTarget) // Клиент выполняет предсказание
-            {
                 // Клиент предсказывает движение без зависимости от HasTarget
-                if (CheckStop(input.targetPosition))
+                if (CheckStop(unitTargetPosition))
                 {
                     Debug.Log($"Client predicts stop for unit {gameObject.name}");
                     direction = Vector3.zero; // Предсказание остановки
                 }
                 else
                 {
-                    if (HasTarget)
+                 //   if (HasTarget)
                     {
-                        direction = PredictClientDirection(input);
+                        direction = PredictClientDirection(input, unitTargetPosition);
                     }
                 }
             }
@@ -132,27 +159,13 @@ public class Unit : NetworkBehaviour
         }
     }
 
-
-    private void ProcessHostInput(NetworkInputData input)
-    {
-        if (input.timestamp > 0 && input.timestamp > lastProcessedTimestamp) // Проверяем валидность данных
-        {
-            TargetPosition = input.targetPosition;
-            HasTarget = true;
-            lastProcessedTimestamp = input.timestamp;
-
-            Debug.Log($"Host processed new target for unit {gameObject.name}: {TargetPosition} at {input.timestamp}");
-        }
-    }
-
-
-    private Vector3 PredictClientDirection(NetworkInputData input)
+    private Vector3 PredictClientDirection(NetworkInputData input, Vector3 unitTragetPosition)
     {
         if (input.timestamp > lastPredictedTimestamp) // Проверяем, новый ли это ввод
         {
             lastPredictedTimestamp = input.timestamp; // Обновляем метку времени
-            Debug.Log($"Client predicting movement for unit {gameObject.name}: {input.targetPosition} at {input.timestamp}");
-            return (input.targetPosition - transform.position).normalized;
+            Debug.Log($"Client predicting movement for unit {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
+            return (unitTragetPosition - transform.position).normalized;
         }
 
         return Vector3.zero; // Никакого движения, если ввод не новый
@@ -169,7 +182,7 @@ public class Unit : NetworkBehaviour
         return distance < 1.0f;
     }
 
-    public void SetTarget(Vector3 targetPosition, float timestamp)
+    public void HostSetTarget(Vector3 targetPosition, float timestamp)
     {
         if (Object.HasStateAuthority && (timestamp > LastCommandTimestamp))
         {

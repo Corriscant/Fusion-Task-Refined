@@ -6,7 +6,9 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+// using UnityEngine.Windows;
 using static Unity.Collections.Unicode;
+using static UnityEngine.UI.CanvasScaler;
 
 public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 {
@@ -19,10 +21,11 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
     [SerializeField] public int unitCountPerPlayer = 5;
 
-    [SerializeField] private NetworkPrefabRef _playerUnitPrefab;
+    [SerializeField] private NetworkPrefabRef _UnitPrefab;
     [SerializeField] private GameObject _DestinationMarkerPrefab;
     [SerializeField] private SelectionManager _selectionManager;
     [SerializeField] private GameObject _HostManagerPrefab;
+    public SelectionManager SelectionManagerLink => _selectionManager;  // to access from Unit when need to get prediction on selected units center
 
     // Client request to send destination point to the host
     private Vector3 _pendingTargetPosition = Vector3.zero;
@@ -50,8 +53,8 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
     async void StartGame(GameMode mode)
     {
-        // Test if _playerUnitPrefab initialized
-        if (_playerUnitPrefab == null)
+        // Test if _UnitPrefab initialized
+        if (_UnitPrefab == null)
         {
             Debug.LogError("Player unit prefab is not set.");
             return;
@@ -110,7 +113,6 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
     private void SpawnPlayerUnits(NetworkRunner runner, PlayerRef player)
     {
-        Debug.Log($"Spawning units for player: {player}");
         // Create a unique center position for each player
         var playerSpawnCenterPosition = new Vector3((player.RawEncoded % runner.Config.Simulation.PlayerCount) * 3, 1, 0);
 
@@ -122,7 +124,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
             // place units in circle around player center
             Vector3 spawnPosition = playerSpawnCenterPosition + new Vector3(Mathf.Cos(i * Mathf.PI * 2 / unitCountPerPlayer), 0, Mathf.Sin(i * Mathf.PI * 2 / unitCountPerPlayer));
             // spawn unit
-            var networkUnitObject = runner.Spawn(_playerUnitPrefab, spawnPosition, Quaternion.identity, player);
+            var networkUnitObject = runner.Spawn(_UnitPrefab, spawnPosition, Quaternion.identity, player);
 
             if (networkUnitObject == null)
             {
@@ -131,6 +133,8 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
             }
 
             networkUnitObject.GetComponent<Unit>().SetOwner(player); // Set unit owner directly (in case it may be given to other player) 
+            // зададим имя для юнита, с индексом текущего игрока и самого юнита
+            networkUnitObject.name = $"Unit_{player.RawEncoded}_{i}";
 
             unitList.Add(networkUnitObject);
 
@@ -217,7 +221,6 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
     public void HostProcessCommandsFromNetwork()
     {
-        // Эта логика вынесена из FixedUpdateNetwork()
         // Получаем данные от всех активных игроков
         foreach (var player in NetRunner.ActivePlayers)
         {
@@ -238,7 +241,12 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
         foreach (var command in sortedCommands)
         {
-           // for (int i = 0; i < command.Input.unitIds.Length; i++)
+            // получим список всех юнитов для которых были изменения в текущем input (для нахождения центральной bearing point)
+            var changedUnits = Unit.GetUnitsInInput(command.Input);
+            // найдем центр выбранных юнитов - как bearing point
+            var center = GetCenterOfUnits(changedUnits);
+
+            // for (int i = 0; i < command.Input.unitIds.Length; i++)
             for (int i = 0; i < command.Input.unitCount; i++)
             {
                 var unitId = command.Input.unitIds[i];
@@ -248,7 +256,11 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
                     // Игнорируем устаревшие команды
                     if (command.Input.timestamp > unit.LastCommandTimestamp)
                     {
-                        unit.SetTarget(command.Input.targetPosition, command.Input.timestamp);
+                        // найдем личную точку для каждого юнита (сохранив центр как основу)
+                        var unitTargetPosition = unit.GetUnitTargetPosition(center, command.Input.targetPosition);
+
+                        // unit.HostSetTarget(command.Input.targetPosition, command.Input.timestamp);
+                        unit.HostSetTarget(unitTargetPosition, command.Input.timestamp);
                     }
                     else
                     {
@@ -302,32 +314,16 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         _hasPendingTarget = true; // Устанавливаем флаг
     }
 
-    // Obsolete - Old way to set destination point
-    public void SetDestinationPoint(Vector3 pointWorld)
+    // функция возвращает центр группы юнитов
+    public Vector3 GetCenterOfUnits(List<Unit> units)
     {
-
-        // если есть хотя бы один выделенный объект
-        if (_selectionManager.SelectedUnits.Count == 0)
-            return;
-
-        // делаем instantiate _DestinationMarkerPrefab префабу в этой точке, и удаляем его через 2 секунды
-        var marker = Instantiate(_DestinationMarkerPrefab, pointWorld, Quaternion.identity);
-        Destroy(marker, 2);
-
-        Vector3 center = Vector3.zero;
-        foreach (var unit in _selectionManager.SelectedUnits)
+        var center = Vector3.zero;
+        foreach (var unit in units)
         {
             center += unit.transform.position;
         }
-        center /= _selectionManager.SelectedUnits.Count;
-
-        // Для каждого юнита устанавливаем цель с учётом смещения
-        foreach (var unit in _selectionManager.SelectedUnits)
-        {
-            Vector3 offset = unit.transform.position - center;
-            //   unit.SetTarget(pointWorld + offset);
-        }
-
+        center /= units.Count;
+        return center;
     }
 }
 
