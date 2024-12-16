@@ -8,13 +8,11 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-// using UnityEngine.Windows;
 using static Unity.Collections.Unicode;
 using static UnityEngine.UI.CanvasScaler;
 
 public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 {
-
     // Singleton Instance
     public static BasicSpawner Instance { get; private set; }
 
@@ -34,12 +32,12 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
     // Client request to send destination point to the host
     private Vector3 _pendingTargetPosition = Vector3.zero;
-    // Флаг наличия точки назначения
+    // Flag indicating the presence of a destination point
     private bool _hasPendingTarget = false;
     public bool HasPendingTarget => _hasPendingTarget;
 
-    // для тестов фризов Host
-    private bool _isFreezeSimulated = false; // Флаг паузы
+    // for testing Host freezes
+    private bool _isFreezeSimulated = false; // Pause flag
 
     private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();
 
@@ -98,7 +96,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
     public void Update()
     {
-        // Включаем или выключаем паузу на Пробел
+        // Toggle pause on Space key
         if (Input.GetKeyDown(KeyCode.Space))
         {
             _isFreezeSimulated = !_isFreezeSimulated;
@@ -126,25 +124,25 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         if (runner.IsServer)
         {
             SpawnPlayerUnits(runner, player);
-            // синхронизируем данные по юнитам между игроками (имена, материалы). Отложенно, чтобы успели заспауниться у всех
+            // Synchronize unit data between players (names, materials). Delayed to allow spawning for everyone
             StartCoroutine(SyncUnitsData());
         }
     }
 
     private IEnumerator SyncUnitsData()
     {
-        // Ждем 2 секунды
-        yield return new WaitForSeconds(2f);
+        // Wait a bit to allow everything to spawn
+        yield return new WaitForSeconds(0.5f);
 
-        // бежим по всем юнитам в сцене и отправляем данные о них через RPC
+        // Iterate through all units in the scene and send their data via RPC to all clients
         foreach (var unit in FindObjectsByType<Unit>(FindObjectsSortMode.None))
         {
-            // отправляем данные о юните
+            // Send unit data
             unit.RPC_SendSpawnedUnitInfo(unit.GetComponent<NetworkObject>().Id, unit.name, unit.materialIndex);
         }
     }
 
-    // число заспаунившихся игроков
+    // Number of spawned players
     private int spawnedPlayersCount;
 
     private void SpawnPlayerUnits(NetworkRunner runner, PlayerRef player)
@@ -156,15 +154,12 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
         spawnedPlayersCount += 1;
 
-        string materialName = $"Materials/UnitPayer{spawnedPlayersCount}_Material"; // Путь без расширения
-        Material material = Resources.Load<Material>(materialName);
-
         // Spawn Player units on the field
         for (int i = 0; i < unitCountPerPlayer; i++)
         {
-            // place units in circle around player center
+            // Place units in a circle around player center
             Vector3 spawnPosition = playerSpawnCenterPosition + new Vector3(Mathf.Cos(i * Mathf.PI * 2 / unitCountPerPlayer), 0, Mathf.Sin(i * Mathf.PI * 2 / unitCountPerPlayer));
-            // spawn unit
+            // Spawn unit
             var networkUnitObject = runner.Spawn(_UnitPrefab, spawnPosition, Quaternion.identity, player);
 
             if (networkUnitObject == null)
@@ -174,35 +169,24 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
             }
 
             var unit = networkUnitObject.GetComponent<Unit>();
-            unit.SetOwner(player); // Set unit owner directly (in case it may be given to other player) 
-            // зададим имя для юнита, с индексом текущего игрока и самого юнита
+            unit.SetOwner(player); // Set unit owner directly (in case it may be given to another player)
+            // Set unit name with the current player index and unit index
             unit.name = $"Unit_{player.RawEncoded}_{i}";
-            // запишем индекс материала, чтобы другие клиенты тоже знали
+            // Record material index so other clients also know
             unit.materialIndex = spawnedPlayersCount;
-
-            // зададим материал, соответствующий игроку (по индексу игрока) (UnitPayer1_Material, UnitPayer2_Material, UnitPayer3_Material, UnitPayer4_Material)
-            if (material != null)
-            {
-                unit.GetComponentInChildren<MeshRenderer>().material = material;
-                Debug.Log("Material successfully loaded and applied.");
-            }
-            else
-            {
-                Debug.LogError("Failed to load material: " + materialName);
-            }
 
             unitList.Add(networkUnitObject);
 
         }
         // Keep track of the player avatars for easy access
         _spawnedPlayers.Add(player, unitList);
-        //   Debug.Log($"Spawned {unitList.Count} units for player: {player}  material name: {materialName}");
+        // Debug.Log($"Spawned {unitList.Count} units for player: {player}  material name: {materialName}");
         Debug.Log($"Spawned {unitList.Count} units for player: {player}");
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        if (runner.IsServer)  // not in Phoron turorial somehow, but looks like it needed
+        if (runner.IsServer)  // Not in Phoron tutorial somehow, but looks like it is needed
         {
             if (_spawnedPlayers.TryGetValue(player, out var networkObjects))
             {
@@ -222,17 +206,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     {
         var data = new NetworkInputData();
 
-        // Обрабатываем направление (для управления камерой позднее)
-        if (Input.GetKey(KeyCode.W))
-            data.direction += Vector3.forward;
-        if (Input.GetKey(KeyCode.S))
-            data.direction += Vector3.back;
-        if (Input.GetKey(KeyCode.A))
-            data.direction += Vector3.left;
-        if (Input.GetKey(KeyCode.D))
-            data.direction += Vector3.right;
-
-        // Если есть новая цель
+        // If there is a new target
         if (HasPendingTarget)
         {
             data.targetPosition = _pendingTargetPosition;
@@ -256,8 +230,6 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         input.Set(data);
     }
 
-
-
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }
     public void OnConnectedToServer(NetworkRunner runner) { }
@@ -278,36 +250,36 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     public void HostProcessCommandsFromNetwork()
     {
 
-        // Получаем данные от всех активных игроков
+        // Get data from all active players
         foreach (var player in NetRunner.ActivePlayers)
         {
             if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
             {
-                HostReceiveCommand(player, input); // Добавляем команду в очередь
+                HostReceiveCommand(player, input); // Add command to queue
             }
         }
 
-        // Имитаци freeze сети
+        // Simulate network freeze
         if (_isFreezeSimulated)
         {
             Debug.LogWarning("Host is Freezed. Skipping HostProcessCommands.");
-            return; // Если хост "заморожен", не обрабатываем команды
+            return; // If the host is "frozen", do not process commands
         }
 
-        // Обрабатываем очередь команд
+        // Process command queue
         HostProcessCommands();
     }
 
     private void HostProcessCommands()
     {
-        // Сортируем команды по времени
+        // Sort commands by time
         var sortedCommands = _commandQueue.OrderBy(c => c.Input.timestamp).ToList();
 
         foreach (var command in sortedCommands)
         {
-            // получим список всех юнитов для которых были изменения в текущем input (для нахождения центральной bearing point)
+            // Get a list of all units for which there were changes in the current input (to find the central bearing point)
             var changedUnits = Unit.GetUnitsInInput(command.Input);
-            // найдем центр выбранных юнитов - как bearing point
+            // Find the center of the selected units - as the bearing point
             var center = GetCenterOfUnits(changedUnits);
 
             // for (int i = 0; i < command.Input.unitIds.Length; i++)
@@ -317,10 +289,10 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
                 var unit = FindUnitById(unitId);
                 if (unit != null)
                 {
-                    // Игнорируем устаревшие команды
+                    // Ignore outdated commands
                     if (command.Input.timestamp > unit.LastCommandTimestamp)
                     {
-                        // найдем личную точку для каждого юнита (сохранив центр как основу)
+                        // Find a personal point for each unit (keeping the center as the base)
                         var unitTargetPosition = unit.GetUnitTargetPosition(center, command.Input.targetPosition);
 
                         // unit.HostSetTarget(command.Input.targetPosition, command.Input.timestamp);
@@ -334,7 +306,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
             }
         }
 
-        _commandQueue.Clear(); // Очищаем очередь после обработки
+        _commandQueue.Clear(); // Clear the queue after processing
     }
 
     public void HostReceiveCommand(PlayerRef player, NetworkInputData input)
@@ -345,13 +317,12 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
             Input = input
         };
 
-        _commandQueue.Enqueue(command); // Добавляем команду в очередь
+        _commandQueue.Enqueue(command); // Add command to queue
     }
-
 
     private Unit FindUnitById(uint unitId)
     {
-        // Предполагаем, что все юниты имеют NetworkObject
+        // Assume all units have NetworkObject
         foreach (var unit in FindObjectsByType<Unit>(FindObjectsSortMode.None))
         {
             var networkObject = unit.GetComponent<NetworkObject>();
@@ -363,23 +334,22 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         return null;
     }
 
-
     public void HandleDestinationInput(Vector3 targetPosition)
     {
-        // если есть хотя бы один выделенный объект
+        // if there is at least one selected object
         if (_selectionManager.SelectedUnits.Count == 0)
             return;
 
-        // делаем instantiate _DestinationMarkerPrefab префабу в этой точке, и удаляем его через 2 секунды
+        // instantiate _DestinationMarkerPrefab prefab at this point, and delete it after 2 seconds
         var marker = Instantiate(_DestinationMarkerPrefab, targetPosition, Quaternion.identity);
         Destroy(marker, 2);
 
         Debug.Log($"Received destination input: {targetPosition}");
-        _pendingTargetPosition = targetPosition; // Сохраняем точку назначения
-        _hasPendingTarget = true; // Устанавливаем флаг
+        _pendingTargetPosition = targetPosition; // Save destination point
+        _hasPendingTarget = true; // Set flag
     }
 
-    // функция возвращает центр группы юнитов
+    // function returns the center of the group of units
     public Vector3 GetCenterOfUnits(List<Unit> units)
     {
         var center = Vector3.zero;
@@ -394,6 +364,6 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
 public class Command
 {
-    public PlayerRef Player;         // ID клиента, от которого пришла команда
-    public NetworkInputData Input;  // Полная структура данных из NetworkInputData
+    public PlayerRef Player;         // ID of the client from which the command came
+    public NetworkInputData Input;  // Full data structure from NetworkInputData
 }

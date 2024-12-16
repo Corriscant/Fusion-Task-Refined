@@ -13,12 +13,12 @@ public class Unit : NetworkBehaviour
 
     public float speed = 5;
 
-    public int materialIndex; // индекс материала, для передачи другим клиентам через RPC
-    private float lastPredictedTimestamp = -1f; // Последний предсказанный ввод
+    public int materialIndex; // material index, for passing to other clients via RPC
+    private float lastPredictedTimestamp = -1f; // Last predicted input
 
     [Networked] private Vector3 TargetPosition { get; set; } = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
     [Networked] private bool HasTarget { get; set; } = false;
-    [Networked] public float LastCommandTimestamp { get; set; } // Последний обработанный приказ
+    [Networked] public float LastCommandTimestamp { get; set; } // Last processed command
 
 
     private bool _selected;
@@ -37,11 +37,9 @@ public class Unit : NetworkBehaviour
 
     public override void Spawned()
     {
-        // Здесь можно оставить логику для других начальных действий,
-        // но владелец устанавливается через SetOwner извне.
-        Debug.Log($"Unit {gameObject.name} spawned. Awaiting owner assignment.");
+        // Here you can leave logic for other initial actions,
+        Debug.Log($"Unit {gameObject.name} spawned.");
     }
-
 
     public void SetOwner(PlayerRef newOwner)
     {
@@ -67,13 +65,13 @@ public class Unit : NetworkBehaviour
         _cc = GetComponent<NetworkCharacterController>();
     }
 
-    // функция формирующая список unit затронутых в input 
+    // function forming a list of units affected in input
     public static List<Unit> GetUnitsInInput(NetworkInputData input)
     {
         List<Unit> units = new();
         for (int i = 0; i < input.unitCount; i++)
         {
-            // бежим по всем объектам в сцене, с компонентами NetworkObject и сравниваем их Id с Id из input
+            // iterate through all objects in the scene with NetworkObject components and compare their Ids with Ids from input
             foreach (var obj in FindObjectsByType<NetworkObject>(FindObjectsSortMode.None))
             {
                 if (obj.Id.Raw == input.unitIds[i])
@@ -90,13 +88,13 @@ public class Unit : NetworkBehaviour
     }
 
 
-    // функция находит unitTargetPosition, с учетом смещения себя относительно центра группы юнитов
+    // function finds unitTargetPosition, taking into account the offset of itself relative to the center of the group of units
     public Vector3 GetUnitTargetPosition(Vector3 center, Vector3 bearingTargetPosition)
     {
         Vector3 offset = center - transform.position;
-        // тут можно ограничить offset, чтобы юниты не были слишком далеко друг от друга
-        offset = Vector3.ClampMagnitude(offset, BasicSpawner.Instance.unitAllowedOffset); // ограничиваем смещение до 5 метров
-        // найдем персональную позицию для Target этого юнита, с учетом того, что он смещен относительно центра выделенных юнитов
+        // here you can limit the offset so that the units are not too far apart
+        offset = Vector3.ClampMagnitude(offset, BasicSpawner.Instance.unitAllowedOffset); // limit the offset to 5 meters
+                                                                                          // find the personal position for the Target of this unit, taking into account that it is offset relative to the center of the selected units
         Vector3 unitTargetPosition = bearingTargetPosition - offset;
         return unitTargetPosition;
     }
@@ -112,28 +110,28 @@ public class Unit : NetworkBehaviour
     {
         Vector3 direction = Vector3.zero;
 
-        // 1. Обработка ввода
+        // 1. Input processing
         if (GetInput(out NetworkInputData input))
         {
-            // Клиент выполняет предсказание (хост с HasTarget - нет, т.к. напрямую внизу считает)
+            // Client performs prediction (host with HasTarget - no, because it directly calculates below)
             if (Object.HasInputAuthority && (!Object.HasStateAuthority || !HasTarget) && IsUnitInCommand(input))
             {
                 Vector3 unitTargetPosition = TargetPosition;
 
-                // Если цель ещё не установлена (например, в начале движения), но есть PendingTarget
+                // If the target is not yet set (e.g., at the start of movement), but there is a PendingTarget
                 if (!HasTarget && BasicSpawner.Instance.HasPendingTarget)
                 {
-                    // Находим центр выделенных юнитов
+                    // Find the center of the selected units
                     var center = BasicSpawner.Instance.GetCenterOfUnits(BasicSpawner.Instance.SelectionManagerLink.SelectedUnits);
-                    // Получаем целевую позицию юнита с учётом смещения от центра
+                    // Get the target position of the unit taking into account the offset from the center
                     unitTargetPosition = GetUnitTargetPosition(center, input.targetPosition);
                 }
 
-                // Предсказание движения, пока цель не достигнута
+                // Prediction of movement until the target is reached
                 if (CheckStop(unitTargetPosition))
                 {
                     Debug.Log($"Client predicts stop for unit {gameObject.name}");
-                    direction = Vector3.zero; // Предсказание остановки
+                    direction = Vector3.zero; // Prediction of stop
                 }
                 else
                 {
@@ -142,13 +140,13 @@ public class Unit : NetworkBehaviour
             }
         }
 
-        // 2. Движение для хоста
+        // 2. Movement for the host
         if (Object.HasStateAuthority && HasTarget)
         {
             if (CheckStop(TargetPosition))
             {
                 ClearTarget();
-                direction = Vector3.zero; // Остановка для хоста
+                direction = Vector3.zero; // Stop for the host
             }
             else
             {
@@ -156,7 +154,7 @@ public class Unit : NetworkBehaviour
             }
         }
 
-        // 3. Единый вызов Move
+        // 3. Unified Move call
         if (direction != Vector3.zero)
         {
             _cc.Move(direction * speed * Runner.DeltaTime);
@@ -165,20 +163,20 @@ public class Unit : NetworkBehaviour
 
     private Vector3 PredictClientDirection(NetworkInputData input, Vector3 unitTragetPosition)
     {
-      //  Debug.Log($"Client PredictClientDirection (BEFORE TIMESTAMP CHECK) {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
-        if (input.timestamp > lastPredictedTimestamp) // Проверяем, новый ли это ввод
+        //  Debug.Log($"Client PredictClientDirection (BEFORE TIMESTAMP CHECK) {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
+        if (input.timestamp > lastPredictedTimestamp) // Check if this is a new input
         {
-            lastPredictedTimestamp = input.timestamp; // Обновляем метку времени
+            lastPredictedTimestamp = input.timestamp; // Update the timestamp
             Debug.Log($"Client predicting movement for unit {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
             return (unitTragetPosition - transform.position).normalized;
         }
 
-        return Vector3.zero; // Никакого движения, если ввод не новый
+        return Vector3.zero; // No movement if the input is not new
     }
 
     private bool CheckStop(Vector3 target)
     {
-        // Проверяем достижение цели (игнорируем высоту)
+        // Check if the target is reached (ignore height)
         float distance = Vector2.Distance(
             new Vector2(transform.position.x, transform.position.z),
             new Vector2(target.x, target.z)
@@ -202,8 +200,8 @@ public class Unit : NetworkBehaviour
     private void ClearTarget()
     {
         Debug.Log($"Unit {gameObject.name} reached target: {TargetPosition}");
-        TargetPosition = Vector3.zero; // Сбрасываем данные о цели
-        HasTarget = false; // Сбрасываем флаг
+        TargetPosition = Vector3.zero; // Reset target data
+        HasTarget = false; // Reset flag
     }
 
 
@@ -239,9 +237,5 @@ public class Unit : NetworkBehaviour
         {
             Debug.LogError("Failed to find the unit from unitId.");
         }
-
     }
-
-
-
 }

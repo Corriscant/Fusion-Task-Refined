@@ -7,7 +7,6 @@ using System.Collections;
 
 public struct NetworkInputData : INetworkInput
 {
-    public Vector3 direction;
     public Vector3 targetPosition;
     public UnitIdList unitIds;
     public int unitCount;

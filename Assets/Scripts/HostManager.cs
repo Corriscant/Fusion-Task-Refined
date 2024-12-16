@@ -10,7 +10,7 @@ public class HostManager : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        // Вызываем у спавнера обработку команд
+        // Call the spawner to process commands
         if (BasicSpawner.Instance != null)
         {
             BasicSpawner.Instance.HostProcessCommandsFromNetwork();

@@ -2,15 +2,15 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
-    [SerializeField] private Camera mainCamera; // Камера для обработки кликов
-    [SerializeField] private SelectionManager selectionManager; // Менеджер выделения юнитов
+    [SerializeField] private Camera mainCamera; // Camera for handling clicks
+    [SerializeField] private SelectionManager selectionManager; // Manager for unit selection
 
     private void Update()
     {
-        // Работа с рамкой выделения
+        // Handling selection box
         HandleSelectionInput();
 
-        // Проверяем нажатие правой кнопки мыши
+        // Check right mouse button click
         if (Input.GetMouseButtonDown(1))
         {
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
@@ -18,7 +18,7 @@ public class InputManager : MonoBehaviour
             {
                 Vector3 targetPosition = hit.point;
 
-                // Передаём данные в BasicSpawner через синглтон
+                // Pass data to BasicSpawner via singleton
                 BasicSpawner.Instance.HandleDestinationInput(targetPosition);
             }
         }
@@ -26,19 +26,19 @@ public class InputManager : MonoBehaviour
 
     private void HandleSelectionInput()
     {
-        // Начало выделения
+        // Start selection
         if (Input.GetMouseButtonDown(0))
         {
             selectionManager.StartSelection(Input.mousePosition);
         }
 
-        // Изменение рамки выделения
+        // Update selection box
         if (Input.GetMouseButton(0))
         {
             selectionManager.UpdateSelection(Input.mousePosition);
         }
 
-        // Завершение выделения
+        // End selection
         if (Input.GetMouseButtonUp(0))
         {
             selectionManager.EndSelection();

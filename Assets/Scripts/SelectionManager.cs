@@ -11,7 +11,7 @@ public class SelectionManager : MonoBehaviour
     private Vector2 _startPosition;
     private RectTransform _canvasRect; // Canvas holding SelectionRect
 
-    // made it     [SerializeField]  for Debug porpouses
+    // made it [SerializeField] for Debug purposes
     [SerializeField] private List<Unit> _selectedUnits = new();
     public List<Unit> SelectedUnits => _selectedUnits;
 
@@ -22,7 +22,7 @@ public class SelectionManager : MonoBehaviour
 
     public void StartSelection(Vector2 startPosition)
     {
-        // Конвертируем экранные координаты в локальные координаты рамки
+        // Convert screen coordinates to local coordinates of the selection box
         RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, startPosition, mainCamera, out Vector2 localPoint);
         _startPosition = localPoint;
 
@@ -31,10 +31,10 @@ public class SelectionManager : MonoBehaviour
 
     public void UpdateSelection(Vector2 currentPosition)
     {
-        // Конвертируем текущую позицию в локальные координаты Canvas
+        // Convert current position to local coordinates of the Canvas
         RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, currentPosition, mainCamera, out Vector2 localPoint);
 
-        // Вычисляем размер рамки
+        // Calculate the size of the selection box
         Vector2 size = localPoint - _startPosition;
         selectionBox.sizeDelta = new Vector2(Mathf.Abs(size.x), Mathf.Abs(size.y));
         selectionBox.anchoredPosition = _startPosition + size / 2;
@@ -50,7 +50,7 @@ public class SelectionManager : MonoBehaviour
 
     private void SelectUnits(PlayerRef localPlayer)
     {
-        // Очистка предыдущего выделения
+        // Clear previous selection
         foreach (var unit in _selectedUnits)
         {
             unit.Selected = false;
@@ -59,10 +59,9 @@ public class SelectionManager : MonoBehaviour
 
         foreach (var unit in FindObjectsByType<Unit>(FindObjectsSortMode.None))
         {
-
             Vector3 unitPosition_Screen = mainCamera.WorldToScreenPoint(unit.transform.position);
 
-            // конвертируем локальные координаты selectionBox в экранные (Обратное действие к тому, что было в StartSelection)
+            // Convert local coordinates of the selection box to screen coordinates (reverse action to what was done in StartSelection)
             var leftTop_Local = new Vector2(selectionBox.anchoredPosition.x - selectionBox.sizeDelta.x / 2, selectionBox.anchoredPosition.y - selectionBox.sizeDelta.y / 2);
             var rightBottom_Local = new Vector2(selectionBox.anchoredPosition.x + selectionBox.sizeDelta.x / 2, selectionBox.anchoredPosition.y + selectionBox.sizeDelta.y / 2);
 
@@ -82,12 +81,13 @@ public class SelectionManager : MonoBehaviour
             }
         }
     }
+
     public static Vector2 LocalToScreenPoint(Camera mainCamera, RectTransform rectTransform, Vector2 localPoint)
     {
-        // Преобразуем локальную точку в мировые координаты
+        // Convert local point to world coordinates
         Vector3 worldPoint = rectTransform.TransformPoint(localPoint);
 
-        // Преобразуем мировые координаты в экранные
+        // Convert world coordinates to screen coordinates
         return mainCamera.WorldToScreenPoint(worldPoint);
     }
 
