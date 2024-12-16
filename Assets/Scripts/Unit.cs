@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Windows;
 using System;
+using System.Linq;
 
 public class Unit : NetworkBehaviour
 {
@@ -39,15 +40,6 @@ public class Unit : NetworkBehaviour
         // Здесь можно оставить логику для других начальных действий,
         // но владелец устанавливается через SetOwner извне.
         Debug.Log($"Unit {gameObject.name} spawned. Awaiting owner assignment.");
-
-        // NOw centralized
-      /*  if (Object.HasStateAuthority)
-        {
-            NetworkId unitId = Object.Id;
-
-            // Send unit info to all clients
-            RPC_SendSpawnedUnitInfo(unitId, name, materialIndex);
-        }  */
     }
 
 
@@ -74,17 +66,6 @@ public class Unit : NetworkBehaviour
         selectedIndicator?.SetActive(false);
         _cc = GetComponent<NetworkCharacterController>();
     }
-
-    /*  // Old Manual moves
-    public override void FixedUpdateNetwork()
-    {
-        if (GetInput(out NetworkInputData data))
-        {
-            data.direction.Normalize();
-            _cc.Move(5 * data.direction * NetRunner.DeltaTime);
-        }
-    }
-    */
 
     // функция формирующая список unit затронутых в input 
     public static List<Unit> GetUnitsInInput(NetworkInputData input)
@@ -120,6 +101,13 @@ public class Unit : NetworkBehaviour
         return unitTargetPosition;
     }
 
+    private bool IsUnitInCommand(NetworkInputData input)
+    {
+        var unitId = Object.Id.Raw;
+        return Enumerable.Range(0, input.unitCount).Any(i => input.unitIds[i] == unitId);
+    }
+
+
     public override void FixedUpdateNetwork()
     {
         Vector3 direction = Vector3.zero;
@@ -128,7 +116,7 @@ public class Unit : NetworkBehaviour
         if (GetInput(out NetworkInputData input))
         {
             // Клиент выполняет предсказание (хост с HasTarget - нет, т.к. напрямую внизу считает)
-            if (Object.HasInputAuthority && (!Object.HasStateAuthority || !HasTarget))
+            if (Object.HasInputAuthority && (!Object.HasStateAuthority || !HasTarget) && IsUnitInCommand(input))
             {
                 Vector3 unitTargetPosition = TargetPosition;
 
@@ -252,21 +240,6 @@ public class Unit : NetworkBehaviour
             Debug.LogError("Failed to find the unit from unitId.");
         }
 
-        /*
-        if (_messages == null)
-            _messages = FindObjectOfType<TMP_Text>();
-
-        if (messageSource == Runner.LocalPlayer)
-        {
-            message = $"You said: {message}\n";
-        }
-        else
-        {
-            message = $"Some other player said: {message}\n";
-        }
-
-        _messages.text += message;
-        */
     }
 
 
