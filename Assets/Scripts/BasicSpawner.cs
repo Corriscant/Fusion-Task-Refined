@@ -1,8 +1,10 @@
 using Fusion;
 using Fusion.Sockets;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -20,12 +22,14 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     public NetworkRunner NetRunner => _NetRunner; // Giving access to runner from other scripts
 
     [SerializeField] public int unitCountPerPlayer = 5;
-    [SerializeField] public int unitAllowedOffset = 5;
+    [SerializeField] public int unitAllowedOffset = 3;
 
     [SerializeField] private NetworkPrefabRef _UnitPrefab;
     [SerializeField] private GameObject _DestinationMarkerPrefab;
     [SerializeField] private SelectionManager _selectionManager;
     [SerializeField] private GameObject _HostManagerPrefab;
+    // to call RPCs from HostManager
+    public HostManager HostManagerLink => _HostManagerPrefab.GetComponent<HostManager>();
     public SelectionManager SelectionManagerLink => _selectionManager;  // to access from Unit when need to get prediction on selected units center
 
     // Client request to send destination point to the host
@@ -33,6 +37,9 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     // Флаг наличия точки назначения
     private bool _hasPendingTarget = false;
     public bool HasPendingTarget => _hasPendingTarget;
+
+    // для тестов фризов Host
+    private bool _isFreezeSimulated = false; // Флаг паузы
 
     private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();
 
@@ -57,7 +64,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         // Test if _UnitPrefab initialized
         if (_UnitPrefab == null)
         {
-            Debug.LogError("Player unit prefab is not set.");
+            Debug.LogError("Unit prefab is not set.");
             return;
         }
 
@@ -89,6 +96,16 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
+    public void Update()
+    {
+        // Включаем или выключаем паузу на Пробел
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            _isFreezeSimulated = !_isFreezeSimulated;
+            Debug.Log(_isFreezeSimulated ? "Host paused." : "Host resumed.");
+        }
+    }
+
     private void OnGUI()
     {
         if (_NetRunner == null)
@@ -109,8 +126,26 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         if (runner.IsServer)
         {
             SpawnPlayerUnits(runner, player);
+            // синхронизируем данные по юнитам между игроками (имена, материалы). Отложенно, чтобы успели заспауниться у всех
+            StartCoroutine(SyncUnitsData());
         }
     }
+
+    private IEnumerator SyncUnitsData()
+    {
+        // Ждем 2 секунды
+        yield return new WaitForSeconds(2f);
+
+        // бежим по всем юнитам в сцене и отправляем данные о них через RPC
+        foreach (var unit in FindObjectsByType<Unit>(FindObjectsSortMode.None))
+        {
+            // отправляем данные о юните
+            unit.RPC_SendSpawnedUnitInfo(unit.GetComponent<NetworkObject>().Id, unit.name, unit.materialIndex);
+        }
+    }
+
+    // число заспаунившихся игроков
+    private int spawnedPlayersCount;
 
     private void SpawnPlayerUnits(NetworkRunner runner, PlayerRef player)
     {
@@ -118,6 +153,11 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         var playerSpawnCenterPosition = new Vector3((player.RawEncoded % runner.Config.Simulation.PlayerCount) * 3, 1, 0);
 
         var unitList = new List<NetworkObject>();
+
+        spawnedPlayersCount += 1;
+
+        string materialName = $"Materials/UnitPayer{spawnedPlayersCount}_Material"; // Путь без расширения
+        Material material = Resources.Load<Material>(materialName);
 
         // Spawn Player units on the field
         for (int i = 0; i < unitCountPerPlayer; i++)
@@ -133,15 +173,30 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
                 return;
             }
 
-            networkUnitObject.GetComponent<Unit>().SetOwner(player); // Set unit owner directly (in case it may be given to other player) 
+            var unit = networkUnitObject.GetComponent<Unit>();
+            unit.SetOwner(player); // Set unit owner directly (in case it may be given to other player) 
             // зададим имя для юнита, с индексом текущего игрока и самого юнита
-            networkUnitObject.name = $"Unit_{player.RawEncoded}_{i}";
+            unit.name = $"Unit_{player.RawEncoded}_{i}";
+            // запишем индекс материала, чтобы другие клиенты тоже знали
+            unit.materialIndex = spawnedPlayersCount;
+
+            // зададим материал, соответствующий игроку (по индексу игрока) (UnitPayer1_Material, UnitPayer2_Material, UnitPayer3_Material, UnitPayer4_Material)
+            if (material != null)
+            {
+                unit.GetComponentInChildren<MeshRenderer>().material = material;
+                Debug.Log("Material successfully loaded and applied.");
+            }
+            else
+            {
+                Debug.LogError("Failed to load material: " + materialName);
+            }
 
             unitList.Add(networkUnitObject);
 
         }
         // Keep track of the player avatars for easy access
         _spawnedPlayers.Add(player, unitList);
+        //   Debug.Log($"Spawned {unitList.Count} units for player: {player}  material name: {materialName}");
         Debug.Log($"Spawned {unitList.Count} units for player: {player}");
     }
 
@@ -222,6 +277,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
     public void HostProcessCommandsFromNetwork()
     {
+
         // Получаем данные от всех активных игроков
         foreach (var player in NetRunner.ActivePlayers)
         {
@@ -229,6 +285,13 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
             {
                 HostReceiveCommand(player, input); // Добавляем команду в очередь
             }
+        }
+
+        // Имитаци freeze сети
+        if (_isFreezeSimulated)
+        {
+            Debug.LogWarning("Host is Freezed. Skipping HostProcessCommands.");
+            return; // Если хост "заморожен", не обрабатываем команды
         }
 
         // Обрабатываем очередь команд
@@ -284,6 +347,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
         _commandQueue.Enqueue(command); // Добавляем команду в очередь
     }
+
 
     private Unit FindUnitById(uint unitId)
     {

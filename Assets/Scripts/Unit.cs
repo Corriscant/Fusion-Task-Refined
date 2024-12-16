@@ -3,6 +3,7 @@ using NUnit.Framework;
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Windows;
+using System;
 
 public class Unit : NetworkBehaviour
 {
@@ -11,6 +12,7 @@ public class Unit : NetworkBehaviour
 
     public float speed = 5;
 
+    public int materialIndex; // индекс материала, для передачи другим клиентам через RPC
     private float lastPredictedTimestamp = -1f; // Последний предсказанный ввод
 
     [Networked] private Vector3 TargetPosition { get; set; } = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
@@ -37,6 +39,15 @@ public class Unit : NetworkBehaviour
         // Здесь можно оставить логику для других начальных действий,
         // но владелец устанавливается через SetOwner извне.
         Debug.Log($"Unit {gameObject.name} spawned. Awaiting owner assignment.");
+
+        // NOw centralized
+      /*  if (Object.HasStateAuthority)
+        {
+            NetworkId unitId = Object.Id;
+
+            // Send unit info to all clients
+            RPC_SendSpawnedUnitInfo(unitId, name, materialIndex);
+        }  */
     }
 
 
@@ -116,15 +127,21 @@ public class Unit : NetworkBehaviour
         // 1. Обработка ввода
         if (GetInput(out NetworkInputData input))
         {
-            // Клиент выполняет предсказание (if Host late to response)
-            if (Object.HasInputAuthority && BasicSpawner.Instance.HasPendingTarget)
+            // Клиент выполняет предсказание (хост с HasTarget - нет, т.к. напрямую внизу считает)
+            if (Object.HasInputAuthority && (!Object.HasStateAuthority || !HasTarget))
             {
-                // find center of selected units
-                var center = BasicSpawner.Instance.GetCenterOfUnits(BasicSpawner.Instance.SelectionManagerLink.SelectedUnits);
-                // getting target position for this unit, keeping offset from center
-                Vector3 unitTargetPosition = GetUnitTargetPosition(center, input.targetPosition);
+                Vector3 unitTargetPosition = TargetPosition;
 
-                // Клиент предсказывает движение 
+                // Если цель ещё не установлена (например, в начале движения), но есть PendingTarget
+                if (!HasTarget && BasicSpawner.Instance.HasPendingTarget)
+                {
+                    // Находим центр выделенных юнитов
+                    var center = BasicSpawner.Instance.GetCenterOfUnits(BasicSpawner.Instance.SelectionManagerLink.SelectedUnits);
+                    // Получаем целевую позицию юнита с учётом смещения от центра
+                    unitTargetPosition = GetUnitTargetPosition(center, input.targetPosition);
+                }
+
+                // Предсказание движения, пока цель не достигнута
                 if (CheckStop(unitTargetPosition))
                 {
                     Debug.Log($"Client predicts stop for unit {gameObject.name}");
@@ -200,6 +217,58 @@ public class Unit : NetworkBehaviour
         TargetPosition = Vector3.zero; // Сбрасываем данные о цели
         HasTarget = false; // Сбрасываем флаг
     }
+
+
+    // [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]
+    public void RPC_SendSpawnedUnitInfo(NetworkId unitId, String unitName, int materialIndex)
+    {
+        Debug.Log($"RPC_SendSpawnedUnitInfo {unitName}");
+        RPC_RelaySpawnedUnitInfo(unitId, unitName, materialIndex);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]
+    public void RPC_RelaySpawnedUnitInfo(NetworkId unitId, String unitName, int materialIndex)
+    {
+        Debug.Log($"RPC_RelaySpawnedUnitInfo {unitName}");
+
+        if (Runner.TryFindObject(unitId, out var networkObject))
+        {
+            var unit = networkObject.GetComponent<Unit>();
+            if (unit != null)
+            {
+                unit.name = unitName;
+                string materialName = $"Materials/UnitPayer{materialIndex}_Material";
+                Material material = Resources.Load<Material>(materialName);
+                if (material != null)
+                {
+                    unit.GetComponentInChildren<MeshRenderer>().material = material;
+                    Debug.Log("Material successfully loaded and applied.");
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("Failed to find the unit from unitId.");
+        }
+
+        /*
+        if (_messages == null)
+            _messages = FindObjectOfType<TMP_Text>();
+
+        if (messageSource == Runner.LocalPlayer)
+        {
+            message = $"You said: {message}\n";
+        }
+        else
+        {
+            message = $"Some other player said: {message}\n";
+        }
+
+        _messages.text += message;
+        */
+    }
+
 
 
 }
