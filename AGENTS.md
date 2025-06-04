@@ -5,3 +5,4 @@ AGENTS Instructions:
 * Comments in Unity code must be written in English.
 * Comments in Delphi code must be written in Russian.
 * Follow the existing coding style, including variable and constant naming.
+ТЕСТ
