@@ -5,6 +5,14 @@ public class InputManager : MonoBehaviour
     [SerializeField] private Camera mainCamera; // Camera for handling clicks
     [SerializeField] private SelectionManager selectionManager; // Manager for unit selection
 
+    private void Awake()
+    {
+        if (mainCamera != null && mainCamera.GetComponent<CameraMovement>() == null)
+        {
+            mainCamera.gameObject.AddComponent<CameraMovement>();
+        }
+    }
+
     private void Update()
     {
         // Handling selection box
