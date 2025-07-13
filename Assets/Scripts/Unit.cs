@@ -1,12 +1,13 @@
 using Fusion;
 using NUnit.Framework;
-using UnityEngine;
-using System.Collections.Generic;
-using UnityEngine.Windows;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
+using UnityEngine.Diagnostics;
+using UnityEngine.Windows;
 
-public class Unit : NetworkBehaviour
+public class Unit : NetworkBehaviour, IPositionable
 {
     public GameObject body;
     public GameObject selectedIndicator;
@@ -15,6 +16,11 @@ public class Unit : NetworkBehaviour
 
     public int materialIndex; // material index, for passing to other clients via RPC
     private float lastPredictedTimestamp = -1f; // Last predicted input
+
+    /// <summary>
+    /// Implementation of IPositionable interface to provide position of the unit. (Used in ListExtensions.GetCenter)
+    /// </summary>
+    public virtual Vector3 Position => transform.position;
 
     [Networked] private Vector3 TargetPosition { get; set; } = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
     [Networked] private bool HasTarget { get; set; } = false;
@@ -122,7 +128,7 @@ public class Unit : NetworkBehaviour
                 if (!HasTarget && BasicSpawner.Instance.HasPendingTarget)
                 {
                     // Find the center of the selected units
-                    var center = BasicSpawner.Instance.GetCenterOfUnits(BasicSpawner.Instance.SelectionManagerLink.SelectedUnits);
+                    var center = BasicSpawner.Instance.SelectionManagerLink.SelectedUnits.GetCenter();
                     // Get the target position of the unit taking into account the offset from the center
                     unitTargetPosition = GetUnitTargetPosition(center, input.targetPosition);
                 }
@@ -202,15 +208,6 @@ public class Unit : NetworkBehaviour
         Debug.Log($"Unit {gameObject.name} reached target: {TargetPosition}");
         TargetPosition = Vector3.zero; // Reset target data
         HasTarget = false; // Reset flag
-    }
-
-
-    // [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]
-    public void RPC_SendSpawnedUnitInfo(NetworkId unitId, String unitName, int materialIndex)
-    {
-        Debug.Log($"RPC_SendSpawnedUnitInfo {unitName}");
-        RPC_RelaySpawnedUnitInfo(unitId, unitName, materialIndex);
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]
