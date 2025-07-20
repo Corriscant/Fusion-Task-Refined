@@ -2,6 +2,8 @@ using Fusion;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static Corris.Loggers.Logger;
+using static Corris.Loggers.LogUtils;
 
 public class HostManager : NetworkBehaviour
 {
@@ -17,7 +19,8 @@ public class HostManager : NetworkBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             _isFreezeSimulated = !_isFreezeSimulated;
-            Debug.Log(_isFreezeSimulated ? "Host paused." : "Host resumed.");
+
+            Log($"{GetLogCallPrefix(GetType())} {(_isFreezeSimulated ? "Host paused." : "Host resumed.")}");
         }
     }
 
@@ -44,7 +47,8 @@ public class HostManager : NetworkBehaviour
         // Simulate network freeze
         if (_isFreezeSimulated)
         {
-            Debug.LogWarning("Host is Freezed. Skipping HostProcessCommands.");
+            LogWarning($"{GetLogCallPrefix(GetType())} Host is Freezed. Skipping HostProcessCommands.");
+
             return; // If the host is "frozen", do not process commands
         }
 
@@ -83,7 +87,7 @@ public class HostManager : NetworkBehaviour
                     }
                     else
                     {
-                        Debug.LogWarning($"Ignored outdated command for unit {unit.name} at {command.Input.timestamp}");
+                        LogWarning($"{GetLogCallPrefix(GetType())} Ignored outdated command for unit {unit.name} at {command.Input.timestamp}");
                     }
                 }
             }
