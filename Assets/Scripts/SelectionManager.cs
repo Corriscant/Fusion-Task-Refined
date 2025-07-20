@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Fusion;
+using static Corris.Loggers.Logger;
+using static Corris.Loggers.LogUtils;
 
 public class SelectionManager : MonoBehaviour
 {
@@ -76,7 +78,8 @@ public class SelectionManager : MonoBehaviour
                 {
                     unit.Selected = true;
                     _selectedUnits.Add(unit);
-                    Debug.Log($"Unit selected: {unit.name}");
+
+                    Log($"{GetLogCallPrefix(GetType())} Unit selected: {unit.name}");
                 }
             }
         }

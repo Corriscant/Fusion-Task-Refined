@@ -1,11 +1,10 @@
 using Fusion;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Diagnostics;
-using UnityEngine.Windows;
+using static Corris.Loggers.Logger;
+using static Corris.Loggers.LogUtils;
 
 public class Unit : NetworkBehaviour, IPositionable
 {
@@ -44,7 +43,7 @@ public class Unit : NetworkBehaviour, IPositionable
     public override void Spawned()
     {
         // Here you can leave logic for other initial actions,
-        Debug.Log($"Unit {gameObject.name} spawned.");
+        Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} spawned.");
     }
 
     public void SetOwner(PlayerRef newOwner)
@@ -63,7 +62,7 @@ public class Unit : NetworkBehaviour, IPositionable
     {
         if (body == null)
         {
-            Debug.LogError("Body is not set.");
+            LogError($"{GetLogCallPrefix(GetType())} Body is not set.");
             return;
         }
 
@@ -136,7 +135,8 @@ public class Unit : NetworkBehaviour, IPositionable
                 // Prediction of movement until the target is reached
                 if (CheckStop(unitTargetPosition))
                 {
-                    Debug.Log($"Client predicts stop for unit {gameObject.name}");
+                    Log($"{GetLogCallPrefix(GetType())} Client predicts stop for unit {gameObject.name}");
+
                     direction = Vector3.zero; // Prediction of stop
                 }
                 else
@@ -169,11 +169,10 @@ public class Unit : NetworkBehaviour, IPositionable
 
     private Vector3 PredictClientDirection(NetworkInputData input, Vector3 unitTragetPosition)
     {
-        //  Debug.Log($"Client PredictClientDirection (BEFORE TIMESTAMP CHECK) {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
         if (input.timestamp > lastPredictedTimestamp) // Check if this is a new input
         {
             lastPredictedTimestamp = input.timestamp; // Update the timestamp
-            Debug.Log($"Client predicting movement for unit {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
+            Log($"{GetLogCallPrefix(GetType())} Client predicting movement for unit {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
             return (unitTragetPosition - transform.position).normalized;
         }
 
@@ -199,13 +198,13 @@ public class Unit : NetworkBehaviour, IPositionable
             HasTarget = true;
             LastCommandTimestamp = timestamp;
 
-            Debug.Log($"Unit {gameObject.name} received new target at {timestamp}");
+            Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} received new target at {timestamp}");
         }
     }
 
     private void ClearTarget()
     {
-        Debug.Log($"Unit {gameObject.name} reached target: {TargetPosition}");
+        Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} reached target: {TargetPosition}");
         TargetPosition = Vector3.zero; // Reset target data
         HasTarget = false; // Reset flag
     }
@@ -213,7 +212,7 @@ public class Unit : NetworkBehaviour, IPositionable
     [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]
     public void RPC_RelaySpawnedUnitInfo(NetworkId unitId, String unitName, int materialIndex)
     {
-        Debug.Log($"RPC_RelaySpawnedUnitInfo {unitName}");
+        Log($"{GetLogCallPrefix(GetType())} RPC_RelaySpawnedUnitInfo {unitName}");
 
         if (Runner.TryFindObject(unitId, out var networkObject))
         {
@@ -226,13 +225,13 @@ public class Unit : NetworkBehaviour, IPositionable
                 if (material != null)
                 {
                     unit.GetComponentInChildren<MeshRenderer>().material = material;
-                    Debug.Log("Material successfully loaded and applied.");
+                    Log($"{GetLogCallPrefix(GetType())} Material successfully loaded and applied.");
                 }
             }
         }
         else
         {
-            Debug.LogError("Failed to find the unit from unitId.");
+            LogError($"{GetLogCallPrefix(GetType())} Failed to find the unit from unitId.");
         }
     }
 }

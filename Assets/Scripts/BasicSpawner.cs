@@ -4,12 +4,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static Unity.Collections.Unicode;
-using static UnityEngine.UI.CanvasScaler;
+using static Corris.Loggers.Logger;
+using static Corris.Loggers.LogUtils;
 
 public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 {
@@ -36,13 +34,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     private bool _hasPendingTarget = false;
     public bool HasPendingTarget => _hasPendingTarget;
 
-    // for testing Host freezes
- //   private bool _isFreezeSimulated = false; // Pause flag
-
     private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();
-
-    // List of commands came to Host
-  //  private Queue<Command> _commandQueue = new Queue<Command>();
 
     private void Awake()
     {
@@ -62,7 +54,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         // Test if _UnitPrefab initialized
         if (_UnitPrefab == null)
         {
-            Debug.LogError("Unit prefab is not set.");
+            LogError($"{GetLogCallPrefix(GetType())} Unit prefab is not set.");
             return;
         }
 
@@ -86,6 +78,21 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
             Scene = scene,
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
+
+        #region LogAccessTo NetRunner.Tick
+        // Provide the logger with a way to get the current server tick safely
+        Corris.Loggers.Logger.LogPrefix = "";
+        Corris.Loggers.Logger.GetCurrentServerTick = () => _NetRunner.IsRunning ? _NetRunner.Tick : -1;
+
+        if (_NetRunner.IsRunning)
+        {
+            Log($"{GetLogCallPrefix(GetType())} Starting game in {mode} mode. Current NetRunner tick: {_NetRunner.Tick}");
+        }
+        else
+        {
+            Log($"{GetLogCallPrefix(GetType())} Starting game in {mode} mode. Runner is not running.");
+        }
+        #endregion
 
         // running host manager
         if (_NetRunner.IsServer)
@@ -112,7 +119,8 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        Debug.Log($"Player joined: {player}");
+        Log($"{GetLogCallPrefix(GetType())} Player joined: {player}");
+
         if (runner.IsServer)
         {
             SpawnPlayerUnits(runner, player);
@@ -156,7 +164,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
             if (networkUnitObject == null)
             {
-                Debug.LogError("Failed to spawn network unit object.");
+                LogError($"{GetLogCallPrefix(GetType())} Failed to spawn network unit object.");
                 return;
             }
 
@@ -173,7 +181,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         // Keep track of the player avatars for easy access
         _spawnedPlayers.Add(player, unitList);
         // Debug.Log($"Spawned {unitList.Count} units for player: {player}  material name: {materialName}");
-        Debug.Log($"Spawned {unitList.Count} units for player: {player}");
+        Log($"{GetLogCallPrefix(GetType())} Spawned {unitList.Count} units for player: {player}");
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
@@ -214,7 +222,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
                 }
                 else
                 {
-                    Debug.LogError($"Unit {_selectionManager.SelectedUnits[i].name} is missing a NetworkObject!");
+                    LogError($"{GetLogCallPrefix(GetType())} Unit {_selectionManager.SelectedUnits[i].name} is missing a NetworkObject!");
                 }
             }
             _hasPendingTarget = false;
@@ -251,7 +259,8 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         var marker = Instantiate(_DestinationMarkerPrefab, targetPosition, Quaternion.identity);
         Destroy(marker, 2);
 
-        Debug.Log($"Received destination input: {targetPosition}");
+        Log($"{GetLogCallPrefix(GetType())} Received destination input: {targetPosition}");
+
         _pendingTargetPosition = targetPosition; // Save destination point
         _hasPendingTarget = true; // Set flag
     }
