@@ -30,6 +30,16 @@ namespace Fusion {
     public bool LogSceneLoadErrors = true;
 
     /// <summary>
+    /// If enabled the scenemanager despawns all runtime spawned prefab instances (not scene objects) before unloading a scene.
+    /// If the peer does not have StateAuthority over the object it is destroyed instead of despawned.
+    /// If disabled the destroy will be indirectly done via the scene unload from Unity however it will be async and might be delayed,
+    /// this can lead to the scene change being synchronized in an earlier tick than the destroys.
+    /// </summary>
+    [InlineHelp]
+    [ToggleLeft]
+    public bool DestroySpawnedPrefabsOnSceneUnload = true;
+    
+    /// <summary>
     /// All the scenes loaded by all the managers. Used when <see cref="IsSceneTakeOverEnabled"/> is enabled.
     /// </summary>
     private static Dictionary<Scene, NetworkSceneManagerDefault> _allOwnedScenes = new Dictionary<Scene, NetworkSceneManagerDefault>(new FusionUnitySceneManagerUtils.SceneEqualityComparer());
@@ -264,7 +274,7 @@ namespace Fusion {
 #if FUSION_ENABLE_ADDRESSABLES && !FUSION_DISABLE_ADDRESSABLES
       // this may be a blocking call due to WaitForCompletion being used internally
       if (!TryGetAddressableScenes(out var addressableScenes)) {
-        Log.ErrorSceneManager(this, $"Failed to resolve addressable scene paths, won't be able to resolve {sceneNameOrPath} or any other addressable scene.");
+        Log.Error(this, $"Failed to resolve addressable scene paths, won't be able to resolve {sceneNameOrPath} or any other addressable scene.");
         addressableScenes = Array.Empty<string>();
       }
 
@@ -344,6 +354,21 @@ namespace Fusion {
             }
           }
         }
+        else
+        {
+          if (DestroySpawnedPrefabsOnSceneUnload && loadSceneMode == LoadSceneMode.Single)
+          {
+            for (int i = 0; i < SceneManager.sceneCount; i++) {
+              // find the scene to unload
+              var sceneToBeUnloaded = SceneManager.GetSceneAt(i); // will be unloaded by Unity on scene load
+              var sceneRefToBeUnloaded = GetSceneRef(sceneToBeUnloaded.path);
+
+              if (sceneRefToBeUnloaded != SceneRef.None) {
+                DestroyAllRuntimeSpawnedObjectsInScene(sceneToBeUnloaded, sceneRefToBeUnloaded);
+              }
+            }
+          }
+        }
 
         if (IsSceneTakeOverEnabled) {
           // check if a loaded scene can be taken over
@@ -401,7 +426,7 @@ namespace Fusion {
           } else {
 #if FUSION_ENABLE_ADDRESSABLES && !FUSION_DISABLE_ADDRESSABLES
             if (!TryGetAddressableScenes(out var addressableScenes)) {
-              Log.ErrorSceneManager(this, $"Failed to resolve addressable scene paths, won't be able to resolve {sceneRef}");
+              Log.Error(this, $"Failed to resolve addressable scene paths, won't be able to resolve {sceneRef}");
               addressableScenes = Array.Empty<string>();
             }
 
@@ -516,10 +541,15 @@ namespace Fusion {
             throw new ArgumentOutOfRangeException($"Did not find a scene to unload: {sceneRef}", nameof(sceneRef));
           }
 
+          if (DestroySpawnedPrefabsOnSceneUnload) {
+            DestroyAllRuntimeSpawnedObjectsInScene(sceneToUnload, sceneRef);
+          }
+
+
           Log.TraceSceneManager(Runner, $"Started unloading {sceneToUnload.Dump()} for {sceneRef}");
 
           if (!sceneToUnload.CanBeUnloaded()) {
-            Log.WarnSceneManager(Runner, $"Scene {sceneToUnload.Dump()} can't be unloaded for {sceneRef}, creating a temporary scene to unload it");
+            Log.Warn(Runner, $"Scene {sceneToUnload.Dump()} can't be unloaded for {sceneRef}, creating a temporary scene to unload it");
             Debug.Assert(!_tempUnloadScene.IsValid());
             _tempUnloadScene = SceneManager.CreateScene($"FusionSceneManager_TempEmptyScene");
           }
@@ -597,6 +627,22 @@ namespace Fusion {
       Log.TraceSceneManager(Runner, $"Loading scene progress {sceneRef} ({progress:P2})");
     }
 
+    private void DestroyAllRuntimeSpawnedObjectsInScene(Scene scene, SceneRef sceneRef) {
+      Log.TraceSceneManager(Runner, $"destroying runtime spawned NetworkObjects in scene {scene.Dump()} for {sceneRef}");
+      foreach (var networkObject in Runner.GetAllNetworkObjects()) {
+        // This exists to ensure all object meta is destroyed when unloading the scene to prevent objects from getting despawned and spawned again repeadetly on scene unload.
+        // Scene objects are ignored as they can't be spawned again when the scene is unloaded.
+        if (networkObject.gameObject.scene == scene && networkObject.NetworkTypeId.IsSceneObject == false) {
+          if (networkObject.HasStateAuthority) {
+            // despawn to ensure the object is immediately added to destroy queue. (Unity destroy callback is delayed until end of Update()
+            Runner.Despawn(networkObject); 
+          } else {
+            Destroy(networkObject.gameObject);
+          }
+        }
+      }
+    }
+    
     private Scene FindSceneToTakeOver(SceneRef sceneRef) {
       for (int i = 0; i < SceneManager.sceneCount; ++i) {
         var candidate = SceneManager.GetSceneAt(i);
@@ -626,7 +672,7 @@ namespace Fusion {
       coro.Completed += x => {
 
         if (LogSceneLoadErrors && x.Error != null) {
-          Log.ErrorSceneManager(Runner, $"Failed async op: {x.Error.SourceException}");
+          Log.Error(Runner, $"Failed async op: {x.Error.SourceException}");
         }
         
         // remove this one from the list
@@ -657,7 +703,7 @@ namespace Fusion {
 
     protected void MarkSceneAsOwned(SceneRef sceneRef, Scene scene) {
       if (_allOwnedScenes.TryGetValue(scene, out var manager)) {
-        Log.WarnSceneManager(Runner, $"Scene {scene.Dump()} (for {sceneRef}) already owned by {manager}");
+        Log.Warn(Runner, $"Scene {scene.Dump()} (for {sceneRef}) already owned by {manager}");
       } else {
         _allOwnedScenes.Add(scene, this);
       }
@@ -665,7 +711,7 @@ namespace Fusion {
 
     private NetworkSceneAsyncOp FailOp(SceneRef sceneRef, Exception exception) {
       if (LogSceneLoadErrors) {
-        Log.ErrorSceneManager(Runner, $"Failed with: {exception}");
+        Log.Error(Runner, $"Failed with: {exception}");
       }
 
       return NetworkSceneAsyncOp.FromError(sceneRef, exception);
@@ -744,7 +790,7 @@ namespace Fusion {
     
     private bool TryGetAddressableScenes(out string[] addressableScenes) {
       if (!_addressableScenesTask.IsValueCreated) {
-        Log.WarnSceneManager(Runner, $"Going to block the thread in wait for addressable scene paths being resolved, call and await {nameof(LoadAddressableScenePathsAsync)} to avoid this.");
+        Log.Warn(Runner, $"Going to block the thread in wait for addressable scene paths being resolved, call and await {nameof(LoadAddressableScenePathsAsync)} to avoid this.");
       }
 
       var t = _addressableScenesTask.Value;

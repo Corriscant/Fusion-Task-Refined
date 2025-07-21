@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: e6682ee4dde280244b048852421e48b9
+guid: 641f841cbef022e4f90b206df4a1f40c
 PluginImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -31,3 +31,10 @@ PluginImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 267958
+  packageName: Photon Fusion
+  packageVersion: 2.0.6
+  assetPath: Assets/Photon/Fusion/Assemblies/Fusion.Log.dll
+  uploadId: 755233

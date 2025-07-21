@@ -9,3 +9,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 267958
+  packageName: Photon Fusion
+  packageVersion: 2.0.6
+  assetPath: Assets/Photon/Fusion/Editor/NetworkPrefabsInspector.cs
+  uploadId: 755233

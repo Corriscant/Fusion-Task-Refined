@@ -128,3 +128,10 @@ PluginImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 267958
+  packageName: Photon Fusion
+  packageVersion: 2.0.6
+  assetPath: Assets/Photon/Fusion/Plugins/NanoSockets/NanoSockets/Static/NanoSockets.dll
+  uploadId: 755233

@@ -1,12 +1,12 @@
 using Fusion;
-using NUnit.Framework;
-using UnityEngine;
-using System.Collections.Generic;
-using UnityEngine.Windows;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
+using static Corris.Loggers.Logger;
+using static Corris.Loggers.LogUtils;
 
-public class Unit : NetworkBehaviour
+public class Unit : NetworkBehaviour, IPositionable
 {
     public GameObject body;
     public GameObject selectedIndicator;
@@ -15,6 +15,11 @@ public class Unit : NetworkBehaviour
 
     public int materialIndex; // material index, for passing to other clients via RPC
     private float lastPredictedTimestamp = -1f; // Last predicted input
+
+    /// <summary>
+    /// Implementation of IPositionable interface to provide position of the unit. (Used in ListExtensions.GetCenter)
+    /// </summary>
+    public virtual Vector3 Position => transform.position;
 
     [Networked] private Vector3 TargetPosition { get; set; } = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
     [Networked] private bool HasTarget { get; set; } = false;
@@ -38,7 +43,7 @@ public class Unit : NetworkBehaviour
     public override void Spawned()
     {
         // Here you can leave logic for other initial actions,
-        Debug.Log($"Unit {gameObject.name} spawned.");
+        Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} spawned.");
     }
 
     public void SetOwner(PlayerRef newOwner)
@@ -57,7 +62,7 @@ public class Unit : NetworkBehaviour
     {
         if (body == null)
         {
-            Debug.LogError("Body is not set.");
+            LogError($"{GetLogCallPrefix(GetType())} Body is not set.");
             return;
         }
 
@@ -111,7 +116,9 @@ public class Unit : NetworkBehaviour
         Vector3 direction = Vector3.zero;
 
         // 1. Input processing
-        if (GetInput(out NetworkInputData input))
+        // Migration from Fusion 2.0.3 -> 2.0.6
+        //  if (GetInput(out NetworkInputData input))
+        if (Runner.TryGetInputForPlayer(Object.InputAuthority, out NetworkInputData input))
         {
             // Client performs prediction (host with HasTarget - no, because it directly calculates below)
             if (Object.HasInputAuthority && (!Object.HasStateAuthority || !HasTarget) && IsUnitInCommand(input))
@@ -122,7 +129,7 @@ public class Unit : NetworkBehaviour
                 if (!HasTarget && BasicSpawner.Instance.HasPendingTarget)
                 {
                     // Find the center of the selected units
-                    var center = BasicSpawner.Instance.GetCenterOfUnits(BasicSpawner.Instance.SelectionManagerLink.SelectedUnits);
+                    var center = BasicSpawner.Instance.SelectionManagerLink.SelectedUnits.GetCenter();
                     // Get the target position of the unit taking into account the offset from the center
                     unitTargetPosition = GetUnitTargetPosition(center, input.targetPosition);
                 }
@@ -130,7 +137,8 @@ public class Unit : NetworkBehaviour
                 // Prediction of movement until the target is reached
                 if (CheckStop(unitTargetPosition))
                 {
-                    Debug.Log($"Client predicts stop for unit {gameObject.name}");
+                    Log($"{GetLogCallPrefix(GetType())} Client predicts stop for unit {gameObject.name}");
+
                     direction = Vector3.zero; // Prediction of stop
                 }
                 else
@@ -163,11 +171,10 @@ public class Unit : NetworkBehaviour
 
     private Vector3 PredictClientDirection(NetworkInputData input, Vector3 unitTragetPosition)
     {
-        //  Debug.Log($"Client PredictClientDirection (BEFORE TIMESTAMP CHECK) {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
         if (input.timestamp > lastPredictedTimestamp) // Check if this is a new input
         {
             lastPredictedTimestamp = input.timestamp; // Update the timestamp
-            Debug.Log($"Client predicting movement for unit {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
+            Log($"{GetLogCallPrefix(GetType())} Client predicting movement for unit {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
             return (unitTragetPosition - transform.position).normalized;
         }
 
@@ -193,30 +200,21 @@ public class Unit : NetworkBehaviour
             HasTarget = true;
             LastCommandTimestamp = timestamp;
 
-            Debug.Log($"Unit {gameObject.name} received new target at {timestamp}");
+            Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} received new target at {timestamp}");
         }
     }
 
     private void ClearTarget()
     {
-        Debug.Log($"Unit {gameObject.name} reached target: {TargetPosition}");
+        Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} reached target: {TargetPosition}");
         TargetPosition = Vector3.zero; // Reset target data
         HasTarget = false; // Reset flag
-    }
-
-
-    // [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]
-    public void RPC_SendSpawnedUnitInfo(NetworkId unitId, String unitName, int materialIndex)
-    {
-        Debug.Log($"RPC_SendSpawnedUnitInfo {unitName}");
-        RPC_RelaySpawnedUnitInfo(unitId, unitName, materialIndex);
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]
     public void RPC_RelaySpawnedUnitInfo(NetworkId unitId, String unitName, int materialIndex)
     {
-        Debug.Log($"RPC_RelaySpawnedUnitInfo {unitName}");
+        Log($"{GetLogCallPrefix(GetType())} RPC_RelaySpawnedUnitInfo {unitName}");
 
         if (Runner.TryFindObject(unitId, out var networkObject))
         {
@@ -229,13 +227,13 @@ public class Unit : NetworkBehaviour
                 if (material != null)
                 {
                     unit.GetComponentInChildren<MeshRenderer>().material = material;
-                    Debug.Log("Material successfully loaded and applied.");
+                    Log($"{GetLogCallPrefix(GetType())} Material successfully loaded and applied.");
                 }
             }
         }
         else
         {
-            Debug.LogError("Failed to find the unit from unitId.");
+            LogError($"{GetLogCallPrefix(GetType())} Failed to find the unit from unitId.");
         }
     }
 }
