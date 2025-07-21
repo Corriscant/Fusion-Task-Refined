@@ -116,7 +116,9 @@ public class Unit : NetworkBehaviour, IPositionable
         Vector3 direction = Vector3.zero;
 
         // 1. Input processing
-        if (GetInput(out NetworkInputData input))
+        // Migration from Fusion 2.0.3 -> 2.0.6
+        //  if (GetInput(out NetworkInputData input))
+        if (Runner.TryGetInputForPlayer(Object.InputAuthority, out NetworkInputData input))
         {
             // Client performs prediction (host with HasTarget - no, because it directly calculates below)
             if (Object.HasInputAuthority && (!Object.HasStateAuthority || !HasTarget) && IsUnitInCommand(input))

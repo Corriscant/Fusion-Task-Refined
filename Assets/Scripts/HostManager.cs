@@ -24,6 +24,17 @@ public class HostManager : NetworkBehaviour
         }
     }
 
+    public override void Spawned()
+    {
+        Log($"{GetLogCallPrefix(GetType())} HostManager {gameObject.name} spawned.");
+    }
+
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        Log($"{GetLogCallPrefix(GetType())} HostManager {gameObject.name} despawned. HasState: {hasState}");
+        base.Despawned(runner, hasState);
+    }
+
     public override void FixedUpdateNetwork()
     {
         if (!Object.HasStateAuthority)
@@ -34,6 +45,7 @@ public class HostManager : NetworkBehaviour
 
     public void HostProcessCommandsFromNetwork()
     {
+        Log($"{GetLogCallPrefix(GetType())} NetRunner.ActivePlayers[{NetRunner.ActivePlayers}]");
 
         // Get data from all active players
         foreach (var player in NetRunner.ActivePlayers)
@@ -41,6 +53,10 @@ public class HostManager : NetworkBehaviour
             if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
             {
                 HostReceiveCommand(player, input); // Add command to queue
+            }
+            else
+            {
+                LogWarning($"{GetLogCallPrefix(GetType())} Input for {player} dropped at tick {NetRunner.Tick}");
             }
         }
 

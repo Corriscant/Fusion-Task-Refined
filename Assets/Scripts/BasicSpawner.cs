@@ -94,12 +94,8 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         }
         #endregion
 
-        // running host manager
-        if (_NetRunner.IsServer)
-        {
-            _NetRunner.Spawn(_HostManagerPrefab, Vector3.zero, Quaternion.identity, null);
-        }
     }
+
 
 
     private void OnGUI()
@@ -230,6 +226,24 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         input.Set(data);
     }
 
+    public void OnSceneLoadDone(NetworkRunner runner)
+    {
+        // running host manager
+        if (_NetRunner.IsServer)
+        {
+            Log($"{GetLogCallPrefix(GetType())} Spawning HostManagerPrefab on server.");
+            var result = _NetRunner.Spawn(_HostManagerPrefab, Vector3.zero, Quaternion.identity, null);
+            if (result == null)
+            {
+                LogError($"{GetLogCallPrefix(GetType())} Failed to spawn HostManagerPrefab.");
+            }
+            else
+            {
+                Log($"{GetLogCallPrefix(GetType())} HostManagerPrefab spawned successfully.");
+            }
+        }
+    }
+
     #region INetworkRunnerCallbacks Implementation
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }
@@ -241,7 +255,6 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { }
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
-    public void OnSceneLoadDone(NetworkRunner runner) { }
     public void OnSceneLoadStart(NetworkRunner runner) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
