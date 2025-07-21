@@ -7,7 +7,6 @@ namespace Fusion.Editor {
 
   [ScriptedImporter(1, ExtensionWithoutDot, NetworkProjectConfigImporter.ImportQueueOffset + 1)]
   public class FusionWeaverTriggerImporter : ScriptedImporter {
-    public const string DependencyName = "FusionILWeaverTriggerImporter/ConfigHash";
     public const string Extension = "." + ExtensionWithoutDot;
     public const string ExtensionWithoutDot = "fusionweavertrigger";
     
@@ -15,20 +14,21 @@ namespace Fusion.Editor {
     public bool RunWeaverOnConfigChanges = true;
 
     public override void OnImportAsset(AssetImportContext ctx) {
-      ctx.DependsOnCustomDependency(DependencyName);
+      ctx.DependsOnCustomDependency(DependencyHash.Name);
       if (RunWeaverOnConfigChanges) {
         ILWeaverUtils.RunWeaver();
       }
     }
 
-    private static void RefreshDependencyHash() {
+    static readonly FusionCustomDependency DependencyHash = new("FusionILWeaverTriggerImporter/ConfigHash", () => {
       if (EditorApplication.isCompiling || EditorApplication.isUpdating) {
-        return;
+        return default;
       }
-      
+
       var configPath = NetworkProjectConfigUtilities.GetGlobalConfigPath();
+
       if (string.IsNullOrEmpty(configPath)) {
-        return;
+        return default;
       }
 
       try {
@@ -44,19 +44,19 @@ namespace Fusion.Editor {
         hash.Append(cfg.CheckRpcAttributeUsage ? 1 : 0);
         hash.Append(cfg.CheckNetworkedPropertiesBeingEmpty ? 1 : 0);
 
-        AssetDatabaseUtils.RegisterCustomDependencyWithMppmWorkaround(DependencyName, hash);
-        AssetDatabase.Refresh();
+        return hash;
       } catch {
         // ignore the error
+        return default;
       }
-    }
-
+    });
+    
     private class Postprocessor : AssetPostprocessor {
       private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths) {
         foreach (var path in importedAssets) {
           if (path.EndsWith(NetworkProjectConfigImporter.Extension)) {
-            EditorApplication.delayCall -= RefreshDependencyHash;
-            EditorApplication.delayCall += RefreshDependencyHash;
+            DependencyHash.Refresh();
+            break;
           }
         }
       }

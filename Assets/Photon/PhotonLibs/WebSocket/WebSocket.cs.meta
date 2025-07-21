@@ -6,3 +6,10 @@ MonoImporter:
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 267958
+  packageName: Photon Fusion
+  packageVersion: 2.0.6
+  assetPath: Assets/Photon/PhotonLibs/WebSocket/WebSocket.cs
+  uploadId: 755233
