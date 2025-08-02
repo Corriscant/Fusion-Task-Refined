@@ -89,40 +89,45 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
                 SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
             });
 
+            #region LogAccessTo NetRunner.Tick
+            // Provide the logger with a way to get the current server tick safely
+            Corris.Loggers.Logger.LogPrefix = "";
+            Corris.Loggers.Logger.GetCurrentServerTick = () => _NetRunner.IsRunning ? _NetRunner.Tick : -1;
             Log($"{GetLogCallPrefix(GetType())} StartGame result: Ok={result.Ok}, ShutdownReason={result.ShutdownReason}, ErrorMessage={result.ErrorMessage}");
+            
+            if (_NetRunner.IsRunning)
+            {
+                Log($"{GetLogCallPrefix(GetType())} Starting game in {mode} mode. Current NetRunner tick: {_NetRunner.Tick}");
+            }
+            else
+            {
+                Log($"{GetLogCallPrefix(GetType())} Starting game in {mode} mode. Runner is not running.");
+            }
+            #endregion
         }
+
         catch (Exception ex)
         {
             LogError($"{GetLogCallPrefix(GetType())} StartGame exception: {ex.Message}");
             return;
         }
 
-        #region LogAccessTo NetRunner.Tick
-        // Provide the logger with a way to get the current server tick safely
-        Corris.Loggers.Logger.LogPrefix = "";
-        Corris.Loggers.Logger.GetCurrentServerTick = () => _NetRunner.IsRunning ? _NetRunner.Tick : -1;
-
-        if (_NetRunner.IsRunning)
-        {
-            Log($"{GetLogCallPrefix(GetType())} Starting game in {mode} mode. Current NetRunner tick: {_NetRunner.Tick}");
-        }
-        else
-        {
-            Log($"{GetLogCallPrefix(GetType())} Starting game in {mode} mode. Runner is not running.");
-        }
-        #endregion
-
     }
 
     private async void StartGameAsync(GameMode mode)
     {
+        // Prevent multiple concurrent calls.
         if (_isConnecting) return;
 
-        _isConnecting = true;
-
-        await StartGame(mode);
-
-        _isConnecting = false;
+        try
+        {
+            _isConnecting = true;
+            await StartGame(mode);
+        }
+        finally
+        {
+            _isConnecting = false;
+        }
     }
 
     private void OnGUI()
