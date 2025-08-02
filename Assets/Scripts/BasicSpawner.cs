@@ -122,7 +122,16 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
         try
         {
             _isConnecting = true;
+            Panel_Status.Instance.StartConnecting();
             await StartGame(mode);
+            if (_NetRunner != null && _NetRunner.IsRunning)
+            {
+                Panel_Status.Instance.SetConnected();
+            }
+            else
+            {
+                Panel_Status.Instance.SetUnconnected();
+            }
         }
         finally
         {
