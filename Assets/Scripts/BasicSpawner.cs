@@ -8,6 +8,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 {
@@ -100,6 +103,8 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
     private void OnGUI()
     {
+        float buttonY = 0f;
+
         if (_NetRunner == null)
         {
             if (GUI.Button(new Rect(0, 0, 200, 40), "Host"))
@@ -110,7 +115,23 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
             {
                 StartGame(GameMode.Client);
             }
+
+            buttonY = 80f;
         }
+
+        if (GUI.Button(new Rect(0, buttonY, 200, 40), "Exit"))
+        {
+            QuitGame();
+        }
+    }
+
+    private void QuitGame()
+    {
+#if UNITY_EDITOR
+        EditorApplication.isPlaying = false; // Simulate pressing the stop button in the editor
+#else
+        Application.Quit();
+#endif
     }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
