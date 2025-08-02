@@ -2,6 +2,9 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 
+/// <summary>
+/// This class manages the status panel in the UI, displaying connection status
+/// </summary>
 public class Panel_Status : MonoBehaviour
 {
     public static Panel_Status Instance { get; private set; }
