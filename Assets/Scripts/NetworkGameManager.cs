@@ -13,10 +13,10 @@ using static Corris.Loggers.LogUtils;
 using UnityEditor;
 #endif
 
-public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
+public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
 {
     // Singleton Instance
-    public static BasicSpawner Instance { get; private set; }
+    public static NetworkGameManager Instance { get; private set; }
 
     private NetworkRunner _NetRunner;
     public NetworkRunner NetRunner => _NetRunner; // Giving access to runner from other scripts

@@ -26,8 +26,8 @@ public class InputManager : MonoBehaviour
             {
                 Vector3 targetPosition = hit.point;
 
-                // Pass data to BasicSpawner via singleton
-                BasicSpawner.Instance.HandleDestinationInput(targetPosition);
+                // Pass data to NetworkGameManager via singleton
+                NetworkGameManager.Instance.HandleDestinationInput(targetPosition);
             }
         }
     }

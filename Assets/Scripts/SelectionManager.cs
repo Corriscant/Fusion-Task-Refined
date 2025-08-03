@@ -47,7 +47,7 @@ public class SelectionManager : MonoBehaviour
         selectionBox.gameObject.SetActive(false);
 
         // Select new units
-        SelectUnits(BasicSpawner.Instance.NetRunner.LocalPlayer);
+        SelectUnits(NetworkGameManager.Instance.NetRunner.LocalPlayer);
     }
 
     private void SelectUnits(PlayerRef localPlayer)
