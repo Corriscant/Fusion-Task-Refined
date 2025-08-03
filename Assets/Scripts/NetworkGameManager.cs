@@ -18,8 +18,8 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
     // Singleton Instance
     public static NetworkGameManager Instance { get; private set; }
 
-    private NetworkRunner _NetRunner;
-    public NetworkRunner NetRunner => _NetRunner; // Giving access to runner from other scripts
+    private NetworkRunner _netRunner;
+    public NetworkRunner NetRunner => _netRunner; // Giving access to runner from other scripts
 
     [SerializeField] public int unitCountPerPlayer = 5;
     /// <summary>
@@ -27,12 +27,12 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
     /// </summary>
     [SerializeField] public int unitAllowedOffset = 3;
 
-    [SerializeField] private NetworkPrefabRef _UnitPrefab;
-    [SerializeField] private GameObject _DestinationMarkerPrefab;
+    [SerializeField] private NetworkPrefabRef _unitPrefab;
+    [SerializeField] private GameObject _destinationMarkerPrefab;
     [SerializeField] private SelectionManager _selectionManager;
-    [SerializeField] private GameObject _HostManagerPrefab;
+    [SerializeField] private GameObject _hostManagerPrefab;
     // to call RPCs from HostManager
-    public HostManager HostManagerLink => _HostManagerPrefab.GetComponent<HostManager>();
+    public HostManager HostManagerLink => _hostManagerPrefab.GetComponent<HostManager>();
     public SelectionManager SelectionManagerLink => _selectionManager;  // to access from Unit when need to get prediction on selected units center
 
     // Client request to send destination point to the host
@@ -63,16 +63,16 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private async Task StartGame(GameMode mode)
     {
-        // Test if _UnitPrefab initialized
-        if (_UnitPrefab == null)
+        // Test if _unitPrefab initialized
+        if (_unitPrefab == null)
         {
             LogError($"{GetLogCallPrefix(GetType())} Unit prefab is not set.");
             return;
         }
 
         // Create the Fusion runner and let it know that we will be providing user input
-        _NetRunner = gameObject.AddComponent<NetworkRunner>();
-        _NetRunner.ProvideInput = true;
+        _netRunner = gameObject.AddComponent<NetworkRunner>();
+        _netRunner.ProvideInput = true;
 
         // Create the NetworkSceneInfo from the current scene
         var scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex);
@@ -86,7 +86,7 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
 
         try
         {
-            var result = await _NetRunner.StartGame(new StartGameArgs()
+            var result = await _netRunner.StartGame(new StartGameArgs()
             {
                 GameMode = mode,
                 SessionName = "TestRoom",
@@ -97,12 +97,12 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
             #region LogAccessTo NetRunner.Tick
             // Provide the logger with a way to get the current server tick safely
             Corris.Loggers.Logger.LogPrefix = "";
-            Corris.Loggers.Logger.GetCurrentServerTick = () => _NetRunner.IsRunning ? _NetRunner.Tick : -1;
+            Corris.Loggers.Logger.GetCurrentServerTick = () => _netRunner.IsRunning ? _netRunner.Tick : -1;
             Log($"{GetLogCallPrefix(GetType())} StartGame result: Ok={result.Ok}, ShutdownReason={result.ShutdownReason}, ErrorMessage={result.ErrorMessage}");
             
-            if (_NetRunner.IsRunning)
+            if (_netRunner.IsRunning)
             {
-                Log($"{GetLogCallPrefix(GetType())} Starting game in {mode} mode. Current NetRunner tick: {_NetRunner.Tick}");
+                Log($"{GetLogCallPrefix(GetType())} Starting game in {mode} mode. Current NetRunner tick: {_netRunner.Tick}");
             }
             else
             {
@@ -129,7 +129,7 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
             _isConnecting = true;
             Panel_Status.Instance.StartConnecting();
             await StartGame(mode);
-            if (_NetRunner != null && _NetRunner.IsRunning)
+            if (_netRunner != null && _netRunner.IsRunning)
             {
                 Panel_Status.Instance.SetConnected();
             }
@@ -150,7 +150,7 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
 
         float buttonY = 0f;
 
-        if (_NetRunner == null)
+        if (_netRunner == null)
         {
             if (GUI.Button(new Rect(0, 0, 200, 40), "Host"))
             {
@@ -224,7 +224,7 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
             // Place units in a circle around player center
             Vector3 spawnPosition = playerSpawnCenterPosition + new Vector3(Mathf.Cos(i * Mathf.PI * 2 / unitCountPerPlayer), 0, Mathf.Sin(i * Mathf.PI * 2 / unitCountPerPlayer));
             // Spawn unit
-            var networkUnitObject = runner.Spawn(_UnitPrefab, spawnPosition, Quaternion.identity, player);
+            var networkUnitObject = runner.Spawn(_unitPrefab, spawnPosition, Quaternion.identity, player);
 
             if (networkUnitObject == null)
             {
@@ -297,10 +297,10 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnSceneLoadDone(NetworkRunner runner)
     {
         // running host manager
-        if (_NetRunner.IsServer)
+        if (_netRunner.IsServer)
         {
             Log($"{GetLogCallPrefix(GetType())} Spawning HostManagerPrefab on server.");
-            var result = _NetRunner.Spawn(_HostManagerPrefab, Vector3.zero, Quaternion.identity, null);
+            var result = _netRunner.Spawn(_hostManagerPrefab, Vector3.zero, Quaternion.identity, null);
             if (result == null)
             {
                 LogError($"{GetLogCallPrefix(GetType())} Failed to spawn HostManagerPrefab.");
@@ -336,8 +336,8 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
         if (_selectionManager.SelectedUnits.Count == 0)
             return;
 
-        // instantiate _DestinationMarkerPrefab prefab at this point, and delete it after 2 seconds
-        var marker = Instantiate(_DestinationMarkerPrefab, targetPosition, Quaternion.identity);
+        // instantiate _destinationMarkerPrefab prefab at this point, and delete it after 2 seconds
+        var marker = Instantiate(_destinationMarkerPrefab, targetPosition, Quaternion.identity);
         Destroy(marker, 2);
 
         Log($"{GetLogCallPrefix(GetType())} Received destination input: {targetPosition}");
