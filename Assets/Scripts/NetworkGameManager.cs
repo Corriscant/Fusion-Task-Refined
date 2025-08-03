@@ -30,10 +30,7 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private NetworkPrefabRef _unitPrefab;
     [SerializeField] private GameObject _destinationMarkerPrefab;
     [SerializeField] private SelectionManager _selectionManager;
-    [SerializeField] private GameObject _hostManagerPrefab;
-    // to call RPCs from HostManager
-    public HostManager HostManagerLink => _hostManagerPrefab.GetComponent<HostManager>();
-    public SelectionManager SelectionManagerLink => _selectionManager;  // to access from Unit when need to get prediction on selected units center
+    [SerializeField] private HostManager _hostManagerPrefab;
 
     // Client request to send destination point to the host
     private Vector3 _pendingTargetPosition = Vector3.zero;

@@ -1775,7 +1775,7 @@ MonoBehaviour:
     RawGuidValue: dd098a457d77e9847a3e48cd58d0dfc4
   _destinationMarkerPrefab: {fileID: 831694046346804455, guid: dd47c8c06480f1448a47302495ee6487, type: 3}
   _selectionManager: {fileID: 1096639965}
-  _hostManagerPrefab: {fileID: 772878785362740361, guid: f430bd65a3ac26d4282fe10ba2434be4, type: 3}
+  _hostManagerPrefab: {fileID: 1764223918444550803, guid: f430bd65a3ac26d4282fe10ba2434be4, type: 3}
 --- !u!4 &1168897077
 Transform:
   m_ObjectHideFlags: 0
