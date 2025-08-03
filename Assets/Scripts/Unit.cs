@@ -6,12 +6,13 @@ using UnityEngine;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 
+/// <summary>
+/// Unit class represents a controllable unit in the game.
+/// </summary>
 public class Unit : NetworkBehaviour, IPositionable
 {
     public GameObject body;
     public GameObject selectedIndicator;
-
-    public float speed = 5;
 
     public int materialIndex; // material index, for passing to other clients via RPC
     private float lastPredictedTimestamp = -1f; // Last predicted input
@@ -46,15 +47,9 @@ public class Unit : NetworkBehaviour, IPositionable
         Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} spawned.");
     }
 
-    public void SetOwner(PlayerRef newOwner)
-    {
-        Owner = newOwner;
-    }
+    public void SetOwner(PlayerRef newOwner) => Owner = newOwner;
 
-    public bool IsOwnedBy(PlayerRef player)
-    {
-        return Owner == player;
-    }
+    public bool IsOwnedBy(PlayerRef player) => Owner == player;
 
     private NetworkCharacterController _cc;
 
@@ -165,7 +160,7 @@ public class Unit : NetworkBehaviour, IPositionable
         // 3. Unified Move call
         if (direction != Vector3.zero)
         {
-            _cc.Move(direction * speed * Runner.DeltaTime);
+            _cc.Move(direction);
         }
     }
 

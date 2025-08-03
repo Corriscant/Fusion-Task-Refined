@@ -1296,6 +1296,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c697b0085f91274e846eaab93f875e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _statusText: {fileID: 0}
+  _colorUnconnected: {r: 1, g: 1, b: 1, a: 1}
+  _colorConnecting: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  _colorConnected: {r: 0, g: 1, b: 0, a: 1}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
