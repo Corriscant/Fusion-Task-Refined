@@ -22,6 +22,9 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     public NetworkRunner NetRunner => _NetRunner; // Giving access to runner from other scripts
 
     [SerializeField] public int unitCountPerPlayer = 5;
+    /// <summary>
+    /// The maximum allowed offset for a unit from the center of the group.
+    /// </summary>
     [SerializeField] public int unitAllowedOffset = 3;
 
     [SerializeField] private NetworkPrefabRef _UnitPrefab;
@@ -34,8 +37,10 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
     // Client request to send destination point to the host
     private Vector3 _pendingTargetPosition = Vector3.zero;
-    // Flag indicating the presence of a destination point
     private bool _hasPendingTarget = false;
+    /// <summary>
+    /// Flag indicating the presence of a destination point
+    /// </summary>
     public bool HasPendingTarget => _hasPendingTarget;
 
     private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();

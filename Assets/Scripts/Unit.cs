@@ -14,8 +14,10 @@ public class Unit : NetworkBehaviour, IPositionable
     public GameObject body;
     public GameObject selectedIndicator;
 
-    public int materialIndex; // material index, for passing to other clients via RPC
-    private float lastPredictedTimestamp = -1f; // Last predicted input
+    /// <summary>
+    /// Material index, for passing to other clients via RPC
+    /// </summary>
+    public int materialIndex; 
 
     /// <summary>
     /// Implementation of IPositionable interface to provide position of the unit. (Used in ListExtensions.GetCenter)
@@ -26,8 +28,10 @@ public class Unit : NetworkBehaviour, IPositionable
     [Networked] private bool HasTarget { get; set; } = false;
     [Networked] public float LastCommandTimestamp { get; set; } // Last processed command
 
-
     private bool _selected;
+    /// <summary>
+    /// Selected property indicates whether the unit is currently selected.
+    /// </summary>
     public bool Selected
     {
         get => _selected;
@@ -87,8 +91,9 @@ public class Unit : NetworkBehaviour, IPositionable
         return units;
     }
 
-
-    // function finds unitTargetPosition, taking into account the offset of itself relative to the center of the group of units
+    /// <summary>
+    /// function finds unitTargetPosition, taking into account the offset of itself relative to the center of the group of units
+    /// </summary>
     public Vector3 GetUnitTargetPosition(Vector3 center, Vector3 bearingTargetPosition)
     {
         Vector3 offset = center - transform.position;
@@ -99,84 +104,35 @@ public class Unit : NetworkBehaviour, IPositionable
         return unitTargetPosition;
     }
 
-    private bool IsUnitInCommand(NetworkInputData input)
-    {
-        var unitId = Object.Id.Raw;
-        return Enumerable.Range(0, input.unitCount).Any(i => input.unitIds[i] == unitId);
-    }
-
-
     public override void FixedUpdateNetwork()
     {
-        Vector3 direction = Vector3.zero;
-
-        // 1. Input processing
-        // Migration from Fusion 2.0.3 -> 2.0.6
-        //  if (GetInput(out NetworkInputData input))
-        if (Runner.TryGetInputForPlayer(Object.InputAuthority, out NetworkInputData input))
-        {
-            // Client performs prediction (host with HasTarget - no, because it directly calculates below)
-            if (Object.HasInputAuthority && (!Object.HasStateAuthority || !HasTarget) && IsUnitInCommand(input))
-            {
-                Vector3 unitTargetPosition = TargetPosition;
-
-                // If the target is not yet set (e.g., at the start of movement), but there is a PendingTarget
-                if (!HasTarget && BasicSpawner.Instance.HasPendingTarget)
-                {
-                    // Find the center of the selected units
-                    var center = BasicSpawner.Instance.SelectionManagerLink.SelectedUnits.GetCenter();
-                    // Get the target position of the unit taking into account the offset from the center
-                    unitTargetPosition = GetUnitTargetPosition(center, input.targetPosition);
-                }
-
-                // Prediction of movement until the target is reached
-                if (CheckStop(unitTargetPosition))
-                {
-                    Log($"{GetLogCallPrefix(GetType())} Client predicts stop for unit {gameObject.name}");
-
-                    direction = Vector3.zero; // Prediction of stop
-                }
-                else
-                {
-                    direction = PredictClientDirection(input, unitTargetPosition);
-                }
-            }
-        }
-
-        // 2. Movement for the host
+        // Movement for the host
         if (Object.HasStateAuthority && HasTarget)
         {
-            if (CheckStop(TargetPosition))
+            if (HasReachedTarget(TargetPosition))
             {
-                ClearTarget();
-                direction = Vector3.zero; // Stop for the host
+                Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} reached target: {TargetPosition}");
+
+                StopUnit();
             }
             else
             {
-                direction = (TargetPosition - transform.position).normalized;
+                Vector3 direction = (TargetPosition - transform.position).normalized;
+                _cc.Move(direction);
             }
         }
-
-        // 3. Unified Move call
-        if (direction != Vector3.zero)
-        {
-            _cc.Move(direction);
-        }
     }
 
-    private Vector3 PredictClientDirection(NetworkInputData input, Vector3 unitTragetPosition)
+    private void StopUnit()
     {
-        if (input.timestamp > lastPredictedTimestamp) // Check if this is a new input
-        {
-            lastPredictedTimestamp = input.timestamp; // Update the timestamp
-            Log($"{GetLogCallPrefix(GetType())} Client predicting movement for unit {gameObject.name}: input.targetPosition = {input.targetPosition}, unitTragetPosition = {unitTragetPosition} at {input.timestamp}");
-            return (unitTragetPosition - transform.position).normalized;
-        }
-
-        return Vector3.zero; // No movement if the input is not new
+        ClearTarget();
+        _cc.Move(Vector3.zero);
     }
 
-    private bool CheckStop(Vector3 target)
+    /// <summary>
+    /// function checks if the unit has reached the target position.
+    /// </summary>
+    private bool HasReachedTarget(Vector3 target)
     {
         // Check if the target is reached (ignore height)
         float distance = Vector2.Distance(
@@ -201,9 +157,8 @@ public class Unit : NetworkBehaviour, IPositionable
 
     private void ClearTarget()
     {
-        Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} reached target: {TargetPosition}");
         TargetPosition = Vector3.zero; // Reset target data
-        HasTarget = false; // Reset flag
+        HasTarget = false; 
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]
