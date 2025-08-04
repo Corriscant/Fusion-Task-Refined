@@ -53,6 +53,7 @@ public class SelectionManager : MonoBehaviour
 
     public void UpdateSelection(Vector2 currentPosition)
     {
+        if (!IsSelecting) return;
         // Convert current position to local coordinates of the Canvas
         RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, currentPosition, mainCamera, out Vector2 localPoint);
 
@@ -64,15 +65,28 @@ public class SelectionManager : MonoBehaviour
 
     public void EndSelection()
     {
+        if (!IsSelecting) return;
         selectionBox.gameObject.SetActive(false);
 
-        // Select new units
-        SelectUnits(NetworkGameManager.Instance.NetRunner.LocalPlayer);
+        SelectUnits();
         IsSelecting = false;
     }
 
-    private void SelectUnits(PlayerRef localPlayer)
+    private void SelectUnits()
     {
+        if (NetworkGameManager.Instance.NetRunner == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} NetRunner is null. Cannot select units.");
+            return;
+        }
+        if (selectionBox == null || mainCamera == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Selection box or main camera is not set.");
+            return;
+        }
+
+        PlayerRef localPlayer = NetworkGameManager.Instance.NetRunner.LocalPlayer;
+
         // Clear previous selection
         foreach (var unit in _selectedUnits)
         {
