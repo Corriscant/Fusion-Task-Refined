@@ -22,6 +22,20 @@ public class SelectionManager : MonoBehaviour
         _canvasRect = selectionBox.GetComponentInParent<Canvas>().GetComponent<RectTransform>();
     }
 
+    public void OnEnable()
+    {
+        InputManager.OnPrimaryMouseDown += StartSelection;
+        InputManager.OnPrimaryMouseDrag += UpdateSelection;
+        InputManager.OnPrimaryMouseUp += EndSelection;
+    }
+
+    public void OnDisable()
+    {
+        InputManager.OnPrimaryMouseDown -= StartSelection;
+        InputManager.OnPrimaryMouseDrag -= UpdateSelection;
+        InputManager.OnPrimaryMouseUp -= EndSelection;
+    }
+
     public void StartSelection(Vector2 startPosition)
     {
         // Convert screen coordinates to local coordinates of the selection box

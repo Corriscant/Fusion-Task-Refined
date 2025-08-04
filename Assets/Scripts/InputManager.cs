@@ -1,9 +1,13 @@
+using System;
 using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
     [SerializeField] private Camera mainCamera; // Camera for handling clicks
-    [SerializeField] private SelectionManager selectionManager; // Manager for unit selection
+
+    public static event Action<Vector2> OnPrimaryMouseDown; 
+    public static event Action<Vector2> OnPrimaryMouseDrag; 
+    public static event Action OnPrimaryMouseUp; 
 
     public static event System.Action<Vector3> OnMoveCommand;
 
@@ -39,19 +43,22 @@ public class InputManager : MonoBehaviour
         // Start selection
         if (Input.GetMouseButtonDown(0))
         {
-            selectionManager.StartSelection(Input.mousePosition);
+            // Send "LMB pressed" event, passing mouse position
+            OnPrimaryMouseDown?.Invoke(Input.mousePosition);
         }
 
         // Update selection box
         if (Input.GetMouseButton(0))
         {
-            selectionManager.UpdateSelection(Input.mousePosition);
+            // Send "LMB held and moving" event
+            OnPrimaryMouseDrag?.Invoke(Input.mousePosition);
         }
 
         // End selection
         if (Input.GetMouseButtonUp(0))
         {
-            selectionManager.EndSelection();
+            // Send "LMB released" event
+            OnPrimaryMouseUp?.Invoke();
         }
     }
 }
