@@ -123,18 +123,10 @@ public class HostManager : NetworkBehaviour
         _commandQueue.Enqueue(command); // Add command to queue
     }
 
+    // Refactored to use UnitRegistry for performance.
     private Unit FindUnitById(uint unitId)
     {
-        // Assume all units have NetworkObject
-        foreach (var unit in FindObjectsByType<Unit>(FindObjectsSortMode.None))
-        {
-            var networkObject = unit.GetComponent<NetworkObject>();
-            if (networkObject != null && networkObject.Id.Raw == unitId)
-            {
-                return unit;
-            }
-        }
-        return null;
+        return UnitRegistry.Units.TryGetValue(unitId, out var unit) ? unit : null;
     }
 
 }

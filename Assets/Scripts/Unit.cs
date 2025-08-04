@@ -47,8 +47,17 @@ public class Unit : NetworkBehaviour, IPositionable
 
     public override void Spawned()
     {
-        // Here you can leave logic for other initial actions,
         Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} spawned.");
+        // Register the unit in the registry for fast lookups.
+        UnitRegistry.Units[Object.Id.Raw] = this;
+    }
+    
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} despawned. HasState: {hasState}");
+        // Unregister the unit from the registry.
+        UnitRegistry.Units.Remove(Object.Id.Raw);
+        base.Despawned(runner, hasState);
     }
 
     public void SetOwner(PlayerRef newOwner) => Owner = newOwner;
@@ -69,23 +78,19 @@ public class Unit : NetworkBehaviour, IPositionable
         _cc = GetComponent<NetworkCharacterController>();
     }
 
-    // function forming a list of units affected in input
+    /// <summary>
+    /// function forming a list of units affected in input
+    /// </summary>
+    // Refactored to use UnitRegistry for performance.
     public static List<Unit> GetUnitsInInput(NetworkInputData input)
     {
         List<Unit> units = new();
         for (int i = 0; i < input.unitCount; i++)
         {
-            // iterate through all objects in the scene with NetworkObject components and compare their Ids with Ids from input
-            foreach (var obj in FindObjectsByType<NetworkObject>(FindObjectsSortMode.None))
+            // The key is now uint, so we can look it up directly.
+            if (UnitRegistry.Units.TryGetValue(input.unitIds[i], out var unit))
             {
-                if (obj.Id.Raw == input.unitIds[i])
-                {
-                    var unit = obj.GetComponent<Unit>();
-                    if (unit != null)
-                    {
-                        units.Add(unit);
-                    }
-                }
+                units.Add(unit);
             }
         }
         return units;
