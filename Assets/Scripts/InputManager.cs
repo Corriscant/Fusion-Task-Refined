@@ -1,7 +1,6 @@
 // Generic input handler, decoupled from game logic.
-using UnityEngine;
 using System;
-using UnityEngine.EventSystems; // Required for checking UI state
+using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
@@ -65,4 +64,5 @@ public class InputManager : MonoBehaviour
             }
         }
     }
+
 }

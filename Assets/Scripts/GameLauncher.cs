@@ -34,7 +34,7 @@ public class GameLauncher : MonoBehaviour
         if (networkManager.NetRunner == null)
         {
             // Disable buttons if a connection is currently in progress or a selection is active.
-            GUI.enabled = !networkManager.IsConnecting && !selectionActive;
+            GUI.enabled = !networkManager.IsConnecting;// && !selectionActive;
 
             if (GUI.Button(new Rect(0, 0, 200, 40), "Host"))
             {
@@ -50,7 +50,7 @@ public class GameLauncher : MonoBehaviour
         }
 
         // Always show the Exit button but disable it during selection.
-        GUI.enabled = !selectionActive;
+      //  GUI.enabled = !selectionActive;
         if (GUI.Button(new Rect(0, exitButtonY, 200, 40), "Exit"))
         {
             QuitGame();
