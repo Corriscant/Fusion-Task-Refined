@@ -44,6 +44,7 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
 
     // Prevent multiple connection attempts
     private bool _isConnecting = false;
+    public bool IsConnecting => _isConnecting;
 
     private void Awake()
     {
@@ -56,6 +57,8 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
 
         Instance = this;
         DontDestroyOnLoad(gameObject); // Preserve between scenes
+
+        Log($"{GetLogCallPrefix(GetType())} NetworkGameManager Instance!");
     }
 
     private async Task StartGame(GameMode mode)
@@ -141,41 +144,10 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    private void OnGUI()
+    public void StartGamePublic(GameMode mode)
     {
-        GUI.enabled = !_isConnecting;
-
-        float buttonY = 0f;
-
-        if (_netRunner == null)
-        {
-            if (GUI.Button(new Rect(0, 0, 200, 40), "Host"))
-            {
-                StartGameAsync(GameMode.Host);
-            }
-            if (GUI.Button(new Rect(0, 40, 200, 40), "Join"))
-            {
-                StartGameAsync(GameMode.Client);
-            }
-
-            buttonY = 80f;
-        }
-
-        GUI.enabled = true;
-
-        if (GUI.Button(new Rect(0, buttonY, 200, 40), "Exit"))
-        {
-            QuitGame();
-        }
-    }
-
-    private void QuitGame()
-    {
-#if UNITY_EDITOR
-        EditorApplication.isPlaying = false; // Simulate pressing the stop button in the editor
-#else
-        Application.Quit();
-#endif
+        // Public wrapper to be called from UI scripts.
+        StartGameAsync(mode);
     }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
