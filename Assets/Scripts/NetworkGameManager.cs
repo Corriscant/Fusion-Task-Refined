@@ -63,13 +63,13 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
         Log($"{GetLogCallPrefix(GetType())} NetworkGameManager Instance!");
 
         // Subscribe to InputManager events
-        InputManager.OnMoveCommand += HandleMoveCommand;
+        InputManager.OnSecondaryMouseClick_World += HandleMoveCommand;
     }
 
     private void OnDestroy()
     {
         // Unsubscribe from InputManager events
-        InputManager.OnMoveCommand -= HandleMoveCommand;
+        InputManager.OnSecondaryMouseClick_World -= HandleMoveCommand;
 
         // Cleanup singleton instance
         if (Instance == this)

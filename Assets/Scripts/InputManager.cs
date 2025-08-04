@@ -1,64 +1,74 @@
-using System;
+// Generic input handler, decoupled from game logic.
 using UnityEngine;
+using System;
+using UnityEngine.EventSystems; // Required for checking UI state
 
 public class InputManager : MonoBehaviour
 {
-    [SerializeField] private Camera mainCamera; // Camera for handling clicks
+    // --- Primary (usually Left) Mouse Button Events ---
+    public static event Action<Vector2> OnPrimaryMouseDown;
+    public static event Action<Vector2> OnPrimaryMouseDrag;
+    public static event Action OnPrimaryMouseUp;
 
-    public static event Action<Vector2> OnPrimaryMouseDown; 
-    public static event Action<Vector2> OnPrimaryMouseDrag; 
-    public static event Action OnPrimaryMouseUp; 
+    // --- Secondary (usually Right) Mouse Button Events ---
+    // This event was created for the move command
+    public static event Action<Vector3> OnSecondaryMouseClick_World;
 
-    public static event System.Action<Vector3> OnMoveCommand;
+    // Camera used for raycasting
+    [SerializeField] private Camera mainCamera;
 
-    private void Awake()
+    /// <summary>
+    /// The main loop that polls for input each frame.
+    /// </summary>
+    private void Update()
     {
-        if (mainCamera != null && mainCamera.GetComponent<CameraMovement>() == null)
+        // Check if the pointer is over a UI element. If so, ignore game input to prevent clicks from going through.
+        if (EventSystem.current.IsPointerOverGameObject())
         {
-            mainCamera.gameObject.AddComponent<CameraMovement>();
+            return;
+        }
+
+        // Process input for each button type
+        ProcessPrimaryMouseInput();
+        ProcessSecondaryMouseInput();
+    }
+
+    /// <summary>
+    /// Processes all states of the primary mouse button.
+    /// </summary>
+    private void ProcessPrimaryMouseInput()
+    {
+        // Must be separate 'if' statements because GetMouseButtonDown(0) and GetMouseButton(0)
+        // are both true on the first frame of a click.
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            OnPrimaryMouseDown?.Invoke(Input.mousePosition);
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            OnPrimaryMouseUp?.Invoke();
+        }
+
+        if (Input.GetMouseButton(0))
+        {
+            OnPrimaryMouseDrag?.Invoke(Input.mousePosition);
         }
     }
 
-    private void Update()
+    /// <summary>
+    /// Handles clicks from the secondary mouse button.
+    /// </summary>
+    private void ProcessSecondaryMouseInput()
     {
-        // Handling selection box
-        HandleSelectionInput();
-
-        // Check right mouse button click
         if (Input.GetMouseButtonDown(1))
         {
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                Vector3 targetPosition = hit.point;
-
-                // Pass data to NetworkGameManager via singleton
-                OnMoveCommand?.Invoke(targetPosition);
+                OnSecondaryMouseClick_World?.Invoke(hit.point);
             }
-        }
-    }
-
-    private void HandleSelectionInput()
-    {
-        // Start selection
-        if (Input.GetMouseButtonDown(0))
-        {
-            // Send "LMB pressed" event, passing mouse position
-            OnPrimaryMouseDown?.Invoke(Input.mousePosition);
-        }
-
-        // Update selection box
-        if (Input.GetMouseButton(0))
-        {
-            // Send "LMB held and moving" event
-            OnPrimaryMouseDrag?.Invoke(Input.mousePosition);
-        }
-
-        // End selection
-        if (Input.GetMouseButtonUp(0))
-        {
-            // Send "LMB released" event
-            OnPrimaryMouseUp?.Invoke();
         }
     }
 }

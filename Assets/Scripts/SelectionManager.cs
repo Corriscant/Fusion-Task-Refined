@@ -24,6 +24,7 @@ public class SelectionManager : MonoBehaviour
 
     public void OnEnable()
     {
+        // Subscribe to input events
         InputManager.OnPrimaryMouseDown += StartSelection;
         InputManager.OnPrimaryMouseDrag += UpdateSelection;
         InputManager.OnPrimaryMouseUp += EndSelection;
@@ -31,6 +32,7 @@ public class SelectionManager : MonoBehaviour
 
     public void OnDisable()
     {
+        // Unsubscribe from input events
         InputManager.OnPrimaryMouseDown -= StartSelection;
         InputManager.OnPrimaryMouseDrag -= UpdateSelection;
         InputManager.OnPrimaryMouseUp -= EndSelection;
