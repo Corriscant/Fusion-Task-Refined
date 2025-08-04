@@ -17,6 +17,9 @@ public class SelectionManager : MonoBehaviour
     [SerializeField] private List<Unit> _selectedUnits = new();
     public List<Unit> SelectedUnits => _selectedUnits;
 
+    // Indicates whether a frame selection is currently active
+    public static bool IsSelecting { get; private set; }
+
     public void Start()
     {
         _canvasRect = selectionBox.GetComponentInParent<Canvas>().GetComponent<RectTransform>();
@@ -45,6 +48,7 @@ public class SelectionManager : MonoBehaviour
         _startPosition = localPoint;
 
         selectionBox.gameObject.SetActive(true);
+        IsSelecting = true;
     }
 
     public void UpdateSelection(Vector2 currentPosition)
@@ -64,6 +68,7 @@ public class SelectionManager : MonoBehaviour
 
         // Select new units
         SelectUnits(NetworkGameManager.Instance.NetRunner.LocalPlayer);
+        IsSelecting = false;
     }
 
     private void SelectUnits(PlayerRef localPlayer)
