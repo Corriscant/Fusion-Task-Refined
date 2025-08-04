@@ -22,12 +22,6 @@ public class InputManager : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        // Check if the pointer is over a UI element. If so, ignore game input to prevent clicks from going through.
-        if (EventSystem.current.IsPointerOverGameObject())
-        {
-            return;
-        }
-
         // Process input for each button type
         ProcessPrimaryMouseInput();
         ProcessSecondaryMouseInput();
@@ -46,14 +40,14 @@ public class InputManager : MonoBehaviour
             OnPrimaryMouseDown?.Invoke(Input.mousePosition);
         }
 
-        if (Input.GetMouseButtonUp(0))
-        {
-            OnPrimaryMouseUp?.Invoke();
-        }
-
         if (Input.GetMouseButton(0))
         {
             OnPrimaryMouseDrag?.Invoke(Input.mousePosition);
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            OnPrimaryMouseUp?.Invoke();
         }
     }
 
