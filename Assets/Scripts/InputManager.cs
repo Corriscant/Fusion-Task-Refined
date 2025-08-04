@@ -5,6 +5,8 @@ public class InputManager : MonoBehaviour
     [SerializeField] private Camera mainCamera; // Camera for handling clicks
     [SerializeField] private SelectionManager selectionManager; // Manager for unit selection
 
+    public static event System.Action<Vector3> OnMoveCommand;
+
     private void Awake()
     {
         if (mainCamera != null && mainCamera.GetComponent<CameraMovement>() == null)
@@ -27,7 +29,7 @@ public class InputManager : MonoBehaviour
                 Vector3 targetPosition = hit.point;
 
                 // Pass data to NetworkGameManager via singleton
-                NetworkGameManager.Instance.HandleDestinationInput(targetPosition);
+                OnMoveCommand?.Invoke(targetPosition);
             }
         }
     }

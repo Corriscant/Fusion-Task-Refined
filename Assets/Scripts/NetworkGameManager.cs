@@ -46,6 +46,8 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
     private bool _isConnecting = false;
     public bool IsConnecting => _isConnecting;
 
+
+
     private void Awake()
     {
         // Singleton setup
@@ -59,7 +61,24 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
         DontDestroyOnLoad(gameObject); // Preserve between scenes
 
         Log($"{GetLogCallPrefix(GetType())} NetworkGameManager Instance!");
+
+        // Subscribe to InputManager events
+        InputManager.OnMoveCommand += HandleMoveCommand;
     }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe from InputManager events
+        InputManager.OnMoveCommand -= HandleMoveCommand;
+
+        // Cleanup singleton instance
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
+
 
     private async Task StartGame(GameMode mode)
     {
@@ -299,7 +318,8 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { Log($"{GetLogCallPrefix(GetType())} OnReliableDataProgress triggered"); }
     #endregion
 
-    public void HandleDestinationInput(Vector3 targetPosition)
+    // Handles input via an event, decoupling from InputManager.
+    public void HandleMoveCommand(Vector3 targetPosition)
     {
         // if there is at least one selected object
         if (_selectionManager.SelectedUnits.Count == 0)
@@ -314,7 +334,6 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
         _pendingTargetPosition = targetPosition; // Save destination point
         _hasPendingTarget = true; // Set flag
     }
-
 }
 
 public class Command

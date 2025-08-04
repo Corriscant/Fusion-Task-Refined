@@ -11,8 +11,7 @@ using UnityEditor;
 
 /// <summary>
 /// This class is responsible for the main menu UI, allowing the user to
-/// host a game, join a game, or exit the application. It decouples UI logic
-/// from the core network connection management. It communicates with the 
+/// host a game, join a game, or exit the application. It communicates with the 
 /// NetworkGameManager (soon to be ConnectionManager) via its singleton instance.
 /// </summary>
 public class GameLauncher : MonoBehaviour
