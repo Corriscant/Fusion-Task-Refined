@@ -21,14 +21,13 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
     private NetworkRunner _netRunner;
     public NetworkRunner NetRunner => _netRunner; // Giving access to runner from other scripts
 
-    [SerializeField] public int unitCountPerPlayer = 5;
     /// <summary>
     /// The maximum allowed offset for a unit from the center of the group.
     /// </summary>
     [SerializeField] public int unitAllowedOffset = 3;
 
-    [SerializeField] private NetworkPrefabRef _unitPrefab;
     [SerializeField] private GameObject _destinationMarkerPrefab;
+    [SerializeField] private PlayerManager playerManager;
     [SerializeField] private SelectionManager _selectionManager;
     [SerializeField] private HostManager _hostManagerPrefab;
 
@@ -40,13 +39,9 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
     /// </summary>
     public bool HasPendingTarget => _hasPendingTarget;
 
-    private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();
-
     // Prevent multiple connection attempts
     private bool _isConnecting = false;
     public bool IsConnecting => _isConnecting;
-
-
 
     private void Awake()
     {
@@ -78,17 +73,8 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-
-
     private async Task StartGame(GameMode mode)
     {
-        // Test if _unitPrefab initialized
-        if (_unitPrefab == null)
-        {
-            LogError($"{GetLogCallPrefix(GetType())} Unit prefab is not set.");
-            return;
-        }
-
         // Create the Fusion runner and let it know that we will be providing user input
         _netRunner = gameObject.AddComponent<NetworkRunner>();
         _netRunner.ProvideInput = true;
@@ -173,84 +159,19 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         Log($"{GetLogCallPrefix(GetType())} Player joined: {player}");
 
-        if (runner.IsServer)
+        if (playerManager != null)
         {
-            SpawnPlayerUnits(runner, player);
-            // Synchronize unit data between players (names, materials). Delayed to allow spawning for everyone
-            StartCoroutine(SyncUnitsData());
+            playerManager.HandlePlayerJoined(runner, player);
         }
-    }
-
-    private IEnumerator SyncUnitsData()
-    {
-        // Wait a bit to allow everything to spawn
-        yield return new WaitForSeconds(0.5f);
-
-        // Iterate through all units in the scene and send their data via RPC to all clients
-        foreach (var unit in FindObjectsByType<Unit>(FindObjectsSortMode.None))
-        {
-            // Send unit data
-            unit.RPC_RelaySpawnedUnitInfo(unit.Object.Id, unit.name, unit.materialIndex);
-        }
-    }
-
-    // Number of spawned players
-    private int spawnedPlayersCount;
-
-    private void SpawnPlayerUnits(NetworkRunner runner, PlayerRef player)
-    {
-        // Create a unique center position for each player
-        var playerSpawnCenterPosition = new Vector3((player.RawEncoded % runner.Config.Simulation.PlayerCount) * 3, 1, 0);
-
-        var unitList = new List<NetworkObject>();
-
-        spawnedPlayersCount += 1;
-
-        // Spawn Player units on the field
-        for (int i = 0; i < unitCountPerPlayer; i++)
-        {
-            // Place units in a circle around player center
-            Vector3 spawnPosition = playerSpawnCenterPosition + new Vector3(Mathf.Cos(i * Mathf.PI * 2 / unitCountPerPlayer), 0, Mathf.Sin(i * Mathf.PI * 2 / unitCountPerPlayer));
-            // Spawn unit
-            var networkUnitObject = runner.Spawn(_unitPrefab, spawnPosition, Quaternion.identity, player);
-
-            if (networkUnitObject == null)
-            {
-                LogError($"{GetLogCallPrefix(GetType())} Failed to spawn network unit object.");
-                return;
-            }
-
-            var unit = networkUnitObject.GetComponent<Unit>();
-            unit.SetOwner(player); // Set unit owner directly (in case it may be given to another player)
-            // Set unit name with the current player index and unit index
-            unit.name = $"Unit_{player.RawEncoded}_{i}";
-            // Record material index so other clients also know
-            unit.materialIndex = spawnedPlayersCount;
-
-            unitList.Add(networkUnitObject);
-
-        }
-        // Keep track of the player avatars for easy access
-        _spawnedPlayers.Add(player, unitList);
-        // Debug.Log($"Spawned {unitList.Count} units for player: {player}  material name: {materialName}");
-        Log($"{GetLogCallPrefix(GetType())} Spawned {unitList.Count} units for player: {player}");
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        if (runner.IsServer)  // Not in Phoron tutorial somehow, but looks like it is needed
-        {
-            if (_spawnedPlayers.TryGetValue(player, out var networkObjects))
-            {
-                // Despawn all player units
-                foreach (var networkObject in networkObjects)
-                {
-                    runner.Despawn(networkObject);
-                }
+        Log($"{GetLogCallPrefix(GetType())} Player left: {player}");
 
-                // Delete the player from the list
-                _spawnedPlayers.Remove(player);
-            }
+        if (playerManager != null)
+        {
+            playerManager.HandlePlayerLeft(runner, player);
         }
     }
 
