@@ -1,5 +1,6 @@
 // Handles UI for starting or quitting the game.
 using UnityEngine;
+using UnityEngine.UI;
 using Fusion;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
@@ -11,51 +12,94 @@ using UnityEditor;
 
 /// <summary>
 /// This class is responsible for the main menu UI, allowing the user to
-/// host a game, join a game, or exit the application. It communicates with the 
+/// host a game, join a game, or exit the application. It communicates with the
 /// NetworkGameManager (soon to be ConnectionManager) via its singleton instance.
 /// </summary>
 public class GameLauncher : MonoBehaviour
 {
-    private void OnGUI()
+    private Button _hostButton;
+    private Button _joinButton;
+    private Button _exitButton;
+    private NetworkGameManager _networkManager;
+
+    private void Start()
     {
-        // Get the singleton instance of the main network manager.
-        var networkManager = NetworkGameManager.Instance;
-        if (networkManager == null)
+        _networkManager = NetworkGameManager.Instance;
+        if (_networkManager == null)
         {
-            // If the manager doesn't exist yet, do nothing.
             LogError($"{GetLogCallPrefix(GetType())} NetworkGameManager NIL!");
+            enabled = false;
             return;
         }
 
-        float exitButtonY = 0f;
+        CreateMenu();
+    }
+
+    private void CreateMenu()
+    {
+        var canvasGo = new GameObject("CanvasMenu");
+        var canvas = canvasGo.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvasGo.AddComponent<CanvasScaler>();
+        canvasGo.AddComponent<GraphicRaycaster>();
+
+        _hostButton = CreateButton(canvas.transform, new Vector2(0f, 0f), "Host");
+        _joinButton = CreateButton(canvas.transform, new Vector2(0f, -40f), "Join");
+        _exitButton = CreateButton(canvas.transform, new Vector2(0f, -80f), "Exit");
+
+        _hostButton.onClick.AddListener(() => _networkManager.StartGamePublic(GameMode.Host));
+        _joinButton.onClick.AddListener(() => _networkManager.StartGamePublic(GameMode.Client));
+        _exitButton.onClick.AddListener(QuitGame);
+    }
+
+    private Button CreateButton(Transform parent, Vector2 anchoredPos, string text)
+    {
+        var go = new GameObject(text + "Button");
+        go.transform.SetParent(parent);
+        var rect = go.AddComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(200f, 40f);
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = anchoredPos;
+
+        var image = go.AddComponent<Image>();
+        image.color = Color.white;
+
+        var button = go.AddComponent<Button>();
+
+        var textGo = new GameObject("Text");
+        textGo.transform.SetParent(go.transform);
+        var textRect = textGo.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+
+        var label = textGo.AddComponent<Text>();
+        label.text = text;
+        label.alignment = TextAnchor.MiddleCenter;
+        label.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        label.color = Color.black;
+
+        return button;
+    }
+
+    private void Update()
+    {
+        if (_networkManager == null)
+            return;
+
         bool selectionActive = SelectionManager.IsSelecting;
+        bool runnerMissing = _networkManager.NetRunner == null;
 
-        // Only draw the Host and Join buttons if the network runner has not been created yet.
-        if (networkManager.NetRunner == null)
-        {
-            // Disable buttons if a connection is currently in progress or a selection is active.
-            GUI.enabled = !networkManager.IsConnecting; // && !selectionActive;
+        _hostButton.gameObject.SetActive(runnerMissing);
+        _joinButton.gameObject.SetActive(runnerMissing);
 
-            if (GUI.Button(new Rect(0, 0, 200, 40), "Host"))
-            {
-                networkManager.StartGamePublic(GameMode.Host);
-            }
-            if (GUI.Button(new Rect(0, 40, 200, 40), "Join"))
-            {
-                networkManager.StartGamePublic(GameMode.Client);
-            }
-
-            // Adjust the Y position for the Exit button so it appears below.
-            exitButtonY = 80f;
-        }
-
-        // Always show the Exit button but disable it during selection.
-        GUI.enabled = !selectionActive;
-        if (GUI.Button(new Rect(0, exitButtonY, 200, 40), "Exit"))
-        {
-            QuitGame();
-        }
-        GUI.enabled = true;
+        bool interactable = !_networkManager.IsConnecting && !selectionActive;
+        _hostButton.interactable = interactable;
+        _joinButton.interactable = interactable;
+        _exitButton.interactable = !selectionActive;
     }
 
     private void QuitGame()
