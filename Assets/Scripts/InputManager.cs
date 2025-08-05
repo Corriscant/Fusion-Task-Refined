@@ -19,7 +19,7 @@ public class InputManager : MonoBehaviour
     /// <summary>
     /// The main loop that polls for input each frame.
     /// </summary>
-    private void Update()
+    private void LateUpdate()
     {
         // Process input for each button type
         ProcessPrimaryMouseInput();

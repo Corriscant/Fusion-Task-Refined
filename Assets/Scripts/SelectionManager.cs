@@ -1,6 +1,9 @@
-using UnityEngine;
-using System.Collections.Generic;
 using Fusion;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UIElements;
+using UnityEngine.InputSystem.UI;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 
@@ -43,6 +46,12 @@ public class SelectionManager : MonoBehaviour
 
     public void StartSelection(Vector2 startPosition)
     {
+        if ((EventSystem.current != null) && EventSystem.current.IsPointerOverGameObject(PointerId.mousePointerId))
+        {
+            Log($"{GetLogCallPrefix(GetType())} Pointer is over UI element. Ignoring selection.");
+            return; // Ignore if pointer is over UI elements
+        }
+
         // Convert screen coordinates to local coordinates of the selection box
         RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, startPosition, mainCamera, out Vector2 localPoint);
         _startPosition = localPoint;
