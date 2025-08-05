@@ -7,7 +7,7 @@ using static Corris.Loggers.LogUtils;
 
 public class HostManager : NetworkBehaviour
 {
-    NetworkRunner NetRunner => NetworkGameManager.Instance.NetRunner;
+    NetworkRunner NetRunner => ConnectionManager.Instance.NetRunner;
     // List of commands came to Host
     private Queue<Command> _commandQueue = new Queue<Command>();
     // for testing Host freezes

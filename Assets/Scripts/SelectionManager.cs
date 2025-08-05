@@ -83,7 +83,7 @@ public class SelectionManager : MonoBehaviour
 
     private void SelectUnits()
     {
-        if (NetworkGameManager.Instance.NetRunner == null)
+        if (ConnectionManager.Instance.NetRunner == null)
         {
             LogError($"{GetLogCallPrefix(GetType())} NetRunner is null. Cannot select units.");
             return;
@@ -94,7 +94,7 @@ public class SelectionManager : MonoBehaviour
             return;
         }
 
-        PlayerRef localPlayer = NetworkGameManager.Instance.NetRunner.LocalPlayer;
+        PlayerRef localPlayer = ConnectionManager.Instance.NetRunner.LocalPlayer;
 
         // Clear previous selection
         foreach (var unit in _selectedUnits)

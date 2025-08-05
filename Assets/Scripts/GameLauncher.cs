@@ -13,7 +13,7 @@ using UnityEditor;
 /// <summary>
 /// This class is responsible for the main menu UI, allowing the user to
 /// host a game, join a game, or exit the application. It communicates with the
-/// NetworkGameManager (soon to be ConnectionManager) via its singleton instance.
+/// ConnectionManager (soon to be ConnectionManager) via its singleton instance.
 /// </summary>
 public class GameLauncher : MonoBehaviour
 {
@@ -30,14 +30,14 @@ public class GameLauncher : MonoBehaviour
     private Button[] _buttons;
     #endregion GUI
 
-    private NetworkGameManager _networkManager;
+    private ConnectionManager _networkManager;
 
     private void Start()
     {
-        _networkManager = NetworkGameManager.Instance;
+        _networkManager = ConnectionManager.Instance;
         if (_networkManager == null)
         {
-            LogError($"{GetLogCallPrefix(GetType())} NetworkGameManager NIL!");
+            LogError($"{GetLogCallPrefix(GetType())} ConnectionManager NIL!");
             enabled = false;
             return;
         }

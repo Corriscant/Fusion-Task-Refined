@@ -13,10 +13,10 @@ using static Corris.Loggers.LogUtils;
 using UnityEditor;
 #endif
 
-public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
+public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 {
     // Singleton Instance
-    public static NetworkGameManager Instance { get; private set; }
+    public static ConnectionManager Instance { get; private set; }
 
     private NetworkRunner _netRunner;
     public NetworkRunner NetRunner => _netRunner; // Giving access to runner from other scripts
@@ -55,7 +55,7 @@ public class NetworkGameManager : MonoBehaviour, INetworkRunnerCallbacks
         Instance = this;
         DontDestroyOnLoad(gameObject); // Preserve between scenes
 
-        Log($"{GetLogCallPrefix(GetType())} NetworkGameManager Instance!");
+        Log($"{GetLogCallPrefix(GetType())} ConnectionManager Instance!");
 
         // Subscribe to InputManager events
         InputManager.OnSecondaryMouseClick_World += HandleMoveCommand;

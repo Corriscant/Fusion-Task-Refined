@@ -103,7 +103,7 @@ public class Unit : NetworkBehaviour, IPositionable
     {
         Vector3 offset = center - transform.position;
         // here you can limit the offset so that the units are not too far apart
-        offset = Vector3.ClampMagnitude(offset, NetworkGameManager.Instance.unitAllowedOffset); // limit the offset to 5 meters
+        offset = Vector3.ClampMagnitude(offset, ConnectionManager.Instance.unitAllowedOffset); // limit the offset to 5 meters
                                                                                           // find the personal position for the Target of this unit, taking into account that it is offset relative to the center of the selected units
         Vector3 unitTargetPosition = bearingTargetPosition - offset;
         return unitTargetPosition;
