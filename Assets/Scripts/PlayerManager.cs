@@ -3,10 +3,12 @@ using Fusion;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static Corris.Loggers.Logger;
+using static Corris.Loggers.LogUtils;
 
 /// <summary>
 /// Handles game logic related to players, such as spawning units when a player joins,
-/// cleaning up when they leave, and processing their commands.
+/// cleaning up when they leave, and processing their commands and translates local player input into network-ready commands.
 /// </summary>
 public class PlayerManager : MonoBehaviour
 {
@@ -26,9 +28,8 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] public int unitAllowedOffset = 3;
 
     // --- State for Network Input ---
-    // These properties are polled by ConnectionManager in OnInput
-    public Vector3 PendingTargetPosition { get; private set; }
-    public bool HasPendingTarget { get; private set; }
+    private Vector3 _pendingTargetPosition;
+    private bool _hasPendingTarget;
 
     // --- Private Fields ---
     // Tracks the spawned units for each player for easy cleanup.
@@ -47,7 +48,46 @@ public class PlayerManager : MonoBehaviour
         InputManager.OnSecondaryMouseClick_World -= HandleMoveCommand;
     }
 
-    // --- Public Methods (called by ConnectionManager) ---
+    // --- Public API for ConnectionManager ---
+
+    /// <summary>
+    /// Attempts to get network input data if a command is pending.
+    /// This method is polled by the ConnectionManager.
+    /// </summary>
+    /// <param name="data">The generated input data.</param>
+    /// <returns>True if there was a pending command, false otherwise.</returns>
+    public bool TryGetNetworkInput(out NetworkInputData data)
+    {
+        if (_hasPendingTarget)
+        {
+            data = new NetworkInputData
+            {
+                targetPosition = _pendingTargetPosition,
+                timestamp = Time.time
+            };
+
+            data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
+            for (int i = 0; i < data.unitCount; i++)
+            {
+                var networkObject = _selectionManager.SelectedUnits[i].GetComponent<NetworkObject>();
+                if (networkObject != null)
+                {
+                    data.unitIds[i] = networkObject.Id.Raw;
+                }
+                else
+                {
+                    LogError($"{GetLogCallPrefix(GetType())} Unit {_selectionManager.SelectedUnits[i].name} is missing a NetworkObject!");
+                }
+            }
+
+            // Clear the flag internally after providing the data
+            _hasPendingTarget = false;
+            return true;
+        }
+
+        data = default;
+        return false;
+    }
 
     /// <summary>
     /// Handles the logic for when a new player joins the game.
@@ -95,7 +135,7 @@ public class PlayerManager : MonoBehaviour
     /// </summary>
     public void ClearPendingTarget()
     {
-        HasPendingTarget = false;
+        _hasPendingTarget = false;
     }
 
     // --- Command Handling ---
@@ -114,8 +154,8 @@ public class PlayerManager : MonoBehaviour
         }
 
         // Prepare data for the next network tick
-        PendingTargetPosition = targetPosition;
-        HasPendingTarget = true;
+        _pendingTargetPosition = targetPosition;
+        _hasPendingTarget = true;
     }
 
 

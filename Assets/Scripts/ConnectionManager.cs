@@ -13,6 +13,12 @@ using static Corris.Loggers.LogUtils;
 using UnityEditor;
 #endif
 
+/// <summary>
+/// Manages the core network connection and session lifecycle using Photon Fusion.
+/// This class is responsible for initializing the NetworkRunner, handling top-level network callbacks,
+/// and delegating game-specific logic to specialized managers (e.g., PlayerManager, HostManager).
+/// It also collects input from other systems to provide it to the network simulation via OnInput.
+/// </summary>
 public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 {
     // Singleton Instance
@@ -23,7 +29,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 
     [Header("Managers")]
     [SerializeField] public PlayerManager PlayerManager;
-    [SerializeField] private SelectionManager _selectionManager;
     [SerializeField] private HostManager _hostManagerPrefab;
 
     // Prevent multiple connection attempts
@@ -56,31 +61,15 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
-        // Generates data for transmission to Fusion
-        var data = new NetworkInputData();
+        NetworkInputData data = default;
 
-        // Poll PlayerManager for any pending input
-        if (PlayerManager != null && PlayerManager.HasPendingTarget)
+        // PlayerManager is fully responsible for generating its own input.
+        // ConnectionManager just collects it.
+        if (PlayerManager != null)
         {
-            data.targetPosition = PlayerManager.PendingTargetPosition;
-            data.timestamp = Time.time;
-
-            data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
-            for (int i = 0; i < data.unitCount; i++)
-            {
-                var networkObject = _selectionManager.SelectedUnits[i].GetComponent<NetworkObject>();
-                if (networkObject != null)
-                {
-                    data.unitIds[i] = networkObject.Id.Raw;
-                }
-                else
-                {
-                    LogError($"{GetLogCallPrefix(GetType())} Unit {_selectionManager.SelectedUnits[i].name} is missing a NetworkObject!");
-                }
-            }
-            // IMPORTANT: Notify PlayerManager that we've consumed the data for this tick.
-            PlayerManager.ClearPendingTarget();
+            PlayerManager.TryGetNetworkInput(out data);
         }
+
         input.Set(data);
     }
 
@@ -222,10 +211,4 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { Log($"{GetLogCallPrefix(GetType())} OnReliableDataProgress triggered"); }
     #endregion
 
-}
-
-public class Command
-{
-    public PlayerRef Player;         // ID of the client from which the command came
-    public NetworkInputData Input;  // Full data structure from NetworkInputData
 }
