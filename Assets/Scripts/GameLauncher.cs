@@ -22,6 +22,7 @@ public class GameLauncher : MonoBehaviour
     [SerializeField] private float buttonWidth = 200f;
     [SerializeField] private float buttonHeight = 40f;
     [SerializeField] private Color buttonColor = new Color(1f, 1f, 1f, 0.717f);
+    [SerializeField] private Vector2 menuOffset = new Vector2(5f, 5f); // Offset from top-left corner
 
     private Button _hostButton;
     private Button _joinButton;
@@ -52,9 +53,9 @@ public class GameLauncher : MonoBehaviour
         canvasGo.AddComponent<CanvasScaler>();
         canvasGo.AddComponent<GraphicRaycaster>();
 
-        _hostButton = CreateButton(canvas.transform, new Vector2(0f, 0f), "Host");
-        _joinButton = CreateButton(canvas.transform, new Vector2(0f, -(buttonHeight + buttonSpacing)), "Join");
-        _exitButton = CreateButton(canvas.transform, new Vector2(0f, -2 * (buttonHeight + buttonSpacing)), "Exit");
+        _hostButton = CreateButton(canvas.transform, new Vector2(menuOffset.x, -menuOffset.y), "Host");
+        _joinButton = CreateButton(canvas.transform, new Vector2(menuOffset.x, -(menuOffset.y + buttonHeight + buttonSpacing)), "Join");
+        _exitButton = CreateButton(canvas.transform, new Vector2(menuOffset.x, -(menuOffset.y + 2 * (buttonHeight + buttonSpacing))), "Exit");
 
         _buttons = new[] { _hostButton, _joinButton, _exitButton };
 
@@ -127,7 +128,7 @@ public class GameLauncher : MonoBehaviour
             var rect = button.GetComponent<RectTransform>();
             if (button.gameObject.activeSelf)
             {
-                rect.anchoredPosition = new Vector2(0f, -offset);
+                rect.anchoredPosition = new Vector2(menuOffset.x, -(menuOffset.y + offset));
                 offset += buttonHeight + buttonSpacing;
             }
         }
