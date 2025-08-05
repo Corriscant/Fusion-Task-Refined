@@ -64,20 +64,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    public void OnInput(NetworkRunner runner, NetworkInput input)
-    {
-        NetworkInputData data = default;
-
-        // PlayerManager is fully responsible for generating its own input.
-        // ConnectionManager just collects it.
-        if (PlayerManager != null)
-        {
-            PlayerManager.TryGetNetworkInput(out data);
-        }
-
-        input.Set(data);
-    }
-
     private async Task StartGame(GameMode mode)
     {
         // Create the Fusion runner and let it know that we will be providing user input
@@ -158,6 +144,22 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         // Public wrapper to be called from UI scripts.
         StartGameAsync(mode);
+    }
+
+    // --- INetworkRunnerCallbacks Implementation --- 
+
+    public void OnInput(NetworkRunner runner, NetworkInput input)
+    {
+        NetworkInputData data = default;
+
+        // PlayerManager is fully responsible for generating its own input.
+        // ConnectionManager just collects it.
+        if (PlayerManager != null)
+        {
+            PlayerManager.TryGetNetworkInput(out data);
+        }
+
+        input.Set(data);
     }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
