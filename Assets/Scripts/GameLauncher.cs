@@ -26,6 +26,7 @@ public class GameLauncher : MonoBehaviour
     private Button _hostButton;
     private Button _joinButton;
     private Button _exitButton;
+    private Button[] _buttons;
     #endregion GUI
 
     private NetworkGameManager _networkManager;
@@ -54,6 +55,8 @@ public class GameLauncher : MonoBehaviour
         _hostButton = CreateButton(canvas.transform, new Vector2(0f, 0f), "Host");
         _joinButton = CreateButton(canvas.transform, new Vector2(0f, -(buttonHeight + buttonSpacing)), "Join");
         _exitButton = CreateButton(canvas.transform, new Vector2(0f, -2 * (buttonHeight + buttonSpacing)), "Exit");
+
+        _buttons = new[] { _hostButton, _joinButton, _exitButton };
 
         _hostButton.onClick.AddListener(() => _networkManager.StartGamePublic(GameMode.Host));
         _joinButton.onClick.AddListener(() => _networkManager.StartGamePublic(GameMode.Client));
@@ -109,6 +112,25 @@ public class GameLauncher : MonoBehaviour
         _hostButton.interactable = interactable;
         _joinButton.interactable = interactable;
         _exitButton.interactable = !selectionActive;
+
+        UpdateMenuLayout();
+    }
+
+    /// <summary>
+    /// Repositions active buttons so that there are no empty gaps in the menu.
+    /// </summary>
+    private void UpdateMenuLayout()
+    {
+        float offset = 0f;
+        foreach (var button in _buttons)
+        {
+            var rect = button.GetComponent<RectTransform>();
+            if (button.gameObject.activeSelf)
+            {
+                rect.anchoredPosition = new Vector2(0f, -offset);
+                offset += buttonHeight + buttonSpacing;
+            }
+        }
     }
 
     private void QuitGame()
