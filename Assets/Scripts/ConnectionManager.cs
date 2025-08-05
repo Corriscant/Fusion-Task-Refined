@@ -21,6 +21,11 @@ using UnityEditor;
 /// </summary>
 public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 {
+    // --- Public Events ---
+    public static event Action OnConnectingStarted;
+    public static event Action OnConnected;
+    public static event Action OnDisconnected;
+
     // Singleton Instance
     public static ConnectionManager Instance { get; private set; }
 
@@ -132,15 +137,15 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         try
         {
             _isConnecting = true;
-            Panel_Status.Instance.StartConnecting();
+            OnConnectingStarted?.Invoke();
             await StartGame(mode);
             if (_netRunner != null && _netRunner.IsRunning)
             {
-                Panel_Status.Instance.SetConnected();
+                OnConnected?.Invoke();
             }
             else
             {
-                Panel_Status.Instance.SetUnconnected();
+                OnDisconnected?.Invoke();
             }
         }
         finally
@@ -193,9 +198,14 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
+    public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
+    {
+        Log($"{GetLogCallPrefix(GetType())} OnShutdown triggered with reason: {shutdownReason}");
+        OnDisconnected?.Invoke();
+    }
+
     #region INetworkRunnerCallbacks Implementation
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { Log($"{GetLogCallPrefix(GetType())} OnInputMissing triggered"); }
-    public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { Log($"{GetLogCallPrefix(GetType())} OnShutdown triggered"); }
     public void OnConnectedToServer(NetworkRunner runner) { Log($"{GetLogCallPrefix(GetType())} OnConnectedToServer triggered"); }
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { Log($"{GetLogCallPrefix(GetType())} OnDisconnectedFromServer triggered"); }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { Log($"{GetLogCallPrefix(GetType())} OnConnectRequest triggered"); }

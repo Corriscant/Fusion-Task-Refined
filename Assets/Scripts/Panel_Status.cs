@@ -4,6 +4,7 @@ using System.Collections;
 
 /// <summary>
 /// This class manages the status panel in the UI, displaying connection status
+/// by listening to events from the ConnectionManager.
 /// </summary>
 public class Panel_Status : MonoBehaviour
 {
@@ -29,6 +30,24 @@ public class Panel_Status : MonoBehaviour
         if (_statusText == null)
         {
             _statusText = GetComponentInChildren<TMP_Text>();
+        }
+
+        // Subscribe to connection events
+        ConnectionManager.OnConnectingStarted += StartConnecting;
+        ConnectionManager.OnConnected += SetConnected;
+        ConnectionManager.OnDisconnected += SetUnconnected;
+    }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe from connection events
+        ConnectionManager.OnConnectingStarted -= StartConnecting;
+        ConnectionManager.OnConnected -= SetConnected;
+        ConnectionManager.OnDisconnected -= SetUnconnected;
+
+        if (Instance == this)
+        {
+            Instance = null;
         }
     }
 
