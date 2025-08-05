@@ -21,23 +21,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     private NetworkRunner _netRunner;
     public NetworkRunner NetRunner => _netRunner; // Giving access to runner from other scripts
 
-    /// <summary>
-    /// The maximum allowed offset for a unit from the center of the group.
-    /// </summary>
-    [SerializeField] public int unitAllowedOffset = 3;
-
-    [SerializeField] private GameObject _destinationMarkerPrefab;
-    [SerializeField] private PlayerManager playerManager;
+    [Header("Managers")]
+    [SerializeField] public PlayerManager PlayerManager;
     [SerializeField] private SelectionManager _selectionManager;
     [SerializeField] private HostManager _hostManagerPrefab;
-
-    // Client request to send destination point to the host
-    private Vector3 _pendingTargetPosition = Vector3.zero;
-    private bool _hasPendingTarget = false;
-    /// <summary>
-    /// Flag indicating the presence of a destination point
-    /// </summary>
-    public bool HasPendingTarget => _hasPendingTarget;
 
     // Prevent multiple connection attempts
     private bool _isConnecting = false;
@@ -56,21 +43,45 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         DontDestroyOnLoad(gameObject); // Preserve between scenes
 
         Log($"{GetLogCallPrefix(GetType())} ConnectionManager Instance!");
-
-        // Subscribe to InputManager events
-        InputManager.OnSecondaryMouseClick_World += HandleMoveCommand;
     }
 
     private void OnDestroy()
     {
-        // Unsubscribe from InputManager events
-        InputManager.OnSecondaryMouseClick_World -= HandleMoveCommand;
-
         // Cleanup singleton instance
         if (Instance == this)
         {
             Instance = null;
         }
+    }
+
+    public void OnInput(NetworkRunner runner, NetworkInput input)
+    {
+        // Generates data for transmission to Fusion
+        var data = new NetworkInputData();
+
+        // Poll PlayerManager for any pending input
+        if (PlayerManager != null && PlayerManager.HasPendingTarget)
+        {
+            data.targetPosition = PlayerManager.PendingTargetPosition;
+            data.timestamp = Time.time;
+
+            data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
+            for (int i = 0; i < data.unitCount; i++)
+            {
+                var networkObject = _selectionManager.SelectedUnits[i].GetComponent<NetworkObject>();
+                if (networkObject != null)
+                {
+                    data.unitIds[i] = networkObject.Id.Raw;
+                }
+                else
+                {
+                    LogError($"{GetLogCallPrefix(GetType())} Unit {_selectionManager.SelectedUnits[i].name} is missing a NetworkObject!");
+                }
+            }
+            // IMPORTANT: Notify PlayerManager that we've consumed the data for this tick.
+            PlayerManager.ClearPendingTarget();
+        }
+        input.Set(data);
     }
 
     private async Task StartGame(GameMode mode)
@@ -159,9 +170,9 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         Log($"{GetLogCallPrefix(GetType())} Player joined: {player}");
 
-        if (playerManager != null)
+        if (PlayerManager != null)
         {
-            playerManager.HandlePlayerJoined(runner, player);
+            PlayerManager.HandlePlayerJoined(runner, player);
         }
     }
 
@@ -169,38 +180,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         Log($"{GetLogCallPrefix(GetType())} Player left: {player}");
 
-        if (playerManager != null)
+        if (PlayerManager != null)
         {
-            playerManager.HandlePlayerLeft(runner, player);
+            PlayerManager.HandlePlayerLeft(runner, player);
         }
-    }
-
-    public void OnInput(NetworkRunner runner, NetworkInput input)
-    {
-        var data = new NetworkInputData();
-
-        // If there is a new target
-        if (HasPendingTarget)
-        {
-            data.targetPosition = _pendingTargetPosition;
-            data.timestamp = Time.time;
-
-            data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
-            for (int i = 0; i < data.unitCount; i++)
-            {
-                var networkObject = _selectionManager.SelectedUnits[i].GetComponent<NetworkObject>();
-                if (networkObject != null)
-                {
-                    data.unitIds[i] = networkObject.Id.Raw;
-                }
-                else
-                {
-                    LogError($"{GetLogCallPrefix(GetType())} Unit {_selectionManager.SelectedUnits[i].name} is missing a NetworkObject!");
-                }
-            }
-            _hasPendingTarget = false;
-        }
-        input.Set(data);
     }
 
     public void OnSceneLoadDone(NetworkRunner runner)
@@ -239,22 +222,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { Log($"{GetLogCallPrefix(GetType())} OnReliableDataProgress triggered"); }
     #endregion
 
-    // Handles input via an event, decoupling from InputManager.
-    public void HandleMoveCommand(Vector3 targetPosition)
-    {
-        // if there is at least one selected object
-        if (_selectionManager.SelectedUnits.Count == 0)
-            return;
-
-        // instantiate _destinationMarkerPrefab prefab at this point, and delete it after 2 seconds
-        var marker = Instantiate(_destinationMarkerPrefab, targetPosition, Quaternion.identity);
-        Destroy(marker, 2);
-
-        Log($"{GetLogCallPrefix(GetType())} Received destination input: {targetPosition}");
-
-        _pendingTargetPosition = targetPosition; // Save destination point
-        _hasPendingTarget = true; // Set flag
-    }
 }
 
 public class Command

@@ -1471,9 +1471,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 071549e336f399643aa57e03f9d4e127, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _selectionManager: {fileID: 1096639965}
+  _destinationMarkerPrefab: {fileID: 831694046346804455, guid: dd47c8c06480f1448a47302495ee6487, type: 3}
   _unitPrefab:
     RawGuidValue: dd098a457d77e9847a3e48cd58d0dfc4
   unitCountPerPlayer: 5
+  unitAllowedOffset: 3
 --- !u!1 &1052078041
 GameObject:
   m_ObjectHideFlags: 0
@@ -1797,7 +1800,7 @@ GameObject:
   - component: {fileID: 1168897077}
   - component: {fileID: 1168897076}
   m_Layer: 0
-  m_Name: NetworkGameManager
+  m_Name: ConnectionManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1812,12 +1815,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1168897075}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 695e9f5a6d75d0c4190d6c9de77edb7c, type: 3}
+  m_Script: {fileID: 11500000, guid: f62f8fee0f2c2694ab35124fef1b228b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  unitAllowedOffset: 3
-  _destinationMarkerPrefab: {fileID: 831694046346804455, guid: dd47c8c06480f1448a47302495ee6487, type: 3}
-  playerManager: {fileID: 981049793}
+  PlayerManager: {fileID: 981049793}
   _selectionManager: {fileID: 1096639965}
   _hostManagerPrefab: {fileID: 1764223918444550803, guid: f430bd65a3ac26d4282fe10ba2434be4, type: 3}
 --- !u!4 &1168897077
@@ -1883,6 +1884,7 @@ MonoBehaviour:
   buttonWidth: 200
   buttonHeight: 40
   buttonColor: {r: 0.499288, g: 0.6415094, b: 0.61051244, a: 0.717}
+  menuOffset: {x: 5, y: 5}
 --- !u!1 &1288217492
 GameObject:
   m_ObjectHideFlags: 0

@@ -5,26 +5,47 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Handles game logic related to players, such as spawning units when a player joins
-/// and cleaning up when they leave.
+/// Handles game logic related to players, such as spawning units when a player joins,
+/// cleaning up when they leave, and processing their commands.
 /// </summary>
 public class PlayerManager : MonoBehaviour
 {
-    // --- Serialized Fields ---
-    [Header("Unit Spawn Settings")]
-    [SerializeField]
-    private NetworkPrefabRef _unitPrefab; // Prefab for the unit to be spawned.
+    // --- Dependencies ---
+    [Header("Dependencies")]
+    [SerializeField] private SelectionManager _selectionManager;
+    [SerializeField] private GameObject _destinationMarkerPrefab;
 
-    [SerializeField]
-    private int unitCountPerPlayer = 5; // How many units to spawn for each player.
+    [Header("Unit Spawn Settings")]
+    [SerializeField] private NetworkPrefabRef _unitPrefab; // Prefab for the unit to be spawned.
+    [SerializeField] private int unitCountPerPlayer = 5; // How many units to spawn for each player.
+
+    [Header("Other")]
+    /// <summary>
+    /// The maximum allowed offset for a unit from the center of the group.
+    /// </summary>
+    [SerializeField] public int unitAllowedOffset = 3;
+
+    // --- State for Network Input ---
+    // These properties are polled by ConnectionManager in OnInput
+    public Vector3 PendingTargetPosition { get; private set; }
+    public bool HasPendingTarget { get; private set; }
 
     // --- Private Fields ---
     // Tracks the spawned units for each player for easy cleanup.
     private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();
-
     // Counter to assign a unique material index to each new player.
     private int _spawnedPlayersCount;
 
+    // --- Unity & Event Subscription ---
+    private void OnEnable()
+    {
+        InputManager.OnSecondaryMouseClick_World += HandleMoveCommand;
+    }
+
+    private void OnDisable()
+    {
+        InputManager.OnSecondaryMouseClick_World -= HandleMoveCommand;
+    }
 
     // --- Public Methods (called by ConnectionManager) ---
 
@@ -68,6 +89,35 @@ public class PlayerManager : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// Called by ConnectionManager after it has consumed the input data for a tick.
+    /// </summary>
+    public void ClearPendingTarget()
+    {
+        HasPendingTarget = false;
+    }
+
+    // --- Command Handling ---
+
+    private void HandleMoveCommand(Vector3 targetPosition)
+    {
+        // Don't issue a move command if no units are selected
+        if (_selectionManager == null || _selectionManager.SelectedUnits.Count == 0)
+            return;
+
+        // Instantiate a purely visual marker for immediate feedback
+        if (_destinationMarkerPrefab != null)
+        {
+            var marker = Instantiate(_destinationMarkerPrefab, targetPosition, Quaternion.identity);
+            Destroy(marker, 2f);
+        }
+
+        // Prepare data for the next network tick
+        PendingTargetPosition = targetPosition;
+        HasPendingTarget = true;
+    }
+
 
     // --- Private Methods ---
 
