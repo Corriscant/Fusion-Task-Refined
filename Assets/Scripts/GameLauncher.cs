@@ -17,9 +17,17 @@ using UnityEditor;
 /// </summary>
 public class GameLauncher : MonoBehaviour
 {
+    #region GUI
+    [SerializeField] private float buttonSpacing = 2f;
+    [SerializeField] private float buttonWidth = 200f;
+    [SerializeField] private float buttonHeight = 40f;
+    [SerializeField] private Color buttonColor = new Color(1f, 1f, 1f, 0.717f);
+
     private Button _hostButton;
     private Button _joinButton;
     private Button _exitButton;
+    #endregion GUI
+
     private NetworkGameManager _networkManager;
 
     private void Start()
@@ -44,8 +52,8 @@ public class GameLauncher : MonoBehaviour
         canvasGo.AddComponent<GraphicRaycaster>();
 
         _hostButton = CreateButton(canvas.transform, new Vector2(0f, 0f), "Host");
-        _joinButton = CreateButton(canvas.transform, new Vector2(0f, -40f), "Join");
-        _exitButton = CreateButton(canvas.transform, new Vector2(0f, -80f), "Exit");
+        _joinButton = CreateButton(canvas.transform, new Vector2(0f, -(buttonHeight + buttonSpacing)), "Join");
+        _exitButton = CreateButton(canvas.transform, new Vector2(0f, -2 * (buttonHeight + buttonSpacing)), "Exit");
 
         _hostButton.onClick.AddListener(() => _networkManager.StartGamePublic(GameMode.Host));
         _joinButton.onClick.AddListener(() => _networkManager.StartGamePublic(GameMode.Client));
@@ -57,14 +65,15 @@ public class GameLauncher : MonoBehaviour
         var go = new GameObject(text + "Button");
         go.transform.SetParent(parent);
         var rect = go.AddComponent<RectTransform>();
-        rect.sizeDelta = new Vector2(200f, 40f);
+        rect.sizeDelta = new Vector2(buttonWidth, buttonHeight);
         rect.anchorMin = new Vector2(0f, 1f);
         rect.anchorMax = new Vector2(0f, 1f);
         rect.pivot = new Vector2(0f, 1f);
         rect.anchoredPosition = anchoredPos;
 
         var image = go.AddComponent<Image>();
-        image.color = Color.white;
+
+        image.color = buttonColor;
 
         var button = go.AddComponent<Button>();
 
@@ -79,7 +88,7 @@ public class GameLauncher : MonoBehaviour
         var label = textGo.AddComponent<Text>();
         label.text = text;
         label.alignment = TextAnchor.MiddleCenter;
-        label.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         label.color = Color.black;
 
         return button;

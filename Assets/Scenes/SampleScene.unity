@@ -1879,6 +1879,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9af79891b00a33147b3856b6baa951ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  buttonSpacing: 2
+  buttonWidth: 200
+  buttonHeight: 40
+  buttonColor: {r: 0.499288, g: 0.6415094, b: 0.61051244, a: 0.717}
 --- !u!1 &1288217492
 GameObject:
   m_ObjectHideFlags: 0
