@@ -5,6 +5,11 @@ using UnityEngine;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 
+/// <summary>
+/// Manages host-side command processing in a Fusion network game by gathering
+/// player inputs, queuing them, optionally simulating host pauses, and dispatching
+/// time-ordered commands to the appropriate units under state authority.
+/// </summary>
 public class HostManager : NetworkBehaviour
 {
     NetworkRunner NetRunner => ConnectionManager.Instance.NetRunner;
@@ -85,7 +90,6 @@ public class HostManager : NetworkBehaviour
             // Find the center of the selected units - as the bearing point
             var center = changedUnits.GetCenter();
 
-            // for (int i = 0; i < command.Input.unitIds.Length; i++)
             for (int i = 0; i < command.Input.unitCount; i++)
             {
                 var unitId = command.Input.unitIds[i];
