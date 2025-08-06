@@ -13,20 +13,26 @@ public class Unit : NetworkBehaviour, IPositionable
 {
     public GameObject body;
     public GameObject selectedIndicator;
+    private NetworkCharacterController _cc;
 
     /// <summary>
     /// Material index, for passing to other clients via RPC
     /// </summary>
-    public int materialIndex; 
+    public int materialIndex;
 
+    #region IPositionable
     /// <summary>
     /// Implementation of IPositionable interface to provide position of the unit. (Used in ListExtensions.GetCenter)
     /// </summary>
     public virtual Vector3 Position => transform.position;
+    #endregion IPositionable
 
+    [Networked] public PlayerRef PlayerOwner { get; private set; }
     [Networked] private Vector3 TargetPosition { get; set; } = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
     [Networked] private bool HasTarget { get; set; } = false;
-    [Networked] public float LastCommandTimestamp { get; set; } // Last processed command
+
+    // Last server tick for processed command (defense from "old commands" being processed)
+    private float lastCommandServerTick;
 
     private bool _selected;
     /// <summary>
@@ -38,16 +44,16 @@ public class Unit : NetworkBehaviour, IPositionable
         set
         {
             _selected = value;
-            selectedIndicator?.SetActive(_selected);
+            if (selectedIndicator)
+                selectedIndicator.SetActive(_selected);
+
         }
     }
-
-    // Unit owner
-    [Networked] public PlayerRef Owner { get; private set; }
 
     public override void Spawned()
     {
         Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} spawned.");
+
         // Register the unit in the registry for fast lookups.
         UnitRegistry.Units[Object.Id.Raw] = this;
     }
@@ -55,16 +61,15 @@ public class Unit : NetworkBehaviour, IPositionable
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} despawned. HasState: {hasState}");
+
         // Unregister the unit from the registry.
         UnitRegistry.Units.Remove(Object.Id.Raw);
         base.Despawned(runner, hasState);
     }
 
-    public void SetOwner(PlayerRef newOwner) => Owner = newOwner;
+    public void SetOwner(PlayerRef newOwner) => PlayerOwner = newOwner;
 
-    public bool IsOwnedBy(PlayerRef player) => Owner == player;
-
-    private NetworkCharacterController _cc;
+    public bool IsOwnedBy(PlayerRef player) => PlayerOwner == player;
 
     private void Awake()
     {
@@ -74,8 +79,16 @@ public class Unit : NetworkBehaviour, IPositionable
             return;
         }
 
-        selectedIndicator?.SetActive(false);
         _cc = GetComponent<NetworkCharacterController>();
+
+        if (selectedIndicator)
+        {
+            selectedIndicator.SetActive(false); // Ensure the indicator is off by default
+        }
+        else
+        {
+            LogWarning($"{GetLogCallPrefix(GetType())} Selected indicator is not set. It will not be shown.");
+        }
     }
 
     /// <summary>
@@ -97,7 +110,7 @@ public class Unit : NetworkBehaviour, IPositionable
     }
 
     /// <summary>
-    /// function finds unitTargetPosition, taking into account the offset of itself relative to the center of the group of units
+    /// Function finds unitTargetPosition, taking into account the offset of itself relative to the center of the group of units
     /// </summary>
     public Vector3 GetUnitTargetPosition(Vector3 center, Vector3 bearingTargetPosition)
     {
@@ -122,8 +135,7 @@ public class Unit : NetworkBehaviour, IPositionable
             }
             else
             {
-                Vector3 direction = (TargetPosition - transform.position).normalized;
-                _cc.Move(direction);
+                MoveUnit();
             }
         }
     }
@@ -134,8 +146,14 @@ public class Unit : NetworkBehaviour, IPositionable
         _cc.Move(Vector3.zero);
     }
 
+    private void MoveUnit()
+    {
+        Vector3 direction = (TargetPosition - transform.position).normalized;
+        _cc.Move(direction);
+    }
+
     /// <summary>
-    /// function checks if the unit has reached the target position.
+    /// Function checks if the unit has reached the target position.
     /// </summary>
     private bool HasReachedTarget(Vector3 target)
     {
@@ -148,15 +166,15 @@ public class Unit : NetworkBehaviour, IPositionable
         return distance < 1.0f;
     }
 
-    public void HostSetTarget(Vector3 targetPosition, float timestamp)
+    public void HostSetTarget(Vector3 targetPosition, float serverTick)
     {
-        if (Object.HasStateAuthority && (timestamp > LastCommandTimestamp))
+        if (Object.HasStateAuthority && (serverTick > lastCommandServerTick))
         {
             TargetPosition = targetPosition;
             HasTarget = true;
-            LastCommandTimestamp = timestamp;
+            lastCommandServerTick = serverTick;
 
-            Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} received new target at {timestamp}");
+            Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} received new target at {serverTick}");
         }
     }
 
@@ -173,8 +191,7 @@ public class Unit : NetworkBehaviour, IPositionable
 
         if (Runner.TryFindObject(unitId, out var networkObject))
         {
-            var unit = networkObject.GetComponent<Unit>();
-            if (unit != null)
+            if (networkObject.TryGetComponent<Unit>(out var unit))
             {
                 unit.name = unitName;
                 string materialName = $"Materials/UnitPayer{materialIndex}_Material";

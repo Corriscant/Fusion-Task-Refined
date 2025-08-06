@@ -68,8 +68,7 @@ public class PlayerManager : MonoBehaviour
             data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
             for (int i = 0; i < data.unitCount; i++)
             {
-                var networkObject = _selectionManager.SelectedUnits[i].GetComponent<NetworkObject>();
-                if (networkObject != null)
+                if (_selectionManager.SelectedUnits[i].TryGetComponent<NetworkObject>(out var networkObject))
                 {
                     data.unitIds[i] = networkObject.Id.Raw;
                 }

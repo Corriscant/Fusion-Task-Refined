@@ -35,14 +35,12 @@ public class HostManager : NetworkBehaviour
 
     public void HostProcessCommandsFromNetwork()
     {
-        Log($"{GetLogCallPrefix(GetType())} NetRunner.ActivePlayers[{NetRunner.ActivePlayers}]");
-
         // Get data from all active players
         foreach (var player in NetRunner.ActivePlayers)
         {
             if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
             {
-                ProcessPlayerCommand(player, input);
+                HostProcessPlayerCommand(player, input);
             }
             else
             {
@@ -54,9 +52,9 @@ public class HostManager : NetworkBehaviour
     }
 
     /// <summary>
-    /// Processes a single command from a single player for the current tick.
+    /// Host processes a single command from a single player for the current tick.
     /// </summary>
-    private void ProcessPlayerCommand(PlayerRef player, NetworkInputData input)
+    private void HostProcessPlayerCommand(PlayerRef player, NetworkInputData input)
     {
         var changedUnits = Unit.GetUnitsInInput(input);
         if (changedUnits.Count == 0) return;
@@ -69,13 +67,9 @@ public class HostManager : NetworkBehaviour
             var unit = FindUnitById(unitId);
             if (unit != null)
             {
-                // We no longer need to check timestamp, as Fusion guarantees input is for the current tick.
-                // The check for outdated commands is now implicit in Fusion's state authority model.
-                // If a unit receives a new command, it will overwrite its old target.
-
                 var unitTargetPosition = unit.GetUnitTargetPosition(center, input.targetPosition);
 
-                // We can pass the current tick as the command "timestamp" for logging or future logic.
+                // We pass the current tick as the command "timestamp" for logging or future logic.
                 unit.HostSetTarget(unitTargetPosition, Runner.Tick);
             }
         }
