@@ -219,9 +219,8 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2a484f521e33a504e954af922abd2102, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   body: {fileID: 2692477421230528371}
-  selectedIndicator: {fileID: 5932611407449186707}
 --- !u!114 &7934947725250144203
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -233,8 +232,9 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 006ab955f8c611b4e8afe68bef192f1e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   isSelectable: 1
+  selectedIndicator: {fileID: 5932611407449186707}
 --- !u!1 &5932611407449186707
 GameObject:
   m_ObjectHideFlags: 0

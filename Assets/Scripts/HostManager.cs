@@ -1,6 +1,5 @@
 using Fusion;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
@@ -78,7 +77,11 @@ public class HostManager : NetworkBehaviour
     // Refactored to use UnitRegistry for performance.
     private Unit FindUnitById(uint unitId)
     {
-        return UnitRegistry.Units.TryGetValue(unitId, out var selectable) ? selectable as Unit : null;
+        if (UnitRegistry.Units.TryGetValue(unitId, out var unit))
+        {
+            return unit;
+        }
+        return null;
     }
 
 }

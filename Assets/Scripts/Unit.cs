@@ -1,7 +1,6 @@
 using Fusion;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
@@ -9,10 +8,9 @@ using static Corris.Loggers.LogUtils;
 /// <summary>
 /// Unit class represents a controllable unit in the game.
 /// </summary>
-public class Unit : NetworkBehaviour, ISelectable
+public class Unit : NetworkBehaviour, IPositionable
 {
     public GameObject body;
-    public GameObject selectedIndicator;
     private NetworkCharacterController _cc;
 
     /// <summary>
@@ -34,35 +32,15 @@ public class Unit : NetworkBehaviour, ISelectable
     // Last server tick for processed command (defense from "old commands" being processed)
     private float lastCommandServerTick;
 
-    private bool _selected;
-    /// <summary>
-    /// Selected property indicates whether the unit is currently selected.
-    /// </summary>
-    public bool Selected
-    {
-        get => _selected;
-        set
-        {
-            _selected = value;
-            if (selectedIndicator)
-                selectedIndicator.SetActive(_selected);
-
-        }
-    }
-
     public override void Spawned()
     {
         Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} spawned.");
-
-        // Register the unit in the registry for fast lookups.
         UnitRegistry.Units[Object.Id.Raw] = this;
     }
-    
+
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} despawned. HasState: {hasState}");
-
-        // Unregister the unit from the registry.
         UnitRegistry.Units.Remove(Object.Id.Raw);
         base.Despawned(runner, hasState);
     }
@@ -81,14 +59,6 @@ public class Unit : NetworkBehaviour, ISelectable
 
         _cc = GetComponent<NetworkCharacterController>();
 
-        if (selectedIndicator)
-        {
-            selectedIndicator.SetActive(false); // Ensure the indicator is off by default
-        }
-        else
-        {
-            LogWarning($"{GetLogCallPrefix(GetType())} Selected indicator is not set. It will not be shown.");
-        }
     }
 
     /// <summary>
@@ -101,7 +71,7 @@ public class Unit : NetworkBehaviour, ISelectable
         for (int i = 0; i < input.unitCount; i++)
         {
             // The key is now uint, so we can look it up directly.
-            if (UnitRegistry.Units.TryGetValue(input.unitIds[i], out var selectable) && selectable is Unit unit)
+            if (UnitRegistry.Units.TryGetValue(input.unitIds[i], out var unit))
             {
                 units.Add(unit);
             }

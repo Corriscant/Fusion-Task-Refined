@@ -214,12 +214,9 @@ public class PlayerManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // Iterate over all registered units and relay their data to clients.
-        foreach (var selectable in UnitRegistry.Units.Values)
+        foreach (var unit in UnitRegistry.Units.Values)
         {
-            if (selectable is Unit unit)
-            {
-                unit.RPC_RelaySpawnedUnitInfo(unit.Object.Id, unit.name, unit.materialIndex);
-            }
+            unit.RPC_RelaySpawnedUnitInfo(unit.Object.Id, unit.name, unit.materialIndex);
         }
     }
 }

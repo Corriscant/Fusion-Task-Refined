@@ -102,9 +102,14 @@ public class SelectionManager : MonoBehaviour
         }
         _selectedUnits.Clear();
 
-        foreach (var selectable in UnitRegistry.Units.Values)
+        foreach (var unit in UnitRegistry.Units.Values)
         {
-            Vector3 unitPosition_Screen = mainCamera.WorldToScreenPoint(selectable.Position);
+            if (!unit.TryGetComponent<Selectable>(out var selectable))
+            {
+                continue;
+            }
+
+            Vector3 unitPosition_Screen = mainCamera.WorldToScreenPoint(unit.Position);
 
             // Convert local coordinates of the selection box to screen coordinates (reverse action to what was done in StartSelection)
             var leftTop_Local = new Vector2(selectionBox.anchoredPosition.x - selectionBox.sizeDelta.x / 2, selectionBox.anchoredPosition.y - selectionBox.sizeDelta.y / 2);
@@ -122,10 +127,7 @@ public class SelectionManager : MonoBehaviour
                     selectable.Selected = true;
                     _selectedUnits.Add(selectable);
 
-                    if (selectable is MonoBehaviour component)
-                    {
-                        Log($"{GetLogCallPrefix(GetType())} Unit selected: {component.name}");
-                    }
+                    Log($"{GetLogCallPrefix(GetType())} Unit selected: {selectable.name}");
                 }
             }
         }
