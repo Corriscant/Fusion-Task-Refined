@@ -205,9 +205,8 @@ public class PlayerManager : MonoBehaviour
         // Wait briefly to ensure all initial objects have been spawned across all clients.
         yield return new WaitForSeconds(0.5f);
 
-        // Find every unit in the scene and tell it to send its data to clients.
-        // We use FindObjectsByType here because this is a one-time setup action, not a per-frame update.
-        foreach (var unit in FindObjectsByType<Unit>(FindObjectsSortMode.None))
+        // Iterate over all registered units and relay their data to clients.
+        foreach (var unit in UnitRegistry.Units.Values)
         {
             if (unit != null)
             {
