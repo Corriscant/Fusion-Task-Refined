@@ -16,9 +16,8 @@ public class SelectionManager : MonoBehaviour
     private Vector2 _startPosition;
     private RectTransform _canvasRect; // Canvas holding SelectionRect
 
-    // made it [SerializeField] for Debug purposes
-    [SerializeField] private List<Unit> _selectedUnits = new();
-    public List<Unit> SelectedUnits => _selectedUnits;
+    private List<ISelectable> _selectedUnits = new();
+    public List<ISelectable> SelectedUnits => _selectedUnits;
 
     // Indicates whether a frame selection is currently active
     public static bool IsSelecting { get; private set; }
@@ -97,15 +96,15 @@ public class SelectionManager : MonoBehaviour
         PlayerRef localPlayer = ConnectionManager.Instance.NetRunner.LocalPlayer;
 
         // Clear previous selection
-        foreach (var unit in _selectedUnits)
+        foreach (var selectable in _selectedUnits)
         {
-            unit.Selected = false;
+            selectable.Selected = false;
         }
         _selectedUnits.Clear();
 
-        foreach (var unit in UnitRegistry.Units.Values)
+        foreach (var selectable in UnitRegistry.Units.Values)
         {
-            Vector3 unitPosition_Screen = mainCamera.WorldToScreenPoint(unit.transform.position);
+            Vector3 unitPosition_Screen = mainCamera.WorldToScreenPoint(selectable.Position);
 
             // Convert local coordinates of the selection box to screen coordinates (reverse action to what was done in StartSelection)
             var leftTop_Local = new Vector2(selectionBox.anchoredPosition.x - selectionBox.sizeDelta.x / 2, selectionBox.anchoredPosition.y - selectionBox.sizeDelta.y / 2);
@@ -118,12 +117,15 @@ public class SelectionManager : MonoBehaviour
 
             if (selectionBox_Screen.Contains(unitPosition_Screen))
             {
-                if (unit.IsOwnedBy(localPlayer))
+                if (selectable.IsOwnedBy(localPlayer))
                 {
-                    unit.Selected = true;
-                    _selectedUnits.Add(unit);
+                    selectable.Selected = true;
+                    _selectedUnits.Add(selectable);
 
-                    Log($"{GetLogCallPrefix(GetType())} Unit selected: {unit.name}");
+                    if (selectable is MonoBehaviour component)
+                    {
+                        Log($"{GetLogCallPrefix(GetType())} Unit selected: {component.name}");
+                    }
                 }
             }
         }

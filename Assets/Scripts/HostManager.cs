@@ -78,7 +78,7 @@ public class HostManager : NetworkBehaviour
     // Refactored to use UnitRegistry for performance.
     private Unit FindUnitById(uint unitId)
     {
-        return UnitRegistry.Units.TryGetValue(unitId, out var unit) ? unit : null;
+        return UnitRegistry.Units.TryGetValue(unitId, out var selectable) ? selectable as Unit : null;
     }
 
 }

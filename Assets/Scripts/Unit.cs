@@ -9,7 +9,7 @@ using static Corris.Loggers.LogUtils;
 /// <summary>
 /// Unit class represents a controllable unit in the game.
 /// </summary>
-public class Unit : NetworkBehaviour, IPositionable
+public class Unit : NetworkBehaviour, ISelectable
 {
     public GameObject body;
     public GameObject selectedIndicator;
@@ -101,7 +101,7 @@ public class Unit : NetworkBehaviour, IPositionable
         for (int i = 0; i < input.unitCount; i++)
         {
             // The key is now uint, so we can look it up directly.
-            if (UnitRegistry.Units.TryGetValue(input.unitIds[i], out var unit))
+            if (UnitRegistry.Units.TryGetValue(input.unitIds[i], out var selectable) && selectable is Unit unit)
             {
                 units.Add(unit);
             }

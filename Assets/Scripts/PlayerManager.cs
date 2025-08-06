@@ -68,13 +68,21 @@ public class PlayerManager : MonoBehaviour
             data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
             for (int i = 0; i < data.unitCount; i++)
             {
-                if (_selectionManager.SelectedUnits[i].TryGetComponent<NetworkObject>(out var networkObject))
+                var selectable = _selectionManager.SelectedUnits[i];
+                if (selectable is MonoBehaviour component)
                 {
-                    data.unitIds[i] = networkObject.Id.Raw;
+                    if (component.TryGetComponent<NetworkObject>(out var networkObject))
+                    {
+                        data.unitIds[i] = networkObject.Id.Raw;
+                    }
+                    else
+                    {
+                        LogError($"{GetLogCallPrefix(GetType())} Unit {component.name} is missing a NetworkObject!");
+                    }
                 }
                 else
                 {
-                    LogError($"{GetLogCallPrefix(GetType())} Unit {_selectionManager.SelectedUnits[i].name} is missing a NetworkObject!");
+                    LogError($"{GetLogCallPrefix(GetType())} Selected object at index {i} is not a MonoBehaviour!");
                 }
             }
 
@@ -206,9 +214,9 @@ public class PlayerManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // Iterate over all registered units and relay their data to clients.
-        foreach (var unit in UnitRegistry.Units.Values)
+        foreach (var selectable in UnitRegistry.Units.Values)
         {
-            if (unit != null)
+            if (selectable is Unit unit)
             {
                 unit.RPC_RelaySpawnedUnitInfo(unit.Object.Id, unit.name, unit.materialIndex);
             }

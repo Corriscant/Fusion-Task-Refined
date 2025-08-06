@@ -10,7 +10,7 @@ using System.Collections.Generic;
 public static class UnitRegistry
 {
     /// <summary>
-    /// The dictionary holding all active units. Key is the unit's raw NetworkId (uint), Value is the Unit component reference.
+    /// The dictionary holding all active units. Key is the unit's raw NetworkId (uint), Value is the selectable component reference.
     /// </summary>
-    public static readonly Dictionary<uint, Unit> Units = new();
+    public static readonly Dictionary<uint, ISelectable> Units = new();
 }
