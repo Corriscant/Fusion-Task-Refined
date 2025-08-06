@@ -63,7 +63,6 @@ public class PlayerManager : MonoBehaviour
             data = new NetworkInputData
             {
                 targetPosition = _pendingTargetPosition,
-                timestamp = Time.time
             };
 
             data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);

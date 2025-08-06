@@ -10,7 +10,6 @@ public struct NetworkInputData : INetworkInput
     public Vector3 targetPosition;
     public UnitIdList unitIds;
     public int unitCount;
-    public float timestamp;
 }
 
 public struct UnitIdList : INetworkStruct

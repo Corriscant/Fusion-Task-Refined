@@ -7,27 +7,12 @@ using static Corris.Loggers.LogUtils;
 
 /// <summary>
 /// Manages host-side command processing in a Fusion network game by gathering
-/// player inputs, queuing them, optionally simulating host pauses, and dispatching
+/// player inputs, queuing them, and dispatching
 /// time-ordered commands to the appropriate units under state authority.
 /// </summary>
 public class HostManager : NetworkBehaviour
 {
     NetworkRunner NetRunner => ConnectionManager.Instance.NetRunner;
-    // List of commands came to Host
-    private Queue<Command> _commandQueue = new Queue<Command>();
-    // for testing Host freezes
-    private bool _isFreezeSimulated = false; // Pause flag
-
-    public void Update()
-    {
-        // Toggle pause on Space key
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            _isFreezeSimulated = !_isFreezeSimulated;
-
-            Log($"{GetLogCallPrefix(GetType())} {(_isFreezeSimulated ? "Host paused." : "Host resumed.")}");
-        }
-    }
 
     public override void Spawned()
     {
@@ -57,74 +42,43 @@ public class HostManager : NetworkBehaviour
         {
             if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
             {
-                HostReceiveCommand(player, input); // Add command to queue
+                ProcessPlayerCommand(player, input);
             }
             else
             {
-                LogWarning($"{GetLogCallPrefix(GetType())} Input for {player} dropped at tick {NetRunner.Tick}");
+                // This is normal and can happen if a player didn't provide input for a tick.
+                // We can log it for debugging if needed.
+                // LogWarning($"{GetLogCallPrefix(GetType())} Input for {player} not available at tick {NetRunner.Tick}");
             }
         }
-
-        // Simulate network freeze
-        if (_isFreezeSimulated)
-        {
-            LogWarning($"{GetLogCallPrefix(GetType())} Host is Freezed. Skipping HostProcessCommands.");
-
-            return; // If the host is "frozen", do not process commands
-        }
-
-        // Process command queue
-        HostProcessCommands();
     }
 
-
-    public void HostProcessCommands()
+    /// <summary>
+    /// Processes a single command from a single player for the current tick.
+    /// </summary>
+    private void ProcessPlayerCommand(PlayerRef player, NetworkInputData input)
     {
-        // Sort commands by time
-        var sortedCommands = _commandQueue.OrderBy(c => c.Input.timestamp).ToList();
+        var changedUnits = Unit.GetUnitsInInput(input);
+        if (changedUnits.Count == 0) return;
 
-        foreach (var command in sortedCommands)
+        var center = changedUnits.GetCenter();
+
+        for (int i = 0; i < input.unitCount; i++)
         {
-            // Get a list of all units for which there were changes in the current input (to find the central bearing point)
-            var changedUnits = Unit.GetUnitsInInput(command.Input);
-            // Find the center of the selected units - as the bearing point
-            var center = changedUnits.GetCenter();
-
-            for (int i = 0; i < command.Input.unitCount; i++)
+            var unitId = input.unitIds[i];
+            var unit = FindUnitById(unitId);
+            if (unit != null)
             {
-                var unitId = command.Input.unitIds[i];
-                var unit = FindUnitById(unitId);
-                if (unit != null)
-                {
-                    // Ignore outdated commands
-                    if (command.Input.timestamp > unit.LastCommandTimestamp)
-                    {
-                        // Find a personal point for each unit (keeping the center as the base)
-                        var unitTargetPosition = unit.GetUnitTargetPosition(center, command.Input.targetPosition);
+                // We no longer need to check timestamp, as Fusion guarantees input is for the current tick.
+                // The check for outdated commands is now implicit in Fusion's state authority model.
+                // If a unit receives a new command, it will overwrite its old target.
 
-                        // unit.HostSetTarget(command.Input.targetPosition, command.Input.timestamp);
-                        unit.HostSetTarget(unitTargetPosition, command.Input.timestamp);
-                    }
-                    else
-                    {
-                        LogWarning($"{GetLogCallPrefix(GetType())} Ignored outdated command for unit {unit.name} at {command.Input.timestamp}");
-                    }
-                }
+                var unitTargetPosition = unit.GetUnitTargetPosition(center, input.targetPosition);
+
+                // We can pass the current tick as the command "timestamp" for logging or future logic.
+                unit.HostSetTarget(unitTargetPosition, Runner.Tick);
             }
         }
-
-        _commandQueue.Clear(); // Clear the queue after processing
-    }
-
-    public void HostReceiveCommand(PlayerRef player, NetworkInputData input)
-    {
-        var command = new Command
-        {
-            Player = player,
-            Input = input
-        };
-
-        _commandQueue.Enqueue(command); // Add command to queue
     }
 
     // Refactored to use UnitRegistry for performance.
