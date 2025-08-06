@@ -103,7 +103,7 @@ public class SelectionManager : MonoBehaviour
         }
         _selectedUnits.Clear();
 
-        foreach (var unit in FindObjectsByType<Unit>(FindObjectsSortMode.None))
+        foreach (var unit in UnitRegistry.Units.Values)
         {
             Vector3 unitPosition_Screen = mainCamera.WorldToScreenPoint(unit.transform.position);
 
