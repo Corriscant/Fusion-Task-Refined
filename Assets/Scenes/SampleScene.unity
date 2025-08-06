@@ -1665,7 +1665,6 @@ MonoBehaviour:
   selectableLayer:
     serializedVersion: 2
     m_Bits: 1024
-  _selectedUnits: []
 --- !u!4 &1096639966
 Transform:
   m_ObjectHideFlags: 0
@@ -1819,7 +1818,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PlayerManager: {fileID: 981049793}
-  _selectionManager: {fileID: 1096639965}
   _hostManagerPrefab: {fileID: 1764223918444550803, guid: f430bd65a3ac26d4282fe10ba2434be4, type: 3}
 --- !u!4 &1168897077
 Transform:
@@ -1830,11 +1828,11 @@ Transform:
   m_GameObject: {fileID: 1168897075}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -471.81244, y: -272.01364, z: -0.9742754}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1932837411}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1190834457
 GameObject:
@@ -2052,7 +2050,6 @@ Transform:
   - {fileID: 1190834458}
   - {fileID: 347864836}
   - {fileID: 1096639966}
-  - {fileID: 1168897077}
   - {fileID: 981049792}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2068,4 +2065,5 @@ SceneRoots:
   - {fileID: 1620159959}
   - {fileID: 528003079}
   - {fileID: 1052078044}
+  - {fileID: 1168897077}
   - {fileID: 1932837411}
