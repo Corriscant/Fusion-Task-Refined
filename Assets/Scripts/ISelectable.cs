@@ -3,7 +3,7 @@ using Fusion;
 /// <summary>
 /// Interface for objects that can be selected.
 /// </summary>
-public interface ISelectable : IPositionable
+public interface ISelectable
 {
     /// <summary>
     /// Indicates whether the object is currently selected.

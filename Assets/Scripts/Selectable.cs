@@ -30,11 +30,6 @@ public class Selectable : NetworkBehaviour, ISelectable
         }
     }
 
-    /// <summary>
-    /// Implementation of IPositionable interface to provide position of the unit.
-    /// </summary>
-    public Vector3 Position => transform.position;
-
     public override void Spawned()
     {
         _unit = GetComponent<Unit>();
