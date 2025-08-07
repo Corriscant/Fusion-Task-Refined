@@ -1,12 +1,18 @@
 using Fusion;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UIElements;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.UIElements;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 
+/// <summary>
+/// Manages drag-box selection of units: listens for mouse events,
+/// draws the selection rectangle and keeps track of the currently
+/// highlighted units.
+/// </summary>
 public class SelectionManager : MonoBehaviour
 {
     [SerializeField] private RectTransform selectionBox; // UI for selection box
@@ -114,33 +120,26 @@ public class SelectionManager : MonoBehaviour
 
         Vector2 leftTop_Screen = LocalToScreenPoint(mainCamera, _canvasRect, leftTop_Local);
         Vector2 rightBottom_Screeen = LocalToScreenPoint(mainCamera, _canvasRect, rightBottom_Local);
+        Rect selectionBox_Screen = GetRectFromPoints(leftTop_Screen, rightBottom_Screeen);
 
         foreach (var unit in UnitRegistry.Units.Values)
         {
-            if (unit is not ISelectableProvider provider)
+            if (unit is not ISelectableProvider { Selectable: { } selectable })
             {
                 continue;
             }
 
-            var selectable = provider.Selectable;
-            if (selectable == null)
-            {
+            if (!selectable.CanBeSelectedBy(localPlayer))
                 continue;
-            }
 
             Vector3 unitPosition_Screen = mainCamera.WorldToScreenPoint(unit.Position);
 
-            Rect selectionBox_Screen = GetRectFromPoints(leftTop_Screen, rightBottom_Screeen);
-
-            if (selectionBox_Screen.Contains(unitPosition_Screen) && selectable.CanBeSelectedBy(localPlayer))
+            if (selectionBox_Screen.Contains(unitPosition_Screen))
             {
                 selectable.Selected = true;
                 _selectedUnits.Add(selectable);
 
-                if (selectable is Component component)
-                {
-                    Log($"{GetLogCallPrefix(GetType())} Unit selected: {component.name}");
-                }
+                Log($"{GetLogCallPrefix(GetType())} Unit selected: {unit.name}");
             }
         }
     }
