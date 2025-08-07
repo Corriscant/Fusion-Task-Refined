@@ -13,7 +13,6 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
 {
     public GameObject body;
     private NetworkCharacterController _cc;
-    private ISelectable _selectable;
 
     /// <summary>
     /// Material index, for passing to other clients via RPC
@@ -27,17 +26,20 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     public virtual Vector3 Position => transform.position;
     #endregion IPositionable
 
+    #region ISelectableProvider
+    private ISelectable _selectable;
+    /// <summary>
+    /// Provides access to the Selectable component associated with this unit.
+    /// </summary>
+    public ISelectable Selectable => _selectable ??= GetComponent<Selectable>();
+    #endregion ISelectableProvider
+
     [Networked] public PlayerRef PlayerOwner { get; private set; }
     [Networked] private Vector3 TargetPosition { get; set; } = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
     [Networked] private bool HasTarget { get; set; } = false;
 
     // Last server tick for processed command (defense from "old commands" being processed)
     private float lastCommandServerTick;
-
-    /// <summary>
-    /// Provides access to the Selectable component associated with this unit.
-    /// </summary>
-    public ISelectable Selectable => _selectable ??= GetComponent<Selectable>();
 
     public override void Spawned()
     {
