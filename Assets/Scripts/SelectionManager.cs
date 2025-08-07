@@ -16,7 +16,7 @@ public class SelectionManager : MonoBehaviour
     private Vector2 _startPosition;
     private RectTransform _canvasRect; // Canvas holding SelectionRect
 
-    private List<ISelectable> _selectedUnits = new();
+    private readonly List<ISelectable> _selectedUnits = new();
     public List<ISelectable> SelectedUnits => _selectedUnits;
 
     // Indicates whether a frame selection is currently active
@@ -80,6 +80,16 @@ public class SelectionManager : MonoBehaviour
         IsSelecting = false;
     }
 
+    public void ClearSelection()
+    {
+        foreach (var selectable in _selectedUnits)
+        {
+            selectable.Selected = false;
+        }
+        _selectedUnits.Clear();
+        Log($"{GetLogCallPrefix(GetType())} Selection cleared.");
+    }
+
     private void SelectUnits()
     {
         if (ConnectionManager.Instance.NetRunner == null)
@@ -96,11 +106,14 @@ public class SelectionManager : MonoBehaviour
         PlayerRef localPlayer = ConnectionManager.Instance.NetRunner.LocalPlayer;
 
         // Clear previous selection
-        foreach (var selectable in _selectedUnits)
-        {
-            selectable.Selected = false;
-        }
-        _selectedUnits.Clear();
+        ClearSelection();
+
+        // Convert local coordinates of the selection box to screen coordinates (reverse action to what was done in StartSelection)
+        var leftTop_Local = new Vector2(selectionBox.anchoredPosition.x - selectionBox.sizeDelta.x / 2, selectionBox.anchoredPosition.y - selectionBox.sizeDelta.y / 2);
+        var rightBottom_Local = new Vector2(selectionBox.anchoredPosition.x + selectionBox.sizeDelta.x / 2, selectionBox.anchoredPosition.y + selectionBox.sizeDelta.y / 2);
+
+        Vector2 leftTop_Screen = LocalToScreenPoint(mainCamera, _canvasRect, leftTop_Local);
+        Vector2 rightBottom_Screeen = LocalToScreenPoint(mainCamera, _canvasRect, rightBottom_Local);
 
         foreach (var unit in UnitRegistry.Units.Values)
         {
@@ -110,13 +123,6 @@ public class SelectionManager : MonoBehaviour
             }
 
             Vector3 unitPosition_Screen = mainCamera.WorldToScreenPoint(unit.Position);
-
-            // Convert local coordinates of the selection box to screen coordinates (reverse action to what was done in StartSelection)
-            var leftTop_Local = new Vector2(selectionBox.anchoredPosition.x - selectionBox.sizeDelta.x / 2, selectionBox.anchoredPosition.y - selectionBox.sizeDelta.y / 2);
-            var rightBottom_Local = new Vector2(selectionBox.anchoredPosition.x + selectionBox.sizeDelta.x / 2, selectionBox.anchoredPosition.y + selectionBox.sizeDelta.y / 2);
-
-            Vector2 leftTop_Screen = LocalToScreenPoint(mainCamera, _canvasRect, leftTop_Local);
-            Vector2 rightBottom_Screeen = LocalToScreenPoint(mainCamera, _canvasRect, rightBottom_Local);
 
             Rect selectionBox_Screen = GetRectFromPoints(leftTop_Screen, rightBottom_Screeen);
 
