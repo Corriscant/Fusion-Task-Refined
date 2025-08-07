@@ -117,7 +117,13 @@ public class SelectionManager : MonoBehaviour
 
         foreach (var unit in UnitRegistry.Units.Values)
         {
-            if (!unit.TryGetComponent<Selectable>(out var selectable))
+            if (unit is not ISelectableProvider provider)
+            {
+                continue;
+            }
+
+            var selectable = provider.Selectable;
+            if (selectable == null)
             {
                 continue;
             }
@@ -126,14 +132,14 @@ public class SelectionManager : MonoBehaviour
 
             Rect selectionBox_Screen = GetRectFromPoints(leftTop_Screen, rightBottom_Screeen);
 
-            if (selectionBox_Screen.Contains(unitPosition_Screen))
+            if (selectionBox_Screen.Contains(unitPosition_Screen) && selectable.CanBeSelectedBy(localPlayer))
             {
-                if (selectable.CanBeSelectedBy(localPlayer))
-                {
-                    selectable.Selected = true;
-                    _selectedUnits.Add(selectable);
+                selectable.Selected = true;
+                _selectedUnits.Add(selectable);
 
-                    Log($"{GetLogCallPrefix(GetType())} Unit selected: {selectable.name}");
+                if (selectable is Component component)
+                {
+                    Log($"{GetLogCallPrefix(GetType())} Unit selected: {component.name}");
                 }
             }
         }

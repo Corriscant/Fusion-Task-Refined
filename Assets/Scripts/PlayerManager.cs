@@ -69,20 +69,13 @@ public class PlayerManager : MonoBehaviour
             for (int i = 0; i < data.unitCount; i++)
             {
                 var selectable = _selectionManager.SelectedUnits[i];
-                if (selectable is MonoBehaviour component)
+                if (selectable is NetworkBehaviour nb)
                 {
-                    if (component.TryGetComponent<NetworkObject>(out var networkObject))
-                    {
-                        data.unitIds[i] = networkObject.Id.Raw;
-                    }
-                    else
-                    {
-                        LogError($"{GetLogCallPrefix(GetType())} Unit {component.name} is missing a NetworkObject!");
-                    }
+                    data.unitIds[i] = nb.Object.Id.Raw;
                 }
-                else
+                else if (selectable is Component component)
                 {
-                    LogError($"{GetLogCallPrefix(GetType())} Selected object at index {i} is not a MonoBehaviour!");
+                    LogError($"{GetLogCallPrefix(GetType())} Unit {component.name} is missing a NetworkObject!");
                 }
             }
 

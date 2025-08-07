@@ -8,10 +8,12 @@ using static Corris.Loggers.LogUtils;
 /// <summary>
 /// Unit class represents a controllable unit in the game.
 /// </summary>
-public class Unit : NetworkBehaviour, IPositionable
+[RequireComponent(typeof(Selectable))]
+public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
 {
     public GameObject body;
     private NetworkCharacterController _cc;
+    private ISelectable _selectable;
 
     /// <summary>
     /// Material index, for passing to other clients via RPC
@@ -31,6 +33,11 @@ public class Unit : NetworkBehaviour, IPositionable
 
     // Last server tick for processed command (defense from "old commands" being processed)
     private float lastCommandServerTick;
+
+    /// <summary>
+    /// Provides access to the Selectable component associated with this unit.
+    /// </summary>
+    public ISelectable Selectable => _selectable ??= GetComponent<Selectable>();
 
     public override void Spawned()
     {
