@@ -45,7 +45,18 @@ public class Selectable : NetworkBehaviour, ISelectable
     }
 
     /// <summary>
-    /// Checks if the unit belongs to the specified player.
+    /// Determines if the unit can be selected by the specified player.
     /// </summary>
-    public bool IsOwnedBy(PlayerRef player) => _unit != null && _unit.PlayerOwner == player;
+    /// <param name="player">Player attempting the selection.</param>
+    /// <returns>True if the player is allowed to select the unit.</returns>
+    public bool CanBeSelectedBy(PlayerRef player)
+    {
+        if (_unit == null)
+        {
+            return false;
+        }
+
+        // Currently selection is allowed only for the owner. Extend this logic to include allies if needed.
+        return _unit.PlayerOwner == player;
+    }
 }

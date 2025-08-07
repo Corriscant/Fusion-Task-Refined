@@ -11,9 +11,9 @@ public interface ISelectable
     bool Selected { get; set; }
 
     /// <summary>
-    /// Checks if the object belongs to the specified player.
+    /// Determines whether the object can be selected by the specified player.
     /// </summary>
-    /// <param name="player">Player to check ownership against.</param>
-    /// <returns>True if owned by the player, otherwise false.</returns>
-    bool IsOwnedBy(PlayerRef player);
+    /// <param name="player">Player attempting the selection.</param>
+    /// <returns>True if selection is allowed, otherwise false.</returns>
+    bool CanBeSelectedBy(PlayerRef player);
 }

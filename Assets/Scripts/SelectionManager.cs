@@ -122,7 +122,7 @@ public class SelectionManager : MonoBehaviour
 
             if (selectionBox_Screen.Contains(unitPosition_Screen))
             {
-                if (selectable.IsOwnedBy(localPlayer))
+                if (selectable.CanBeSelectedBy(localPlayer))
                 {
                     selectable.Selected = true;
                     _selectedUnits.Add(selectable);
