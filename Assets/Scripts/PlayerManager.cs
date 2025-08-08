@@ -63,9 +63,9 @@ public class PlayerManager : MonoBehaviour
             data = new NetworkInputData
             {
                 targetPosition = _pendingTargetPosition,
+                unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits)
             };
 
-            data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
             for (int i = 0; i < data.unitCount; i++)
             {
                 var selectable = _selectionManager.SelectedUnits[i];
@@ -75,7 +75,7 @@ public class PlayerManager : MonoBehaviour
                 }
                 else if (selectable is Component component)
                 {
-                    LogError($"{GetLogCallPrefix(GetType())} Unit {component.name} is missing a NetworkObject!");
+                    LogError($"Unit {component.name} is missing a NetworkObject!");
                 }
             }
 

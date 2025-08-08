@@ -36,6 +36,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] public PlayerManager PlayerManager;
     [SerializeField] private HostManager _hostManagerPrefab;
 
+    [Header("Other")]
+    [Tooltip("Prefab of Cursor Echo of other players")]
+    [SerializeField] public GameObject PlayerCursorEcho;
+
     // Prevent multiple connection attempts
     private bool _isConnecting = false;
     public bool IsConnecting => _isConnecting;

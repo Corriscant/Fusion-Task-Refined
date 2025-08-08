@@ -1,9 +1,7 @@
-using Fusion;
+using Fusion; // for PlayerRef
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.UIElements;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;

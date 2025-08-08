@@ -10,6 +10,9 @@ public struct NetworkInputData : INetworkInput
     public Vector3 targetPosition;
     public UnitIdList unitIds;
     public int unitCount;
+
+    // The mouse world position is used to show opponent's mouse position in the game world.
+    public Vector3 mouseWorldPosition;
 }
 
 public struct UnitIdList : INetworkStruct
