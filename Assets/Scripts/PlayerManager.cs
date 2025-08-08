@@ -51,20 +51,32 @@ public class PlayerManager : MonoBehaviour
     // --- Public API for ConnectionManager ---
 
     /// <summary>
-    /// Attempts to get network input data if a command is pending.
-    /// This method is polled by the ConnectionManager.
+    /// Generates network input data for the local player.
+    /// Always provides the current mouse world position and, when available,
+    /// also includes any pending move commands.
     /// </summary>
     /// <param name="data">The generated input data.</param>
-    /// <returns>True if there was a pending command, false otherwise.</returns>
+    /// <returns>True.</returns>
     public bool TryGetNetworkInput(out NetworkInputData data)
     {
+        // Determine where the cursor points in the world.
+        Vector3 mouseWorld = Vector3.zero;
+        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            mouseWorld = hit.point;
+        }
+
+        data = new NetworkInputData
+        {
+            mouseWorldPosition = mouseWorld
+        };
+
+        // Include move command data if one is queued.
         if (_hasPendingTarget)
         {
-            data = new NetworkInputData
-            {
-                targetPosition = _pendingTargetPosition,
-                unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits)
-            };
+            data.targetPosition = _pendingTargetPosition;
+            data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
 
             for (int i = 0; i < data.unitCount; i++)
             {
@@ -79,13 +91,11 @@ public class PlayerManager : MonoBehaviour
                 }
             }
 
-            // Clear the flag internally after providing the data
+            // Clear the flag internally after providing the data.
             _hasPendingTarget = false;
-            return true;
         }
 
-        data = default;
-        return false;
+        return true;
     }
 
     /// <summary>

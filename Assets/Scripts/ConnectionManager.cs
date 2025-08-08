@@ -44,6 +44,9 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     private bool _isConnecting = false;
     public bool IsConnecting => _isConnecting;
 
+    // Keeps track of instantiated cursor echos for remote players.
+    private readonly Dictionary<PlayerRef, GameObject> _cursorEchos = new();
+
     private void Awake()
     {
         // Singleton setup
@@ -150,7 +153,21 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         StartGameAsync(mode);
     }
 
-    // --- INetworkRunnerCallbacks Implementation --- 
+    private void Update()
+    {
+        if (_netRunner == null)
+            return;
+
+        foreach (var pair in _cursorEchos)
+        {
+            if (_netRunner.TryGetInputForPlayer<NetworkInputData>(pair.Key, out var input))
+            {
+                pair.Value.transform.position = input.mouseWorldPosition;
+            }
+        }
+    }
+
+    // --- INetworkRunnerCallbacks Implementation ---
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
@@ -174,6 +191,13 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             PlayerManager.HandlePlayerJoined(runner, player);
         }
+
+        // Instantiate a cursor echo for remote players.
+        if (player != runner.LocalPlayer && PlayerCursorEcho != null)
+        {
+            var echo = Instantiate(PlayerCursorEcho, Vector3.zero, Quaternion.identity);
+            _cursorEchos[player] = echo;
+        }
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
@@ -183,6 +207,13 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         if (PlayerManager != null)
         {
             PlayerManager.HandlePlayerLeft(runner, player);
+        }
+
+        // Remove the cursor echo when a remote player leaves.
+        if (_cursorEchos.TryGetValue(player, out var echo))
+        {
+            Destroy(echo);
+            _cursorEchos.Remove(player);
         }
     }
 
