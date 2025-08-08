@@ -25,7 +25,7 @@ public class PlayerManager : MonoBehaviour
     /// <summary>
     /// The maximum allowed offset for a unit from the center of the group.
     /// </summary>
-    [SerializeField] public int unitAllowedOffset = 3;
+    [SerializeField] public int unitAllowedOffset = 1;
 
     // --- State for Network Input ---
     private Vector3 _pendingTargetPosition;

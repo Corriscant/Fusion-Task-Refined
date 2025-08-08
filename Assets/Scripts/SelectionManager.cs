@@ -144,7 +144,7 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
-    public static Vector2 LocalToScreenPoint(Camera mainCamera, RectTransform rectTransform, Vector2 localPoint)
+    private Vector2 LocalToScreenPoint(Camera mainCamera, RectTransform rectTransform, Vector2 localPoint)
     {
         // Convert local point to world coordinates
         Vector3 worldPoint = rectTransform.TransformPoint(localPoint);

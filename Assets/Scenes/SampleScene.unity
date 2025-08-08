@@ -1476,7 +1476,7 @@ MonoBehaviour:
   _unitPrefab:
     RawGuidValue: dd098a457d77e9847a3e48cd58d0dfc4
   unitCountPerPlayer: 5
-  unitAllowedOffset: 3
+  unitAllowedOffset: 1
 --- !u!1 &1052078041
 GameObject:
   m_ObjectHideFlags: 0
