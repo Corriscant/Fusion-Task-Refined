@@ -129,14 +129,6 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Called by ConnectionManager after it has consumed the input data for a tick.
-    /// </summary>
-    public void ClearPendingTarget()
-    {
-        _hasPendingTarget = false;
-    }
-
     // --- Command Handling ---
 
     private void HandleMoveCommand(Vector3 targetPosition)
