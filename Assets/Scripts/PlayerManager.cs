@@ -100,13 +100,18 @@ public class PlayerManager : NetworkBehaviour
 
     private void UpdateCursorsEcho()
     {
-        foreach (var pair in _playerCursors)
+        foreach (var cursor in _playerCursors.Values)
         {
-            if (_playerCursors.TryGetValue(pair.Key, out var cursor))
-            {
-                pair.Value.transform.position = cursor.CursorPosition;
-            }
+            cursor.transform.position = cursor.CursorPosition;
         }
+    }
+
+    /// <summary>
+    /// Registers a player cursor so its position can be updated.
+    /// </summary>
+    public void RegisterPlayerCursor(PlayerRef player, PlayerCursor cursor)
+    {
+        _playerCursors[player] = cursor;
     }
 
     public bool TryGetPlayerCursor(PlayerRef player, out PlayerCursor cursor)
@@ -185,7 +190,7 @@ public class PlayerManager : NetworkBehaviour
             if (PlayerCursorPrefab != null)
             {
                 var cursor = runner.Spawn(PlayerCursorPrefab, Vector3.zero, Quaternion.identity, player);
-                _playerCursors[player] = cursor;
+                RegisterPlayerCursor(player, cursor);
             }
             else
             {
