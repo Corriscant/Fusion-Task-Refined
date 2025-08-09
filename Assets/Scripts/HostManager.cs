@@ -55,6 +55,11 @@ public class HostManager : NetworkBehaviour
     /// </summary>
     private void HostProcessPlayerCommand(PlayerRef player, NetworkInputData input)
     {
+        if (ConnectionManager.Instance.TryGetPlayerCursor(player, out var playerCursor))
+        {
+            playerCursor.CursorPosition = input.mouseWorldPosition;
+        }
+
         var changedUnits = Unit.GetUnitsInInput(input);
         if (changedUnits.Count == 0) return;
 

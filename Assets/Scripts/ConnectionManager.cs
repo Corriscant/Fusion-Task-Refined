@@ -41,6 +41,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     [Header("Other")]
     [Tooltip("Prefab of Cursor Echo of other players")]
     [SerializeField] public GameObject PlayerCursorEcho;
+    [SerializeField] private PlayerCursor _playerCursorPrefab;
 
     // Prevent multiple connection attempts
     private bool _isConnecting = false;
@@ -48,6 +49,13 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 
     // Keeps track of instantiated cursor echos for remote players.
     private readonly Dictionary<PlayerRef, GameObject> _cursorEchos = new();
+    // Stores spawned network cursors for players.
+    private readonly Dictionary<PlayerRef, PlayerCursor> _playerCursors = new();
+
+    public bool TryGetPlayerCursor(PlayerRef player, out PlayerCursor cursor)
+    {
+        return _playerCursors.TryGetValue(player, out cursor);
+    }
 
     private void Awake()
     {
@@ -162,11 +170,9 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 
         foreach (var pair in _cursorEchos)
         {
-            if (_netRunner.TryGetInputForPlayer<NetworkInputData>(pair.Key, out var input))
+            if (_playerCursors.TryGetValue(pair.Key, out var cursor))
             {
-                Log($"{GetLogCallPrefix(GetType())} input.mouseWorldPosition[{input.mouseWorldPosition}].");
-
-                pair.Value.transform.position = input.mouseWorldPosition;
+                pair.Value.transform.position = cursor.CursorPosition;
             }
         }
     }
@@ -196,14 +202,22 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
             PlayerManager.HandlePlayerJoined(runner, player);
         }
 
-        // Instantiate a cursor echo for remote players.
-      //  if (player != runner.LocalPlayer && PlayerCursorEcho != null)
-        if (PlayerCursorEcho != null)
+        if (_playerCursorPrefab != null)
+        {
+            var cursor = _netRunner.Spawn(_playerCursorPrefab, Vector3.zero, Quaternion.identity, player);
+            _playerCursors[player] = cursor;
+        }
+        else
+        {
+            LogWarning($"{GetLogCallPrefix(GetType())} PlayerCursor prefab is null. Cannot spawn cursor for player {player}.");
+        }
+
+        if (player != runner.LocalPlayer && PlayerCursorEcho != null)
         {
             var echo = Instantiate(PlayerCursorEcho, Vector3.zero, Quaternion.identity);
             _cursorEchos[player] = echo;
         }
-        else
+        else if (PlayerCursorEcho == null)
         {
             LogWarning($"{GetLogCallPrefix(GetType())} PlayerCursorEcho is null. Cannot instantiate cursor echo for player {player}.");
         }
@@ -218,7 +232,12 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
             PlayerManager.HandlePlayerLeft(runner, player);
         }
 
-        // Remove the cursor echo when a remote player leaves.
+        if (_playerCursors.TryGetValue(player, out var cursor))
+        {
+            _netRunner.Despawn(cursor.Object);
+            _playerCursors.Remove(player);
+        }
+
         if (_cursorEchos.TryGetValue(player, out var echo))
         {
             Destroy(echo);
