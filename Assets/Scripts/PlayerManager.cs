@@ -61,6 +61,7 @@ public class PlayerManager : MonoBehaviour
     {
         // Determine where the cursor points in the world.
         Vector3 mouseWorld = Vector3.zero;
+
         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit))
         {

@@ -9,6 +9,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
+using UnityEngine.Windows;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -162,6 +164,8 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             if (_netRunner.TryGetInputForPlayer<NetworkInputData>(pair.Key, out var input))
             {
+                Log($"{GetLogCallPrefix(GetType())} input.mouseWorldPosition[{input.mouseWorldPosition}].");
+
                 pair.Value.transform.position = input.mouseWorldPosition;
             }
         }
@@ -193,10 +197,15 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         // Instantiate a cursor echo for remote players.
-        if (player != runner.LocalPlayer && PlayerCursorEcho != null)
+      //  if (player != runner.LocalPlayer && PlayerCursorEcho != null)
+        if (PlayerCursorEcho != null)
         {
             var echo = Instantiate(PlayerCursorEcho, Vector3.zero, Quaternion.identity);
             _cursorEchos[player] = echo;
+        }
+        else
+        {
+            LogWarning($"{GetLogCallPrefix(GetType())} PlayerCursorEcho is null. Cannot instantiate cursor echo for player {player}.");
         }
     }
 
