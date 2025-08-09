@@ -1820,6 +1820,7 @@ MonoBehaviour:
   PlayerManager: {fileID: 981049793}
   _hostManagerPrefab: {fileID: 1764223918444550803, guid: f430bd65a3ac26d4282fe10ba2434be4, type: 3}
   PlayerCursorEcho: {fileID: 831694046346804455, guid: 51e7ce9da520a564a8a82bab6437180c, type: 3}
+  _playerCursorPrefab: {fileID: 5459181759355313869, guid: 51e7ce9da520a564a8a82bab6437180c, type: 3}
 --- !u!4 &1168897077
 Transform:
   m_ObjectHideFlags: 0
