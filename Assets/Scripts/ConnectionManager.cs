@@ -47,7 +47,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     public bool IsConnecting => _isConnecting;
 
     // Keeps track of instantiated cursor echos for remote players.
-    private readonly Dictionary<PlayerRef, GameObject> _cursorEchos = new();
+    public Dictionary<PlayerRef, GameObject> CursorEchos = new();
 
     private void Awake()
     {
@@ -160,7 +160,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         if (_netRunner == null)
             return;
 
-        foreach (var pair in _cursorEchos)
+        foreach (var pair in CursorEchos)
         {
             if (_netRunner.TryGetInputForPlayer<NetworkInputData>(pair.Key, out var input))
             {
@@ -201,7 +201,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         if (PlayerCursorEcho != null)
         {
             var echo = Instantiate(PlayerCursorEcho, Vector3.zero, Quaternion.identity);
-            _cursorEchos[player] = echo;
+            CursorEchos[player] = echo;
         }
         else
         {
@@ -219,10 +219,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         // Remove the cursor echo when a remote player leaves.
-        if (_cursorEchos.TryGetValue(player, out var echo))
+        if (CursorEchos.TryGetValue(player, out var echo))
         {
             Destroy(echo);
-            _cursorEchos.Remove(player);
+            CursorEchos.Remove(player);
         }
     }
 

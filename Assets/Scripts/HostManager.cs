@@ -12,6 +12,7 @@ using static Corris.Loggers.LogUtils;
 public class HostManager : NetworkBehaviour
 {
     NetworkRunner NetRunner => ConnectionManager.Instance.NetRunner;
+    private Dictionary<PlayerRef, GameObject> _cursorEchos => ConnectionManager.Instance.CursorEchos;
 
     public override void Spawned()
     {
@@ -55,6 +56,19 @@ public class HostManager : NetworkBehaviour
     /// </summary>
     private void HostProcessPlayerCommand(PlayerRef player, NetworkInputData input)
     {
+
+        /*  TEMP - better use new Codex branch - there is correct one
+        foreach (var pair in _cursorEchos)
+        {
+            if (NetRunner.TryGetInputForPlayer<NetworkInputData>(pair.Key, out var input))
+            {
+                Log($"{GetLogCallPrefix(GetType())} input.mouseWorldPosition[{input.mouseWorldPosition}].");
+
+                pair.Value.transform.position = input.mouseWorldPosition;
+            }
+        }
+        */
+
         var changedUnits = Unit.GetUnitsInInput(input);
         if (changedUnits.Count == 0) return;
 
