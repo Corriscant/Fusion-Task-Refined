@@ -41,11 +41,17 @@ public class PlayerManager : MonoBehaviour
     private void OnEnable()
     {
         InputManager.OnSecondaryMouseClick_World += HandleMoveCommand;
+        ConnectionManager.On_PlayerJoined += HandlePlayerJoined;
+        ConnectionManager.On_PlayerLeft += HandlePlayerLeft;
+        ConnectionManager.On_Input += TryGetNetworkInput;
     }
 
     private void OnDisable()
     {
         InputManager.OnSecondaryMouseClick_World -= HandleMoveCommand;
+        ConnectionManager.On_PlayerLeft -= HandlePlayerLeft;
+        ConnectionManager.On_PlayerJoined -= HandlePlayerJoined;
+        ConnectionManager.On_Input -= TryGetNetworkInput;
     }
 
     // --- Public API for ConnectionManager ---
@@ -57,7 +63,7 @@ public class PlayerManager : MonoBehaviour
     /// </summary>
     /// <param name="data">The generated input data.</param>
     /// <returns>True.</returns>
-    public bool TryGetNetworkInput(out NetworkInputData data)
+    private void TryGetNetworkInput(ref NetworkInputData data)
     {
         // Determine where the cursor points in the world.
         Vector3 mouseWorld = Vector3.zero;
@@ -95,8 +101,6 @@ public class PlayerManager : MonoBehaviour
             // Clear the flag internally after providing the data.
             _hasPendingTarget = false;
         }
-
-        return true;
     }
 
     /// <summary>
@@ -112,6 +116,7 @@ public class PlayerManager : MonoBehaviour
             // Synchronize unit data (names, materials). Delayed to allow spawning for everyone.
             StartCoroutine(SyncUnitsData(runner));
         }
+
     }
 
     /// <summary>

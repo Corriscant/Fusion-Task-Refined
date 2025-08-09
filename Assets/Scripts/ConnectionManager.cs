@@ -16,6 +16,11 @@ using UnityEditor;
 #endif
 
 /// <summary>
+/// This structure is used to encapsulate player input for network transmission.
+/// </summary>
+public delegate void OnInputHandler(ref NetworkInputData data);
+
+/// <summary>
 /// Manages the core network connection and session lifecycle using Photon Fusion.
 /// This class is responsible for initializing the NetworkRunner, handling top-level network callbacks,
 /// and delegating game-specific logic to specialized managers (e.g., PlayerManager, HostManager).
@@ -27,6 +32,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     public static event Action OnConnectingStarted;
     public static event Action OnConnected;
     public static event Action OnDisconnected;
+
+    public static event Action<NetworkRunner, PlayerRef> On_PlayerJoined;
+    public static event Action<NetworkRunner, PlayerRef> On_PlayerLeft;
+    public static event OnInputHandler On_Input;
 
     // Singleton Instance
     public static ConnectionManager Instance { get; private set; }
@@ -40,22 +49,12 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 
     [Header("Other")]
     [Tooltip("Prefab of Cursor Echo of other players")]
-    [SerializeField] public GameObject PlayerCursorEcho;
-    [SerializeField] private PlayerCursor _playerCursorPrefab;
+    // [SerializeField] private PlayerCursor PlayerCursorPrefab;
+    public PlayerCursor PlayerCursorPrefab;
 
     // Prevent multiple connection attempts
     private bool _isConnecting = false;
     public bool IsConnecting => _isConnecting;
-
-    // Keeps track of instantiated cursor echos for remote players.
-    private readonly Dictionary<PlayerRef, GameObject> _cursorEchos = new();
-    // Stores spawned network cursors for players.
-    private readonly Dictionary<PlayerRef, PlayerCursor> _playerCursors = new();
-
-    public bool TryGetPlayerCursor(PlayerRef player, out PlayerCursor cursor)
-    {
-        return _playerCursors.TryGetValue(player, out cursor);
-    }
 
     private void Awake()
     {
@@ -163,19 +162,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         StartGameAsync(mode);
     }
 
-    private void Update()
-    {
-        if (_netRunner == null)
-            return;
-
-        foreach (var pair in _cursorEchos)
-        {
-            if (_playerCursors.TryGetValue(pair.Key, out var cursor))
-            {
-                pair.Value.transform.position = cursor.CursorPosition;
-            }
-        }
-    }
 
     // --- INetworkRunnerCallbacks Implementation ---
 
@@ -183,12 +169,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         NetworkInputData data = default;
 
-        // PlayerManager is fully responsible for generating its own input.
-        // ConnectionManager just collects it.
-        if (PlayerManager != null)
-        {
-            PlayerManager.TryGetNetworkInput(out data);
-        }
+        On_Input?.Invoke(ref data);   
 
         input.Set(data);
     }
@@ -197,52 +178,14 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         Log($"{GetLogCallPrefix(GetType())} Player joined: {player}");
 
-        if (PlayerManager != null)
-        {
-            PlayerManager.HandlePlayerJoined(runner, player);
-        }
-
-        if (_playerCursorPrefab != null)
-        {
-            var cursor = _netRunner.Spawn(_playerCursorPrefab, Vector3.zero, Quaternion.identity, player);
-            _playerCursors[player] = cursor;
-        }
-        else
-        {
-            LogWarning($"{GetLogCallPrefix(GetType())} PlayerCursor prefab is null. Cannot spawn cursor for player {player}.");
-        }
-
-        if (/*player != runner.LocalPlayer && */PlayerCursorEcho != null)
-        {
-            var echo = Instantiate(PlayerCursorEcho, Vector3.zero, Quaternion.identity);
-            _cursorEchos[player] = echo;
-        }
-        else if (PlayerCursorEcho == null)
-        {
-            LogWarning($"{GetLogCallPrefix(GetType())} PlayerCursorEcho is null. Cannot instantiate cursor echo for player {player}.");
-        }
+        On_PlayerJoined?.Invoke(runner, player);
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
         Log($"{GetLogCallPrefix(GetType())} Player left: {player}");
 
-        if (PlayerManager != null)
-        {
-            PlayerManager.HandlePlayerLeft(runner, player);
-        }
-
-        if (_playerCursors.TryGetValue(player, out var cursor))
-        {
-            _netRunner.Despawn(cursor.Object);
-            _playerCursors.Remove(player);
-        }
-
-        if (_cursorEchos.TryGetValue(player, out var echo))
-        {
-            Destroy(echo);
-            _cursorEchos.Remove(player);
-        }
+        On_PlayerLeft?.Invoke(runner, player);
     }
 
     public void OnSceneLoadDone(NetworkRunner runner)
