@@ -1437,6 +1437,7 @@ GameObject:
   m_Component:
   - component: {fileID: 981049792}
   - component: {fileID: 981049793}
+  - component: {fileID: 981049794}
   m_Layer: 0
   m_Name: PlayerManager
   m_TagString: Untagged
@@ -1476,7 +1477,27 @@ MonoBehaviour:
   _unitPrefab:
     RawGuidValue: dd098a457d77e9847a3e48cd58d0dfc4
   unitCountPerPlayer: 5
+  PlayerCursorPrefab: {fileID: 5459181759355313869, guid: 51e7ce9da520a564a8a82bab6437180c, type: 3}
   unitAllowedOffset: 1
+--- !u!114 &981049794
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 981049791}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 3188278609
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 981049793}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &1052078041
 GameObject:
   m_ObjectHideFlags: 0
@@ -1819,8 +1840,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PlayerManager: {fileID: 981049793}
   _hostManagerPrefab: {fileID: 1764223918444550803, guid: f430bd65a3ac26d4282fe10ba2434be4, type: 3}
-  PlayerCursorEcho: {fileID: 831694046346804455, guid: 51e7ce9da520a564a8a82bab6437180c, type: 3}
-  _playerCursorPrefab: {fileID: 5459181759355313869, guid: 51e7ce9da520a564a8a82bab6437180c, type: 3}
 --- !u!4 &1168897077
 Transform:
   m_ObjectHideFlags: 0

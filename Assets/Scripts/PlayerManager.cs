@@ -10,8 +10,10 @@ using static Corris.Loggers.LogUtils;
 /// Handles game logic related to players, such as spawning units when a player joins,
 /// cleaning up when they leave, and processing their commands and translates local player input into network-ready commands.
 /// </summary>
-public class PlayerManager : MonoBehaviour
+public class PlayerManager : NetworkBehaviour
 {
+    NetworkRunner NetRunner => ConnectionManager.Instance.NetRunner;
+
     // --- Dependencies ---
     [Header("Dependencies")]
     [SerializeField] private SelectionManager _selectionManager;
@@ -20,6 +22,12 @@ public class PlayerManager : MonoBehaviour
     [Header("Unit Spawn Settings")]
     [SerializeField] private NetworkPrefabRef _unitPrefab; // Prefab for the unit to be spawned.
     [SerializeField] private int unitCountPerPlayer = 5; // How many units to spawn for each player.
+
+    [Header("Other")]
+    [Tooltip("Prefab of Cursor Echo of other players")]
+    [SerializeField] private PlayerCursor PlayerCursorPrefab;
+    // Stores spawned network cursors for players.
+    private readonly Dictionary<PlayerRef, PlayerCursor> _playerCursors = new();
 
     [Header("Other")]
     /// <summary>
@@ -52,6 +60,55 @@ public class PlayerManager : MonoBehaviour
         ConnectionManager.On_PlayerLeft -= HandlePlayerLeft;
         ConnectionManager.On_PlayerJoined -= HandlePlayerJoined;
         ConnectionManager.On_Input -= TryGetNetworkInput;
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (Object.HasStateAuthority)
+            HostProcessCommandsFromNetwork();
+    }
+
+    private void HostProcessCommandsFromNetwork()
+    {
+        // Get data from all active players
+        foreach (var player in NetRunner.ActivePlayers)
+        {
+            if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
+            {
+                if (TryGetPlayerCursor(player, out var playerCursor))
+                {
+                    playerCursor.CursorPosition = input.mouseWorldPosition;
+                }
+            }
+            else
+            {
+                // This is normal and can happen if a player didn't provide input for a tick.
+                // We can log it for debugging if needed.
+                // LogWarning($"{GetLogCallPrefix(GetType())} Input for {player} not available at tick {NetRunner.Tick}");
+            }
+        }
+    }
+
+    public void LateUpdate()
+    {
+        if (_playerCursors != null && _playerCursors.Count > 0)
+            UpdateCursorsEcho();
+    }
+
+    private void UpdateCursorsEcho()
+    {
+        foreach (var pair in _playerCursors)
+        {
+            if (_playerCursors.TryGetValue(pair.Key, out var cursor))
+            {
+                pair.Value.transform.position = cursor.CursorPosition;
+            }
+        }
+    }
+
+    public bool TryGetPlayerCursor(PlayerRef player, out PlayerCursor cursor)
+    {
+        return _playerCursors.TryGetValue(player, out cursor);
     }
 
     // --- Public API for ConnectionManager ---
@@ -115,6 +172,16 @@ public class PlayerManager : MonoBehaviour
             SpawnPlayerUnits(runner, player);
             // Synchronize unit data (names, materials). Delayed to allow spawning for everyone.
             StartCoroutine(SyncUnitsData(runner));
+
+            if (PlayerCursorPrefab != null)
+            {
+                var cursor = runner.Spawn(PlayerCursorPrefab, Vector3.zero, Quaternion.identity, player);
+                _playerCursors[player] = cursor;
+            }
+            else
+            {
+                LogWarning($"{GetLogCallPrefix(GetType())} PlayerCursor prefab is null. Cannot spawn cursor for player {player}.");
+            }
         }
 
     }
@@ -141,6 +208,12 @@ public class PlayerManager : MonoBehaviour
 
                 // Remove the player from the dictionary.
                 _spawnedPlayers.Remove(player);
+            }
+
+            if (_playerCursors.TryGetValue(player, out var cursor))
+            {
+                runner.Despawn(cursor.Object);
+                _playerCursors.Remove(player);
             }
         }
     }
