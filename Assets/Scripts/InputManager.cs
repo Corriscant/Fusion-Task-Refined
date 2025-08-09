@@ -14,6 +14,9 @@ public class InputManager : MonoBehaviour
     // This event was created for the move command
     public static event Action<Vector3> OnSecondaryMouseClick_World;
 
+    // --- Mouse movement  ---
+    public static event Action<Vector3> OnMouseMove;
+
     // Camera used for raycasting
     [SerializeField] private Camera mainCamera;
 
@@ -25,6 +28,7 @@ public class InputManager : MonoBehaviour
         // Process input for each button type
         ProcessPrimaryMouseInput();
         ProcessSecondaryMouseInput();
+        ProcessMousePosition();
     }
 
     /// <summary>
@@ -64,6 +68,14 @@ public class InputManager : MonoBehaviour
                 OnSecondaryMouseClick_World?.Invoke(hit.point);
             }
         }
+    }
+
+    /// <summary>
+    /// Publishes the current mouse position.
+    /// </summary>
+    private void ProcessMousePosition()
+    {
+        OnMouseMove?.Invoke(Input.mousePosition);
     }
 
 }

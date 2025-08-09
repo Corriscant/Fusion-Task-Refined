@@ -38,6 +38,7 @@ public class PlayerManager : NetworkBehaviour
     // --- State for Network Input ---
     private Vector3 _pendingTargetPosition;
     private bool _hasPendingTarget;
+    private Vector3 _currentMousePosition;
 
     // --- Private Fields ---
     // Tracks the spawned units for each player for easy cleanup.
@@ -49,6 +50,7 @@ public class PlayerManager : NetworkBehaviour
     private void OnEnable()
     {
         InputManager.OnSecondaryMouseClick_World += HandleMoveCommand;
+        InputManager.OnMouseMove += CacheMousePosition;
         ConnectionManager.On_PlayerJoined += HandlePlayerJoined;
         ConnectionManager.On_PlayerLeft += HandlePlayerLeft;
         ConnectionManager.On_Input += TryGetNetworkInput;
@@ -57,6 +59,7 @@ public class PlayerManager : NetworkBehaviour
     private void OnDisable()
     {
         InputManager.OnSecondaryMouseClick_World -= HandleMoveCommand;
+        InputManager.OnMouseMove -= CacheMousePosition;
         ConnectionManager.On_PlayerLeft -= HandlePlayerLeft;
         ConnectionManager.On_PlayerJoined -= HandlePlayerJoined;
         ConnectionManager.On_Input -= TryGetNetworkInput;
@@ -111,8 +114,13 @@ public class PlayerManager : NetworkBehaviour
         return _playerCursors.TryGetValue(player, out cursor);
     }
 
-    // --- Public API for ConnectionManager ---
+    private void CacheMousePosition(Vector3 position)
+    {
+        _currentMousePosition = position;
+    }
 
+    // --- Public API for ConnectionManager ---
+    
     /// <summary>
     /// Generates network input data for the local player.
     /// Always provides the current mouse world position and, when available,
@@ -125,7 +133,8 @@ public class PlayerManager : NetworkBehaviour
         // Determine where the cursor points in the world.
         Vector3 mouseWorld = Vector3.zero;
 
-        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+      //  var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        var ray = Camera.main.ScreenPointToRay(_currentMousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
             mouseWorld = hit.point;
