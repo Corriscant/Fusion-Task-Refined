@@ -9,6 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8537578631343576272}
+  - component: {fileID: 5459181759355313869}
+  - component: {fileID: -8487732924325373455}
   m_Layer: 0
   m_Name: PlayerCursorEcho
   m_TagString: Untagged
@@ -32,6 +34,38 @@ Transform:
   - {fileID: 6446881109258135132}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5459181759355313869
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 831694046346804455}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e59f69e3b324d60a1c84ffa19d99123, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _CursorPosition: {x: 0, y: 0, z: 0}
+--- !u!114 &-8487732924325373455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 831694046346804455}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 2666664219
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 5459181759355313869}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &2796399501939750781
 GameObject:
   m_ObjectHideFlags: 0

@@ -212,7 +212,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
             LogWarning($"{GetLogCallPrefix(GetType())} PlayerCursor prefab is null. Cannot spawn cursor for player {player}.");
         }
 
-        if (player != runner.LocalPlayer && PlayerCursorEcho != null)
+        if (/*player != runner.LocalPlayer && */PlayerCursorEcho != null)
         {
             var echo = Instantiate(PlayerCursorEcho, Vector3.zero, Quaternion.identity);
             _cursorEchos[player] = echo;
