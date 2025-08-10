@@ -41,6 +41,8 @@ public class PlayerManager : NetworkBehaviour
     // --- Private Fields ---
     // Tracks the spawned units for each player for easy cleanup.
     private Dictionary<PlayerRef, List<NetworkObject>> _spawnedPlayers = new();
+    // Tracks material indices assigned to each player.
+    private Dictionary<PlayerRef, int> _playerMaterialIndices = new();
     // Counter to assign a unique material index to each new player.
     private int _spawnedPlayersCount;
 
@@ -173,7 +175,8 @@ public class PlayerManager : NetworkBehaviour
 
             if (PlayerCursorPrefab != null)
             {
-                runner.Spawn(PlayerCursorPrefab, Vector3.zero, Quaternion.identity, player);
+                var cursor = runner.Spawn(PlayerCursorPrefab, Vector3.zero, Quaternion.identity, player);
+                cursor.MaterialIndex = _playerMaterialIndices[player];
             }
             else
             {
@@ -205,6 +208,7 @@ public class PlayerManager : NetworkBehaviour
 
                 // Remove the player from the dictionary.
                 _spawnedPlayers.Remove(player);
+                _playerMaterialIndices.Remove(player);
             }
 
             if (PlayerCursorRegistry.TryGet(player, out var cursor))
@@ -266,6 +270,7 @@ public class PlayerManager : NetworkBehaviour
             // This will be sent to all clients via an RPC.
             unit.name = $"Unit_{player.RawEncoded}_{i}";
             unit.materialIndex = _spawnedPlayersCount;
+            _playerMaterialIndices[player] = _spawnedPlayersCount;
 
             unitList.Add(networkUnitObject);
         }
