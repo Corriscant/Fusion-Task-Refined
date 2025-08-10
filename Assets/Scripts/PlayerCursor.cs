@@ -12,7 +12,7 @@ public class PlayerCursor : NetworkBehaviour
     {
         base.Spawned();
         // Register this cursor with the PlayerManager when it spawns.
-        FindObjectOfType<PlayerManager>()?.RegisterPlayerCursor(Object.InputAuthority, this);
+        ConnectionManager.Instance.PlayerManager?.RegisterPlayerCursor(Object.InputAuthority, this);
     }
 }
 
