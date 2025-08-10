@@ -92,8 +92,7 @@ public class PlayerManager : NetworkBehaviour
 
     public void LateUpdate()
     {
-        if (PlayerCursorRegistry.Cursors.Count > 0)
-            UpdateCursorsEcho();
+        UpdateCursorsEcho();
     }
 
     private void UpdateCursorsEcho()
@@ -110,6 +109,19 @@ public class PlayerManager : NetworkBehaviour
     }
 
     /// <summary>
+    /// This uses a raycast from the camera to the mouse position to find the point in the world.
+    /// </summary>
+    private Vector3 GetMouseWorldPosition()
+    {
+        var ray = Camera.main.ScreenPointToRay(_currentMousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            return hit.point;
+        }
+        return Vector3.zero; // Default to zero if no hit.
+    }
+
+    /// <summary>
     /// Generates network input data for the local player.
     /// Always provides the current mouse world position and, when available,
     /// also includes any pending move commands.
@@ -117,18 +129,9 @@ public class PlayerManager : NetworkBehaviour
     /// <param name="data">The generated input data.</param>
     private void TryGetNetworkInput(ref NetworkInputData data)
     {
-        // Determine where the cursor points in the world.
-        Vector3 mouseWorld = Vector3.zero;
-
-        var ray = Camera.main.ScreenPointToRay(_currentMousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit))
-        {
-            mouseWorld = hit.point;
-        }
-
         data = new NetworkInputData
         {
-            mouseWorldPosition = mouseWorld
+            mouseWorldPosition = GetMouseWorldPosition()
         };
 
         // Include move command data if one is queued.
