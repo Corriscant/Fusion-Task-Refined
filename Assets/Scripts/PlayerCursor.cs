@@ -9,7 +9,11 @@ using static Corris.Loggers.LogUtils;
 public class PlayerCursor : NetworkBehaviour
 {
     [Networked] public Vector3 CursorPosition { get; set; }
-    [Networked] public int MaterialIndex { get; set; }
+    /// <summary>
+    /// We use a material index to determine which material to apply to the cursor. React on Networked changes to this index to update the cursor's appearance.
+    /// </summary>
+    [Networked, OnChangedRender(nameof(OnMaterialIndexChanged))]
+    public int MaterialIndex { get; set; }
 
     private MeshRenderer _meshRenderer;
 
@@ -17,7 +21,11 @@ public class PlayerCursor : NetworkBehaviour
     {
         base.Spawned();
         PlayerCursorRegistry.Register(Object.InputAuthority, this);
-        ApplyMaterial(MaterialIndex);
+    }
+
+    private void OnMaterialIndexChanged()
+    {
+       ApplyMaterial(MaterialIndex);
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
