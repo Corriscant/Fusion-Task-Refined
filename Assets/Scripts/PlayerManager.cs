@@ -26,8 +26,6 @@ public class PlayerManager : NetworkBehaviour
     [Header("Other")]
     [Tooltip("Prefab of Cursor Echo of other players")]
     [SerializeField] private PlayerCursor PlayerCursorPrefab;
-    // Stores spawned network cursors for players.
-    private readonly Dictionary<PlayerRef, PlayerCursor> _playerCursors = new();
 
     [Header("Other")]
     /// <summary>
@@ -78,7 +76,7 @@ public class PlayerManager : NetworkBehaviour
         {
             if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
             {
-                if (TryGetPlayerCursor(player, out var playerCursor))
+                if (PlayerCursorRegistry.TryGet(player, out var playerCursor))
                 {
                     playerCursor.CursorPosition = input.mouseWorldPosition;
                 }
@@ -94,29 +92,16 @@ public class PlayerManager : NetworkBehaviour
 
     public void LateUpdate()
     {
-        if (_playerCursors != null && _playerCursors.Count > 0)
+        if (PlayerCursorRegistry.Cursors.Count > 0)
             UpdateCursorsEcho();
     }
 
     private void UpdateCursorsEcho()
     {
-        foreach (var cursor in _playerCursors.Values)
+        foreach (var cursor in PlayerCursorRegistry.Cursors.Values)
         {
             cursor.transform.position = cursor.CursorPosition;
         }
-    }
-
-    /// <summary>
-    /// Registers a player cursor so its position can be updated.
-    /// </summary>
-    public void RegisterPlayerCursor(PlayerRef player, PlayerCursor cursor)
-    {
-        _playerCursors[player] = cursor;
-    }
-
-    public bool TryGetPlayerCursor(PlayerRef player, out PlayerCursor cursor)
-    {
-        return _playerCursors.TryGetValue(player, out cursor);
     }
 
     private void CacheMousePosition(Vector3 position)
@@ -124,21 +109,17 @@ public class PlayerManager : NetworkBehaviour
         _currentMousePosition = position;
     }
 
-    // --- Public API for ConnectionManager ---
-    
     /// <summary>
     /// Generates network input data for the local player.
     /// Always provides the current mouse world position and, when available,
     /// also includes any pending move commands.
     /// </summary>
     /// <param name="data">The generated input data.</param>
-    /// <returns>True.</returns>
     private void TryGetNetworkInput(ref NetworkInputData data)
     {
         // Determine where the cursor points in the world.
         Vector3 mouseWorld = Vector3.zero;
 
-      //  var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         var ray = Camera.main.ScreenPointToRay(_currentMousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
@@ -189,8 +170,7 @@ public class PlayerManager : NetworkBehaviour
 
             if (PlayerCursorPrefab != null)
             {
-                var cursor = runner.Spawn(PlayerCursorPrefab, Vector3.zero, Quaternion.identity, player);
-                RegisterPlayerCursor(player, cursor);
+                runner.Spawn(PlayerCursorPrefab, Vector3.zero, Quaternion.identity, player);
             }
             else
             {
@@ -224,10 +204,9 @@ public class PlayerManager : NetworkBehaviour
                 _spawnedPlayers.Remove(player);
             }
 
-            if (_playerCursors.TryGetValue(player, out var cursor))
+            if (PlayerCursorRegistry.TryGet(player, out var cursor))
             {
                 runner.Despawn(cursor.Object);
-                _playerCursors.Remove(player);
             }
         }
     }

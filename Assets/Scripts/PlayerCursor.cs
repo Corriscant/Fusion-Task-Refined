@@ -11,8 +11,12 @@ public class PlayerCursor : NetworkBehaviour
     public override void Spawned()
     {
         base.Spawned();
-        // Register this cursor with the PlayerManager when it spawns.
-        ConnectionManager.Instance.PlayerManager?.RegisterPlayerCursor(Object.InputAuthority, this);
+        PlayerCursorRegistry.Register(Object.InputAuthority, this);
+    }
+
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        PlayerCursorRegistry.Unregister(Object.InputAuthority);
+        base.Despawned(runner, hasState);
     }
 }
-
