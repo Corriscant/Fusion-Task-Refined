@@ -1,5 +1,7 @@
 using Fusion;
 using UnityEngine;
+using static Corris.Loggers.Logger;
+using static Corris.Loggers.LogUtils;
 
 /// <summary>
 /// Networked cursor data for a player.
@@ -26,11 +28,26 @@ public class PlayerCursor : NetworkBehaviour
 
     private void ApplyMaterial(int index)
     {
-        _meshRenderer ??= GetComponentInChildren<MeshRenderer>();
+        _meshRenderer = _meshRenderer != null ? _meshRenderer : GetComponentInChildren<MeshRenderer>();
+
+        if (_meshRenderer == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} MeshRenderer not found for Cursor Index[{index}].");
+            return;
+        }
+
         var material = Resources.Load<Material>($"Materials/UnitPayer{index}_Material");
+
+        if (material == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Material not found for Cursor Index[{index}].");
+            return;
+        }
+
         if (_meshRenderer != null && material != null)
         {
             _meshRenderer.material = material;
+            Log($"{GetLogCallPrefix(GetType())} Material successfully loaded and applied to Cursor Index[{index}].");
         }
     }
 }
