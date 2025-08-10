@@ -31,12 +31,12 @@ public class GameLauncher : MonoBehaviour
     private Button[] _buttons;
     #endregion GUI
 
-    private ConnectionManager _networkManager;
+    private ConnectionManager _connectionManager;
 
     private void Start()
     {
-        _networkManager = ConnectionManager.Instance;
-        if (_networkManager == null)
+        _connectionManager = ConnectionManager.Instance;
+        if (_connectionManager == null)
         {
             LogError($"{GetLogCallPrefix(GetType())} ConnectionManager NIL!");
             enabled = false;
@@ -60,8 +60,8 @@ public class GameLauncher : MonoBehaviour
 
         _buttons = new[] { _hostButton, _joinButton, _exitButton };
 
-        _hostButton.onClick.AddListener(() => _networkManager.StartGamePublic(GameMode.Host));
-        _joinButton.onClick.AddListener(() => _networkManager.StartGamePublic(GameMode.Client));
+        _hostButton.onClick.AddListener(() => _connectionManager.StartGamePublic(GameMode.Host));
+        _joinButton.onClick.AddListener(() => _connectionManager.StartGamePublic(GameMode.Client));
         _exitButton.onClick.AddListener(QuitGame);
     }
 
@@ -101,16 +101,16 @@ public class GameLauncher : MonoBehaviour
 
     private void Update()
     {
-        if (_networkManager == null)
+        if (_connectionManager == null)
             return;
 
         bool selectionActive = SelectionManager.IsSelecting;
-        bool runnerMissing = _networkManager.NetRunner == null;
+        bool runnerMissing = _connectionManager.NetRunner == null;
 
         _hostButton.gameObject.SetActive(runnerMissing);
         _joinButton.gameObject.SetActive(runnerMissing);
 
-        bool interactable = !_networkManager.IsConnecting && !selectionActive;
+        bool interactable = !_connectionManager.IsConnecting && !selectionActive;
         _hostButton.interactable = interactable;
         _joinButton.interactable = interactable;
         _exitButton.interactable = !selectionActive;
