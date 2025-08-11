@@ -37,7 +37,7 @@ public class PlayerCursor : NetworkBehaviour
 
     private void ApplyMaterial(int index)
     {
-        _meshRenderer = _meshRenderer != null ? _meshRenderer : GetComponentInChildren<MeshRenderer>();
+        _meshRenderer ??= GetComponentInChildren<MeshRenderer>();
 
         if (_meshRenderer == null)
         {
@@ -45,7 +45,7 @@ public class PlayerCursor : NetworkBehaviour
             return;
         }
 
-        var material = Resources.Load<Material>($"Materials/UnitPayer{index}_Material");
+        var material = PlayerMaterialProvider.GetMaterial(index);
 
         if (material == null)
         {
@@ -53,10 +53,7 @@ public class PlayerCursor : NetworkBehaviour
             return;
         }
 
-        if (_meshRenderer != null && material != null)
-        {
-            _meshRenderer.material = material;
-            Log($"{GetLogCallPrefix(GetType())} Material successfully loaded and applied to Cursor Index[{index}].");
-        }
+        _meshRenderer.material = material;
+        Log($"{GetLogCallPrefix(GetType())} Material successfully loaded and applied to Cursor Index[{index}].");
     }
 }

@@ -13,6 +13,7 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
 {
     public GameObject body;
     private NetworkCharacterController _cc;
+    private MeshRenderer _meshRenderer; // Cache for MeshRenderer to avoid repeated lookups
 
     /// <summary>
     /// Material index, for passing to other clients via RPC
@@ -173,18 +174,38 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
             if (networkObject.TryGetComponent<Unit>(out var unit))
             {
                 unit.name = unitName;
-                string materialName = $"Materials/UnitPayer{materialIndex}_Material";
-                Material material = Resources.Load<Material>(materialName);
-                if (material != null)
-                {
-                    unit.GetComponentInChildren<MeshRenderer>().material = material;
-                    Log($"{GetLogCallPrefix(GetType())} Material successfully loaded and applied.");
-                }
+                unit.materialIndex = materialIndex;
+                unit.ApplyMaterial(materialIndex);
             }
         }
         else
         {
             LogError($"{GetLogCallPrefix(GetType())} Failed to find the unit from unitId.");
         }
+    }
+
+    /// <summary>
+    /// Applies material to the unit using cached renderer.
+    /// </summary>
+    public void ApplyMaterial(int index)
+    {
+        _meshRenderer ??= GetComponentInChildren<MeshRenderer>();
+
+        if (_meshRenderer == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} MeshRenderer not found for Unit Index[{index}].");
+            return;
+        }
+
+        var material = PlayerMaterialProvider.GetMaterial(index);
+
+        if (material == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Material not found for Unit Index[{index}].");
+            return;
+        }
+
+        _meshRenderer.material = material;
+        Log($"{GetLogCallPrefix(GetType())} Material successfully loaded and applied to Unit Index[{index}].");
     }
 }

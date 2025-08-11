@@ -170,18 +170,20 @@ public class PlayerManager : NetworkBehaviour
         if (runner.IsServer)
         {
             SpawnPlayerUnits(runner, player);
-            // Synchronize unit data (names, materials). Delayed to allow spawning for everyone.
-            StartCoroutine(SyncUnitsData(runner));
 
             if (PlayerCursorPrefab != null)
             {
-                var cursor = runner.Spawn(PlayerCursorPrefab, Vector3.zero, Quaternion.identity, player);
-                cursor.MaterialIndex = _playerMaterialIndices[player];
+                runner.Spawn(PlayerCursorPrefab, Vector3.zero, Quaternion.identity, player);
             }
             else
             {
                 LogWarning($"{GetLogCallPrefix(GetType())} PlayerCursor prefab is null. Cannot spawn cursor for player {player}.");
             }
+
+            AssignPlayerColor(player, _spawnedPlayersCount);
+
+            // Synchronize unit data (names, materials). Delayed to allow spawning for everyone.
+            StartCoroutine(SyncUnitsData(runner));
         }
 
     }
@@ -266,17 +268,38 @@ public class PlayerManager : NetworkBehaviour
 
             var unit = networkUnitObject.GetComponent<Unit>();
             unit.SetOwner(player);
-            // We set the name and material index here on the server.
-            // This will be sent to all clients via an RPC.
             unit.name = $"Unit_{player.RawEncoded}_{i}";
-            unit.materialIndex = _spawnedPlayersCount;
-            _playerMaterialIndices[player] = _spawnedPlayersCount;
 
             unitList.Add(networkUnitObject);
         }
 
         // Add the list of spawned units to our dictionary for tracking.
         _spawnedPlayers.Add(player, unitList);
+    }
+
+    /// <summary>
+    /// Assigns a material index to the given player and applies it to all related objects.
+    /// </summary>
+    private void AssignPlayerColor(PlayerRef player, int index)
+    {
+        _playerMaterialIndices[player] = index;
+
+        if (PlayerCursorRegistry.TryGet(player, out var cursor))
+        {
+            cursor.MaterialIndex = index;
+        }
+
+        if (_spawnedPlayers.TryGetValue(player, out var objects))
+        {
+            foreach (var networkObject in objects)
+            {
+                if (networkObject != null && networkObject.TryGetComponent<Unit>(out var unit))
+                {
+                    unit.materialIndex = index;
+                    unit.ApplyMaterial(index);
+                }
+            }
+        }
     }
 
     /// <summary>
