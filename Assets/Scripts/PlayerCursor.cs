@@ -37,7 +37,10 @@ public class PlayerCursor : NetworkBehaviour
 
     private void ApplyMaterial(int index)
     {
-        _meshRenderer ??= GetComponentInChildren<MeshRenderer>();
+        if (_meshRenderer == null)
+        {
+            _meshRenderer = GetComponentInChildren<MeshRenderer>();
+        }
 
         if (_meshRenderer == null)
         {

@@ -32,7 +32,17 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     /// <summary>
     /// Provides access to the Selectable component associated with this unit.
     /// </summary>
-    public ISelectable Selectable => _selectable ??= GetComponent<Selectable>();
+    public ISelectable Selectable
+    {
+        get
+        {
+            if (_selectable == null)
+            {
+                _selectable = GetComponent<Selectable>();
+            }
+            return _selectable;
+        }
+    }
     #endregion ISelectableProvider
 
     [Networked] public PlayerRef PlayerOwner { get; private set; }
@@ -189,7 +199,10 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     /// </summary>
     public void ApplyMaterial(int index)
     {
-        _meshRenderer ??= GetComponentInChildren<MeshRenderer>();
+        if (_meshRenderer == null)
+        {
+            _meshRenderer = GetComponentInChildren<MeshRenderer>();
+        }
 
         if (_meshRenderer == null)
         {
