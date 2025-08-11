@@ -210,13 +210,13 @@ public class PlayerManager : NetworkBehaviour
             Destroy(marker, 2f);
         }
 
-        // Build unit id list and invoke RPC immediately
-        UnitIdList unitIds = default;
-        int unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
+        // Build unit id array and invoke RPC immediately
+        var selectedUnits = _selectionManager.SelectedUnits;
+        var unitIds = new uint[selectedUnits.Count];
 
-        for (int i = 0; i < unitCount; i++)
+        for (int i = 0; i < selectedUnits.Count; i++)
         {
-            var selectable = _selectionManager.SelectedUnits[i];
+            var selectable = selectedUnits[i];
             if (selectable is NetworkBehaviour nb)
             {
                 unitIds[i] = nb.Object.Id.Raw;
@@ -227,7 +227,7 @@ public class PlayerManager : NetworkBehaviour
             }
         }
 
-        RPC_MoveUnits(targetPosition, unitIds, unitCount);
+        RPC_MoveUnits(targetPosition, unitIds);
     }
 
     /// <summary>
@@ -235,15 +235,14 @@ public class PlayerManager : NetworkBehaviour
     /// Executed on the state authority to validate ownership and apply targets.
     /// </summary>
     [Rpc(RpcSources.All, RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsServer)]
-    private void RPC_MoveUnits(Vector3 targetPosition, UnitIdList unitIds, int unitCount, RpcInfo info = default)
+    private void RPC_MoveUnits(Vector3 targetPosition, uint[] unitIds, RpcInfo info = default)
     {
         var changedUnits = new List<Unit>();
 
         var player = info.Source != PlayerRef.None ? info.Source : Runner.LocalPlayer;
 
-        for (int i = 0; i < unitCount; i++)
+        foreach (var unitId in unitIds)
         {
-            var unitId = unitIds[i];
             if (UnitRegistry.Units.TryGetValue(unitId, out var unit) && unit.IsOwnedBy(player))
             {
                 changedUnits.Add(unit);
