@@ -239,10 +239,12 @@ public class PlayerManager : NetworkBehaviour
     {
         var changedUnits = new List<Unit>();
 
+        var player = info.Source != PlayerRef.None ? info.Source : Runner.LocalPlayer;
+
         for (int i = 0; i < unitCount; i++)
         {
             var unitId = unitIds[i];
-            if (UnitRegistry.Units.TryGetValue(unitId, out var unit) && unit.IsOwnedBy(info.Source))
+            if (UnitRegistry.Units.TryGetValue(unitId, out var unit) && unit.IsOwnedBy(player))
             {
                 changedUnits.Add(unit);
             }
@@ -259,7 +261,6 @@ public class PlayerManager : NetworkBehaviour
             unit.HostSetTarget(unitTargetPosition, Runner.Tick);
         }
     }
-
 
     // --- Private Methods ---
 

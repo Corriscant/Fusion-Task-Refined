@@ -1850,7 +1850,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PlayerManager: {fileID: 981049793}
-  _hostManagerPrefab: {fileID: 1764223918444550803, guid: f430bd65a3ac26d4282fe10ba2434be4, type: 3}
 --- !u!4 &1168897077
 Transform:
   m_ObjectHideFlags: 0
