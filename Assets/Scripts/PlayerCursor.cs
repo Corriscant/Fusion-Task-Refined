@@ -21,6 +21,7 @@ public class PlayerCursor : NetworkBehaviour
     {
         base.Spawned();
         PlayerCursorRegistry.Register(Object.InputAuthority, this);
+        ApplyMaterial(MaterialIndex);
     }
 
     private void OnMaterialIndexChanged()
