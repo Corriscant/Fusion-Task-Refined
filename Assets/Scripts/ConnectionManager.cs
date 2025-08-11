@@ -23,7 +23,7 @@ public delegate void OnInputHandler(ref NetworkInputData data);
 /// <summary>
 /// Manages the core network connection and session lifecycle using Photon Fusion.
 /// This class is responsible for initializing the NetworkRunner, handling top-level network callbacks,
-/// and delegating game-specific logic to specialized managers (e.g., PlayerManager, HostManager).
+/// and delegating game-specific logic to specialized managers (e.g., PlayerManager).
 /// It also collects input from other systems to provide it to the network simulation via OnInput.
 /// </summary>
 public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
@@ -45,7 +45,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 
     [Header("Managers")]
     [SerializeField] public PlayerManager PlayerManager;
-    [SerializeField] private HostManager _hostManagerPrefab;
 
     // Prevent multiple connection attempts
     private bool _isConnecting = false;
@@ -185,20 +184,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnSceneLoadDone(NetworkRunner runner)
     {
-        // running host manager
-        if (_netRunner.IsServer)
-        {
-            Log($"{GetLogCallPrefix(GetType())} Spawning HostManagerPrefab on server.");
-            var result = _netRunner.Spawn(_hostManagerPrefab, Vector3.zero, Quaternion.identity, null);
-            if (result == null)
-            {
-                LogError($"{GetLogCallPrefix(GetType())} Failed to spawn HostManagerPrefab.");
-            }
-            else
-            {
-                Log($"{GetLogCallPrefix(GetType())} HostManagerPrefab spawned successfully.");
-            }
-        }
+        // HostManager prefab is no longer required after the refactor.
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)

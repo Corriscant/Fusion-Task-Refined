@@ -8,7 +8,7 @@ using static Corris.Loggers.LogUtils;
 
 /// <summary>
 /// Handles game logic related to players, such as spawning units when a player joins,
-/// cleaning up when they leave, and processing their commands and translates local player input into network-ready commands.
+/// cleaning up when they leave, and processing their commands via RPC while streaming cursor data through NetworkInput.
 /// </summary>
 public class PlayerManager : NetworkBehaviour
 {
@@ -34,8 +34,6 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField] public int unitAllowedOffset = 1;
 
     // --- State for Network Input ---
-    private Vector3 _pendingTargetPosition;
-    private bool _hasPendingTarget;
     private Vector3 _currentMousePosition;
 
     // --- Private Fields ---
@@ -68,12 +66,12 @@ public class PlayerManager : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (Object.HasStateAuthority)
-            HostProcessCommandsFromNetwork();
+            HostUpdateCursorPositions();
     }
 
-    private void HostProcessCommandsFromNetwork()
+    private void HostUpdateCursorPositions()
     {
-        // Get data from all active players
+        // Get cursor data from all active players
         foreach (var player in NetRunner.ActivePlayers)
         {
             if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
@@ -125,8 +123,8 @@ public class PlayerManager : NetworkBehaviour
 
     /// <summary>
     /// Generates network input data for the local player.
-    /// Always provides the current mouse world position and, when available,
-    /// also includes any pending move commands.
+    /// Currently only the mouse world position is sent. Unit move
+    /// commands are handled separately via RPC and are not included here.
     /// </summary>
     /// <param name="data">The generated input data.</param>
     private void TryGetNetworkInput(ref NetworkInputData data)
@@ -135,29 +133,6 @@ public class PlayerManager : NetworkBehaviour
         {
             mouseWorldPosition = GetMouseWorldPosition()
         };
-
-        // Include move command data if one is queued.
-        if (_hasPendingTarget)
-        {
-            data.targetPosition = _pendingTargetPosition;
-            data.unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
-
-            for (int i = 0; i < data.unitCount; i++)
-            {
-                var selectable = _selectionManager.SelectedUnits[i];
-                if (selectable is NetworkBehaviour nb)
-                {
-                    data.unitIds[i] = nb.Object.Id.Raw;
-                }
-                else if (selectable is Component component)
-                {
-                    LogError($"Unit {component.name} is missing a NetworkObject!");
-                }
-            }
-
-            // Clear the flag internally after providing the data.
-            _hasPendingTarget = false;
-        }
     }
 
     /// <summary>
@@ -235,9 +210,54 @@ public class PlayerManager : NetworkBehaviour
             Destroy(marker, 2f);
         }
 
-        // Prepare data for the next network tick
-        _pendingTargetPosition = targetPosition;
-        _hasPendingTarget = true;
+        // Build unit id list and invoke RPC immediately
+        UnitIdList unitIds = default;
+        int unitCount = Mathf.Min(_selectionManager.SelectedUnits.Count, UnitIdList.MaxUnits);
+
+        for (int i = 0; i < unitCount; i++)
+        {
+            var selectable = _selectionManager.SelectedUnits[i];
+            if (selectable is NetworkBehaviour nb)
+            {
+                unitIds[i] = nb.Object.Id.Raw;
+            }
+            else if (selectable is Component component)
+            {
+                LogError($"Unit {component.name} is missing a NetworkObject!");
+            }
+        }
+
+        RPC_MoveUnits(targetPosition, unitIds, unitCount);
+    }
+
+    /// <summary>
+    /// RPC called by clients to request movement for a group of units.
+    /// Executed on the state authority to validate ownership and apply targets.
+    /// </summary>
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsServer)]
+    private void RPC_MoveUnits(Vector3 targetPosition, UnitIdList unitIds, int unitCount, RpcInfo info = default)
+    {
+        var changedUnits = new List<Unit>();
+
+        for (int i = 0; i < unitCount; i++)
+        {
+            var unitId = unitIds[i];
+            if (UnitRegistry.Units.TryGetValue(unitId, out var unit) && unit.IsOwnedBy(info.Source))
+            {
+                changedUnits.Add(unit);
+            }
+        }
+
+        if (changedUnits.Count == 0)
+            return;
+
+        var center = changedUnits.GetCenter();
+
+        foreach (var unit in changedUnits)
+        {
+            var unitTargetPosition = unit.GetUnitTargetPosition(center, targetPosition);
+            unit.HostSetTarget(unitTargetPosition, Runner.Tick);
+        }
     }
 
 

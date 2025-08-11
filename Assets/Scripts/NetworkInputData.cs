@@ -7,6 +7,7 @@ using System.Collections;
 
 public struct NetworkInputData : INetworkInput
 {
+    // Legacy fields kept for compatibility; move commands are now sent via RPC.
     public Vector3 targetPosition;
     public UnitIdList unitIds;
     public int unitCount;
