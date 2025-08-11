@@ -296,7 +296,7 @@ public class PlayerManager : NetworkBehaviour
                 if (networkObject != null && networkObject.TryGetComponent<Unit>(out var unit))
                 {
                     unit.materialIndex = index;
-                    unit.ApplyMaterial(index);
+                    MaterialApplier.ApplyMaterial(unit.MeshRenderer, index, "Unit");
                 }
             }
         }

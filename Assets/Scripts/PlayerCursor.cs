@@ -17,16 +17,31 @@ public class PlayerCursor : NetworkBehaviour
 
     private MeshRenderer _meshRenderer;
 
+    /// <summary>
+    /// Cached MeshRenderer component of the cursor.
+    /// </summary>
+    private MeshRenderer MeshRenderer
+    {
+        get
+        {
+            if (_meshRenderer == null)
+            {
+                _meshRenderer = GetComponentInChildren<MeshRenderer>();
+            }
+            return _meshRenderer;
+        }
+    }
+
     public override void Spawned()
     {
         base.Spawned();
         PlayerCursorRegistry.Register(Object.InputAuthority, this);
-        ApplyMaterial(MaterialIndex);
+        MaterialApplier.ApplyMaterial(MeshRenderer, MaterialIndex, "Cursor");
     }
 
     private void OnMaterialIndexChanged()
     {
-       ApplyMaterial(MaterialIndex);
+        MaterialApplier.ApplyMaterial(MeshRenderer, MaterialIndex, "Cursor");
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
@@ -35,28 +50,4 @@ public class PlayerCursor : NetworkBehaviour
         base.Despawned(runner, hasState);
     }
 
-    private void ApplyMaterial(int index)
-    {
-        if (_meshRenderer == null)
-        {
-            _meshRenderer = GetComponentInChildren<MeshRenderer>();
-        }
-
-        if (_meshRenderer == null)
-        {
-            LogError($"{GetLogCallPrefix(GetType())} MeshRenderer not found for Cursor Index[{index}].");
-            return;
-        }
-
-        var material = PlayerMaterialProvider.GetMaterial(index);
-
-        if (material == null)
-        {
-            LogError($"{GetLogCallPrefix(GetType())} Material not found for Cursor Index[{index}].");
-            return;
-        }
-
-        _meshRenderer.material = material;
-        Log($"{GetLogCallPrefix(GetType())} Material successfully loaded and applied to Cursor Index[{index}].");
-    }
 }

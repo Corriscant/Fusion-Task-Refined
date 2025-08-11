@@ -16,6 +16,21 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     private MeshRenderer _meshRenderer; // Cache for MeshRenderer to avoid repeated lookups
 
     /// <summary>
+    /// Cached MeshRenderer component of the unit.
+    /// </summary>
+    public MeshRenderer MeshRenderer
+    {
+        get
+        {
+            if (_meshRenderer == null)
+            {
+                _meshRenderer = GetComponentInChildren<MeshRenderer>();
+            }
+            return _meshRenderer;
+        }
+    }
+
+    /// <summary>
     /// Material index, for passing to other clients via RPC
     /// </summary>
     public int materialIndex;
@@ -185,40 +200,12 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
             {
                 unit.name = unitName;
                 unit.materialIndex = materialIndex;
-                unit.ApplyMaterial(materialIndex);
+                MaterialApplier.ApplyMaterial(unit.MeshRenderer, materialIndex, "Unit");
             }
         }
         else
         {
             LogError($"{GetLogCallPrefix(GetType())} Failed to find the unit from unitId.");
         }
-    }
-
-    /// <summary>
-    /// Applies material to the unit using cached renderer.
-    /// </summary>
-    public void ApplyMaterial(int index)
-    {
-        if (_meshRenderer == null)
-        {
-            _meshRenderer = GetComponentInChildren<MeshRenderer>();
-        }
-
-        if (_meshRenderer == null)
-        {
-            LogError($"{GetLogCallPrefix(GetType())} MeshRenderer not found for Unit Index[{index}].");
-            return;
-        }
-
-        var material = PlayerMaterialProvider.GetMaterial(index);
-
-        if (material == null)
-        {
-            LogError($"{GetLogCallPrefix(GetType())} Material not found for Unit Index[{index}].");
-            return;
-        }
-
-        _meshRenderer.material = material;
-        Log($"{GetLogCallPrefix(GetType())} Material successfully loaded and applied to Unit Index[{index}].");
     }
 }
