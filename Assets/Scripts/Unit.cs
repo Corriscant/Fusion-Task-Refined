@@ -97,24 +97,6 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     }
 
     /// <summary>
-    /// function forming a list of units affected in input
-    /// </summary>
-    // Refactored to use UnitRegistry for performance.
-    public static List<Unit> GetUnitsInInput(NetworkInputData input)
-    {
-        List<Unit> units = new();
-        for (int i = 0; i < input.unitCount; i++)
-        {
-            // The key is now uint, so we can look it up directly.
-            if (UnitRegistry.Units.TryGetValue(input.unitIds[i], out var unit))
-            {
-                units.Add(unit);
-            }
-        }
-        return units;
-    }
-
-    /// <summary>
     /// Function finds unitTargetPosition, taking into account the offset of itself relative to the center of the group of units
     /// </summary>
     public Vector3 GetUnitTargetPosition(Vector3 center, Vector3 bearingTargetPosition)

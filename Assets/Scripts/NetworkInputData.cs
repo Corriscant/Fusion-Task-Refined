@@ -7,11 +7,6 @@ using System.Collections;
 
 public struct NetworkInputData : INetworkInput
 {
-    // Legacy fields kept for compatibility; move commands are now sent via RPC.
-    public Vector3 targetPosition;
-    public UnitIdList unitIds;
-    public int unitCount;
-
     // The mouse world position is used to show opponent's mouse position in the game world.
     public Vector3 mouseWorldPosition;
 }
