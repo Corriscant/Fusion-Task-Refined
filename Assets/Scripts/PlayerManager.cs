@@ -303,6 +303,45 @@ public class PlayerManager : NetworkBehaviour
     }
 
     /// <summary>
+    /// Moves the specified units to the provided target position.
+    /// The acting player is resolved from the <paramref name="info"/> parameter or falls back to the local player.
+    /// </summary>
+    /// <param name="targetPosition">Destination for the units.</param>
+    /// <param name="unitCount">Number of units to move.</param>
+    /// <param name="unitIds">Identifiers of the units to move.</param>
+    /// <param name="info">Information about the RPC call.</param>
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsServer)]
+    public void RPC_MoveUnits(Vector3 targetPosition, int unitCount, uint[] unitIds, RpcInfo info = default)
+    {
+        var player = info.Source != PlayerRef.None ? info.Source : Runner.LocalPlayer;
+
+        List<Unit> units = new();
+        for (int i = 0; i < unitCount; i++)
+        {
+            var networkId = new NetworkId(unitIds[i]);
+            if (Runner.TryFindObject(networkId, out var networkObject))
+            {
+                if (networkObject.TryGetComponent<Unit>(out var unit) && unit.IsOwnedBy(player))
+                {
+                    units.Add(unit);
+                }
+            }
+        }
+
+        if (units.Count == 0)
+        {
+            return;
+        }
+
+        var center = units.GetCenter();
+        foreach (var unit in units)
+        {
+            var unitTargetPosition = unit.GetUnitTargetPosition(center, targetPosition);
+            unit.HostSetTarget(unitTargetPosition, Runner.Tick);
+        }
+    }
+
+    /// <summary>
     /// Waits a moment and then tells all units to broadcast their info (name, material) to all clients.
     /// This ensures that all clients have the correct visual representation for all units.
     /// </summary>
