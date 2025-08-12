@@ -8,8 +8,6 @@ using System.Collections;
 /// </summary>
 public class Panel_Status : MonoBehaviour
 {
-    public static Panel_Status Instance { get; private set; }
-
     [SerializeField] private TMP_Text _statusText;
     [SerializeField] private Color _colorUnconnected = Color.white;
     [SerializeField] private Color _colorConnecting = Color.yellow;
@@ -19,14 +17,6 @@ public class Panel_Status : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-
         if (_statusText == null)
         {
             _statusText = GetComponentInChildren<TMP_Text>();
@@ -44,11 +34,6 @@ public class Panel_Status : MonoBehaviour
         ConnectionManager.OnConnectingStarted -= StartConnecting;
         ConnectionManager.OnConnected -= SetConnected;
         ConnectionManager.OnDisconnected -= SetUnconnected;
-
-        if (Instance == this)
-        {
-            Instance = null;
-        }
     }
 
     private void Start()
