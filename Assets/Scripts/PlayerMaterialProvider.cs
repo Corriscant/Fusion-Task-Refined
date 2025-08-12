@@ -18,7 +18,7 @@ public static class PlayerMaterialProvider
             return material;
         }
 
-        string materialName = $"Materials/UnitPayer{index}_Material";
+        string materialName = $"Materials/UnitPlayer{index}_Material";
         material = Resources.Load<Material>(materialName);
         if (material != null)
         {
