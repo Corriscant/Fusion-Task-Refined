@@ -7,6 +7,7 @@ using UnityEngine;
 public static class PlayerMaterialProvider
 {
     private static readonly Dictionary<int, Material> _materials = new();
+    private static PlayerMaterialList _materialList;
 
     /// <summary>
     /// Returns a material for the given index. The material is loaded once and then cached.
@@ -18,8 +19,21 @@ public static class PlayerMaterialProvider
             return material;
         }
 
-        string materialName = $"Materials/UnitPlayer{index}_Material";
-        material = Resources.Load<Material>(materialName);
+        if (_materialList == null)
+        {
+            _materialList = Resources.Load<PlayerMaterialList>("PlayerMaterialList");
+            if (_materialList == null)
+            {
+                return null;
+            }
+        }
+
+        if (index < 0 || index >= _materialList.Materials.Count)
+        {
+            return null;
+        }
+
+        material = _materialList.Materials[index];
         if (material != null)
         {
             _materials[index] = material;
