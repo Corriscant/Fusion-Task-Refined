@@ -27,10 +27,22 @@ public class SelectionManager : MonoBehaviour
     // Indicates whether a frame selection is currently active
     public static bool IsSelecting { get; private set; }
 
-    [Inject] private IConnectionService _connectionService;
+   // [Inject] 
+    private IConnectionService _connectionService;
+
+    // Called by VContainer to inject the dependency immediately upon its creation.
+    [Inject]
+    public void Construct(IConnectionService connectionService)
+    {
+        this._connectionService = connectionService;
+    }
 
     public void Start()
     {
+        if (_connectionService == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
+        }
         _canvasRect = selectionBox.GetComponentInParent<Canvas>().GetComponent<RectTransform>();
     }
 

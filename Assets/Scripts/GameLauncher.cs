@@ -32,7 +32,16 @@ public class GameLauncher : MonoBehaviour
     private Button[] _buttons;
     #endregion GUI
 
-    [Inject] private IConnectionService _connectionService;
+   // [Inject] 
+    private IConnectionService _connectionService;
+
+    // Called by VContainer to inject the dependency immediately upon its creation.
+    [Inject]
+    public void Construct(IConnectionService connectionService)
+    {
+        Log($"{GetLogCallPrefix(GetType())} VContainer called!");
+        this._connectionService = connectionService;
+    }
 
     private void Start()
     {

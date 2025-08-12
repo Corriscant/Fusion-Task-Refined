@@ -1,6 +1,8 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using static Corris.Loggers.Logger;
+using static Corris.Loggers.LogUtils;
 using VContainer;
 
 /// <summary>
@@ -14,7 +16,8 @@ public class Panel_Status : MonoBehaviour
     [SerializeField] private Color _colorConnecting = Color.yellow;
     [SerializeField] private Color _colorConnected = Color.green;
 
-    [Inject] private IConnectionService _connectionService;
+    // [Inject] 
+    private IConnectionService _connectionService;
 
     private Coroutine _connectingRoutine;
 
@@ -24,11 +27,17 @@ public class Panel_Status : MonoBehaviour
         {
             _statusText = GetComponentInChildren<TMP_Text>();
         }
+    }
 
-        // Subscribe to connection events
-        _connectionService.ConnectingStarted += StartConnecting;
-        _connectionService.Connected += SetConnected;
-        _connectionService.Disconnected += SetUnconnected;
+    // Called by VContainer to inject the dependency immediately upon its creation.
+    [Inject]
+    public void Construct(IConnectionService connectionService)
+    {
+        this._connectionService = connectionService;
+
+        connectionService.ConnectingStarted += StartConnecting;
+        connectionService.Connected += SetConnected;
+        connectionService.Disconnected += SetUnconnected;
     }
 
     private void OnDestroy()
@@ -44,6 +53,10 @@ public class Panel_Status : MonoBehaviour
 
     private void Start()
     {
+        if (_connectionService == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
+        }
         SetUnconnected();
     }
 
