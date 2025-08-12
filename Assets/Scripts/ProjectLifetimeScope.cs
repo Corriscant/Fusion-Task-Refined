@@ -10,7 +10,8 @@ public class ProjectLifetimeScope : LifetimeScope
     {
         builder.RegisterComponentInHierarchy<ConnectionManager>()
             .As<IConnectionService>()
-            .AsSelf()
-            .WithLifetime(Lifetime.Singleton);
+            .AsSelf();
+        // Note: RegisterComponentInHierarchy already registers as Singleton by default in VContainer.
+        // The .WithLifetime(Lifetime.Singleton) call is not needed and causes CS1061.
     }
 }
