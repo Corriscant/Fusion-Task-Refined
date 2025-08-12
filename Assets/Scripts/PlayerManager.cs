@@ -42,7 +42,7 @@ public class PlayerManager : NetworkBehaviour
     // Tracks material indices assigned to each player.
     private Dictionary<PlayerRef, int> _playerMaterialIndices = new();
     // Counter to assign a unique material index to each new player.
-    private int _spawnedPlayersCount;
+    private int _spawnedPlayersCount = 0;
 
     // --- Unity & Event Subscription ---
     private void OnEnable()
@@ -156,6 +156,7 @@ public class PlayerManager : NetworkBehaviour
             }
 
             AssignPlayerColor(player, _spawnedPlayersCount);
+            _spawnedPlayersCount++;
 
             // Synchronize unit data (names, materials). Delayed to allow spawning for everyone.
             StartCoroutine(SyncUnitsData(runner));
@@ -268,8 +269,6 @@ public class PlayerManager : NetworkBehaviour
     /// </summary>
     private void SpawnPlayerUnits(NetworkRunner runner, PlayerRef player)
     {
-        _spawnedPlayersCount++;
-
         // Calculate a unique spawn center for the player to avoid overlap.
         var playerSpawnCenterPosition = new Vector3((player.RawEncoded % runner.Config.Simulation.PlayerCount) * 3, 1, 0);
         var unitList = new List<NetworkObject>();
