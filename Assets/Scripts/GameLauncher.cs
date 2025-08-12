@@ -60,8 +60,8 @@ public class GameLauncher : MonoBehaviour
 
         _buttons = new[] { _hostButton, _joinButton, _exitButton };
 
-        _hostButton.onClick.AddListener(() => _connectionManager.StartGamePublic(GameMode.Host));
-        _joinButton.onClick.AddListener(() => _connectionManager.StartGamePublic(GameMode.Client));
+        _hostButton.onClick.AddListener(async () => await _connectionManager.StartGamePublic(GameMode.Host));
+        _joinButton.onClick.AddListener(async () => await _connectionManager.StartGamePublic(GameMode.Client));
         _exitButton.onClick.AddListener(QuitGame);
     }
 

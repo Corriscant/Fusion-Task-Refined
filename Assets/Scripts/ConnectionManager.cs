@@ -135,7 +135,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 
     }
 
-    private async void StartGameAsync(GameMode mode)
+    private async Task StartGameAsync(GameMode mode)
     {
         // Prevent multiple concurrent calls.
         if (_isConnecting) return;
@@ -154,16 +154,21 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
                 OnDisconnected?.Invoke();
             }
         }
+        catch (Exception ex)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} StartGameAsync exception: {ex.Message}");
+            throw;
+        }
         finally
         {
             _isConnecting = false;
         }
     }
 
-    public void StartGamePublic(GameMode mode)
+    public Task StartGamePublic(GameMode mode)
     {
         // Public wrapper to be called from UI scripts.
-        StartGameAsync(mode);
+        return StartGameAsync(mode);
     }
 
     private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
