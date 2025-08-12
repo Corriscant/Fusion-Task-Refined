@@ -166,8 +166,14 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         StartGameAsync(mode);
     }
 
+    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        UnitRegistry.Clear();
+        PlayerCursorRegistry.Clear();
+    }
 
     // --- INetworkRunnerCallbacks Implementation ---
+    #region INetworkRunnerCallbacks Implementation
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
@@ -204,8 +210,16 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         PlayerCursorRegistry.Clear();
         OnDisconnected?.Invoke();
     }
+    public void OnSceneLoadStart(NetworkRunner runner)
+    {
+        Log($"{GetLogCallPrefix(GetType())} OnSceneLoadStart triggered");
+        UnitRegistry.Clear();
+        PlayerCursorRegistry.Clear();
+    }
 
-    #region INetworkRunnerCallbacks Implementation
+    #region INetworkRunnerCallbacks Implementation Unassigned
+
+
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { Log($"{GetLogCallPrefix(GetType())} OnInputMissing triggered"); }
     public void OnConnectedToServer(NetworkRunner runner) { Log($"{GetLogCallPrefix(GetType())} OnConnectedToServer triggered"); }
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { Log($"{GetLogCallPrefix(GetType())} OnDisconnectedFromServer triggered"); }
@@ -215,22 +229,12 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { Log($"{GetLogCallPrefix(GetType())} OnSessionListUpdated triggered"); }
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { Log($"{GetLogCallPrefix(GetType())} OnCustomAuthenticationResponse triggered"); }
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { Log($"{GetLogCallPrefix(GetType())} OnHostMigration triggered"); }
-    public void OnSceneLoadStart(NetworkRunner runner)
-    {
-        Log($"{GetLogCallPrefix(GetType())} OnSceneLoadStart triggered");
-        UnitRegistry.Clear();
-        PlayerCursorRegistry.Clear();
-    }
-
-    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        UnitRegistry.Clear();
-        PlayerCursorRegistry.Clear();
-    }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { Log($"{GetLogCallPrefix(GetType())} OnObjectExitAOI triggered"); }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { Log($"{GetLogCallPrefix(GetType())} OnObjectEnterAOI triggered"); }
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { Log($"{GetLogCallPrefix(GetType())} OnReliableDataReceived triggered"); }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { Log($"{GetLogCallPrefix(GetType())} OnReliableDataProgress triggered"); }
+    #endregion INetworkRunnerCallbacks Implementation Unassigned
+
     #endregion
 
 }
