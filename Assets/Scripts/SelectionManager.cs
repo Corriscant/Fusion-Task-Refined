@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
+using VContainer;
 
 /// <summary>
 /// Manages drag-box selection of units: listens for mouse events,
@@ -25,6 +26,8 @@ public class SelectionManager : MonoBehaviour
 
     // Indicates whether a frame selection is currently active
     public static bool IsSelecting { get; private set; }
+
+    [Inject] private IConnectionService _connectionService;
 
     public void Start()
     {
@@ -96,7 +99,7 @@ public class SelectionManager : MonoBehaviour
 
     private void SelectUnits()
     {
-        if (ConnectionManager.Instance.NetRunner == null)
+        if (_connectionService.Runner == null)
         {
             LogError($"{GetLogCallPrefix(GetType())} NetRunner is null. Cannot select units.");
             return;
@@ -107,7 +110,7 @@ public class SelectionManager : MonoBehaviour
             return;
         }
 
-        PlayerRef localPlayer = ConnectionManager.Instance.NetRunner.LocalPlayer;
+        PlayerRef localPlayer = _connectionService.Runner.LocalPlayer;
 
         // Clear previous selection
         ClearSelection();

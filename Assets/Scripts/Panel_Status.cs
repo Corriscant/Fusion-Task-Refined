@@ -1,10 +1,11 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using VContainer;
 
 /// <summary>
 /// This class manages the status panel in the UI, displaying connection status
-/// by listening to events from the ConnectionManager.
+/// by listening to events from the connection service.
 /// </summary>
 public class Panel_Status : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class Panel_Status : MonoBehaviour
     [SerializeField] private Color _colorUnconnected = Color.white;
     [SerializeField] private Color _colorConnecting = Color.yellow;
     [SerializeField] private Color _colorConnected = Color.green;
+
+    [Inject] private IConnectionService _connectionService;
 
     private Coroutine _connectingRoutine;
 
@@ -23,17 +26,20 @@ public class Panel_Status : MonoBehaviour
         }
 
         // Subscribe to connection events
-        ConnectionManager.OnConnectingStarted += StartConnecting;
-        ConnectionManager.OnConnected += SetConnected;
-        ConnectionManager.OnDisconnected += SetUnconnected;
+        _connectionService.ConnectingStarted += StartConnecting;
+        _connectionService.Connected += SetConnected;
+        _connectionService.Disconnected += SetUnconnected;
     }
 
     private void OnDestroy()
     {
         // Unsubscribe from connection events
-        ConnectionManager.OnConnectingStarted -= StartConnecting;
-        ConnectionManager.OnConnected -= SetConnected;
-        ConnectionManager.OnDisconnected -= SetUnconnected;
+        if (_connectionService != null)
+        {
+            _connectionService.ConnectingStarted -= StartConnecting;
+            _connectionService.Connected -= SetConnected;
+            _connectionService.Disconnected -= SetUnconnected;
+        }
     }
 
     private void Start()

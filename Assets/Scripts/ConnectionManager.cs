@@ -26,12 +26,19 @@ public delegate void OnInputHandler(ref NetworkInputData data);
 /// and delegating game-specific logic to specialized managers (e.g., PlayerManager).
 /// It also collects input from other systems to provide it to the network simulation via OnInput.
 /// </summary>
-public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
+/// <summary>
+/// Exposes connection functionality through <see cref="IConnectionService"/> to allow dependency injection.
+/// </summary>
+public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnectionService
 {
     // --- Public Events ---
-    public static event Action OnConnectingStarted;
-    public static event Action OnConnected;
-    public static event Action OnDisconnected;
+    public static event Action OnConnectingStarted; // Temporary for legacy access
+    public static event Action OnConnected; // Temporary for legacy access
+    public static event Action OnDisconnected; // Temporary for legacy access
+
+    public event Action ConnectingStarted;
+    public event Action Connected;
+    public event Action Disconnected;
 
     public static event Action<NetworkRunner, PlayerRef> On_PlayerJoined;
     public static event Action<NetworkRunner, PlayerRef> On_PlayerLeft;
@@ -41,6 +48,12 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     public static ConnectionManager Instance { get; private set; }
 
     private NetworkRunner _netRunner;
+    /// <summary>
+    /// Current runner instance.
+    /// </summary>
+    public NetworkRunner Runner => _netRunner;
+
+    // Temporary property for classes still using ConnectionManager.Instance
     public NetworkRunner NetRunner => _netRunner; // Giving access to runner from other scripts
 
     [Header("Managers")]
@@ -84,7 +97,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    private async Task StartGame(GameMode mode)
+    private async Task StartGameInternal(GameMode mode)
     {
         // Create the Fusion runner and let it know that we will be providing user input
         _netRunner = gameObject.AddComponent<NetworkRunner>();
@@ -135,7 +148,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
 
     }
 
-    private async Task StartGameAsync(GameMode mode)
+    public async Task StartGame(GameMode mode)
     {
         // Prevent multiple concurrent calls.
         if (_isConnecting) return;
@@ -143,32 +156,29 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         try
         {
             _isConnecting = true;
+            ConnectingStarted?.Invoke();
             OnConnectingStarted?.Invoke();
-            await StartGame(mode);
+            await StartGameInternal(mode);
             if (_netRunner != null && _netRunner.IsRunning)
             {
+                Connected?.Invoke();
                 OnConnected?.Invoke();
             }
             else
             {
+                Disconnected?.Invoke();
                 OnDisconnected?.Invoke();
             }
         }
         catch (Exception ex)
         {
-            LogError($"{GetLogCallPrefix(GetType())} StartGameAsync exception: {ex.Message}");
+            LogError($"{GetLogCallPrefix(GetType())} StartGame exception: {ex.Message}");
             throw;
         }
         finally
         {
             _isConnecting = false;
         }
-    }
-
-    public Task StartGamePublic(GameMode mode)
-    {
-        // Public wrapper to be called from UI scripts.
-        return StartGameAsync(mode);
     }
 
     private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -213,6 +223,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         Log($"{GetLogCallPrefix(GetType())} OnShutdown triggered with reason: {shutdownReason}");
         UnitRegistry.Clear();
         PlayerCursorRegistry.Clear();
+        Disconnected?.Invoke();
         OnDisconnected?.Invoke();
     }
     public void OnSceneLoadStart(NetworkRunner runner)

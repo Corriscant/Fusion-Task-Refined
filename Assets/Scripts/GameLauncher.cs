@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using Fusion;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
+using VContainer;
 
 // This directive is needed because Application.Quit() doesn't stop play mode in the editor.
 #if UNITY_EDITOR
@@ -13,7 +14,7 @@ using UnityEditor;
 /// <summary>
 /// This class is responsible for the main menu UI, allowing the user to
 /// host a game, join a game, or exit the application. It communicates with the
-/// ConnectionManager (soon to be ConnectionManager) via its singleton instance.
+/// connection service via dependency injection.
 /// </summary>
 public class GameLauncher : MonoBehaviour
 {
@@ -31,14 +32,13 @@ public class GameLauncher : MonoBehaviour
     private Button[] _buttons;
     #endregion GUI
 
-    private ConnectionManager _connectionManager;
+    [Inject] private IConnectionService _connectionService;
 
     private void Start()
     {
-        _connectionManager = ConnectionManager.Instance;
-        if (_connectionManager == null)
+        if (_connectionService == null)
         {
-            LogError($"{GetLogCallPrefix(GetType())} ConnectionManager NIL!");
+            LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
             enabled = false;
             return;
         }
@@ -60,8 +60,8 @@ public class GameLauncher : MonoBehaviour
 
         _buttons = new[] { _hostButton, _joinButton, _exitButton };
 
-        _hostButton.onClick.AddListener(async () => await _connectionManager.StartGamePublic(GameMode.Host));
-        _joinButton.onClick.AddListener(async () => await _connectionManager.StartGamePublic(GameMode.Client));
+        _hostButton.onClick.AddListener(async () => await _connectionService.StartGame(GameMode.Host));
+        _joinButton.onClick.AddListener(async () => await _connectionService.StartGame(GameMode.Client));
         _exitButton.onClick.AddListener(QuitGame);
     }
 
@@ -101,16 +101,16 @@ public class GameLauncher : MonoBehaviour
 
     private void Update()
     {
-        if (_connectionManager == null)
+        if (_connectionService == null)
             return;
 
         bool selectionActive = SelectionManager.IsSelecting;
-        bool runnerMissing = _connectionManager.NetRunner == null;
+        bool runnerMissing = _connectionService.Runner == null;
 
         _hostButton.gameObject.SetActive(runnerMissing);
         _joinButton.gameObject.SetActive(runnerMissing);
 
-        bool interactable = !_connectionManager.IsConnecting && !selectionActive;
+        bool interactable = !_connectionService.IsConnecting && !selectionActive;
         _hostButton.interactable = interactable;
         _joinButton.interactable = interactable;
         _exitButton.interactable = !selectionActive;
