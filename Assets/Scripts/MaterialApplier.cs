@@ -14,8 +14,9 @@ public static class MaterialApplier
     /// <param name="renderer">The MeshRenderer to apply the material to.</param>
     /// <param name="index">The material index used to retrieve the material.</param>
     /// <param name="entityName">Name of the entity for logging purposes.</param>
+    /// <param name="propertyBlock">Optional property block for per-instance material properties.</param>
     /// <returns>True if the material was successfully applied, otherwise false.</returns>
-    public static bool ApplyMaterial(MeshRenderer renderer, int index, string entityName)
+    public static bool ApplyMaterial(MeshRenderer renderer, int index, string entityName, MaterialPropertyBlock propertyBlock = null)
     {
         if (renderer == null)
         {
@@ -31,7 +32,13 @@ public static class MaterialApplier
             return false;
         }
 
-        renderer.material = material;
+        renderer.sharedMaterial = material;
+
+        if (propertyBlock != null)
+        {
+            renderer.SetPropertyBlock(propertyBlock);
+        }
+
         Log($"{GetLogCallPrefix(typeof(MaterialApplier))} Material successfully loaded and applied to {entityName} Index[{index}].");
         return true;
     }
