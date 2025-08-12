@@ -12,4 +12,12 @@ public static class UnitRegistry
     /// The dictionary holding all active units. Key is the unit's raw NetworkId (uint), Value is the unit reference.
     /// </summary>
     public static readonly Dictionary<uint, Unit> Units = new();
+
+    /// <summary>
+    /// Clears the registry of all units.
+    /// </summary>
+    public static void Clear()
+    {
+        Units.Clear();
+    }
 }

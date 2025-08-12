@@ -65,6 +65,16 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
         Log($"{GetLogCallPrefix(GetType())} ConnectionManager Instance!");
     }
 
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+    }
+
     private void OnDestroy()
     {
         // Cleanup singleton instance
@@ -190,6 +200,8 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
         Log($"{GetLogCallPrefix(GetType())} OnShutdown triggered with reason: {shutdownReason}");
+        UnitRegistry.Clear();
+        PlayerCursorRegistry.Clear();
         OnDisconnected?.Invoke();
     }
 
@@ -203,7 +215,18 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { Log($"{GetLogCallPrefix(GetType())} OnSessionListUpdated triggered"); }
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { Log($"{GetLogCallPrefix(GetType())} OnCustomAuthenticationResponse triggered"); }
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { Log($"{GetLogCallPrefix(GetType())} OnHostMigration triggered"); }
-    public void OnSceneLoadStart(NetworkRunner runner) { Log($"{GetLogCallPrefix(GetType())} OnSceneLoadStart triggered"); }
+    public void OnSceneLoadStart(NetworkRunner runner)
+    {
+        Log($"{GetLogCallPrefix(GetType())} OnSceneLoadStart triggered");
+        UnitRegistry.Clear();
+        PlayerCursorRegistry.Clear();
+    }
+
+    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        UnitRegistry.Clear();
+        PlayerCursorRegistry.Clear();
+    }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { Log($"{GetLogCallPrefix(GetType())} OnObjectExitAOI triggered"); }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { Log($"{GetLogCallPrefix(GetType())} OnObjectEnterAOI triggered"); }
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { Log($"{GetLogCallPrefix(GetType())} OnReliableDataReceived triggered"); }

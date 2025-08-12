@@ -29,6 +29,14 @@ public static class PlayerCursorRegistry
     }
 
     /// <summary>
+    /// Clears the registry of all player cursors.
+    /// </summary>
+    public static void Clear()
+    {
+        Cursors.Clear();
+    }
+
+    /// <summary>
     /// Attempts to get the cursor for the specified player.
     /// </summary>
     public static bool TryGet(PlayerRef player, out PlayerCursor cursor)
