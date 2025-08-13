@@ -57,7 +57,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     private void Awake()
     {
         // Avoid duplicates in the scene
-        if (FindObjectsOfType<ConnectionManager>().Length > 1)
+        if (FindObjectsByType<ConnectionManager>(FindObjectsSortMode.None).Length > 1)
         {
             Destroy(gameObject);
             return;
