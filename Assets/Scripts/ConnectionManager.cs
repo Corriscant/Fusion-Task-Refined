@@ -44,17 +44,11 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     public event Action<NetworkRunner, PlayerRef> PlayerLeft;
     public event OnInputHandler Input;
 
-    // Singleton Instance
-    public static ConnectionManager Instance { get; private set; }
-
     private NetworkRunner _netRunner;
     /// <summary>
     /// Current runner instance.
     /// </summary>
     public NetworkRunner Runner => _netRunner;
-
-    // Temporary property for classes still using ConnectionManager.Instance
-    public NetworkRunner NetRunner => _netRunner; // Giving access to runner from other scripts
 
     // Prevent multiple connection attempts
     private bool _isConnecting = false;
@@ -62,17 +56,16 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
 
     private void Awake()
     {
-        // Singleton setup
-        if (Instance != null && Instance != this)
+        // Avoid duplicates in the scene
+        if (FindObjectsOfType<ConnectionManager>().Length > 1)
         {
-            Destroy(gameObject); // Destroy duplicate object
+            Destroy(gameObject);
             return;
         }
 
-        Instance = this;
         DontDestroyOnLoad(gameObject); // Preserve between scenes
 
-        Log($"{GetLogCallPrefix(GetType())} ConnectionManager Instance!");
+        Log($"{GetLogCallPrefix(GetType())} ConnectionManager awake!");
     }
 
     private void OnEnable()
@@ -85,14 +78,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         SceneManager.sceneLoaded -= HandleSceneLoaded;
     }
 
-    private void OnDestroy()
-    {
-        // Cleanup singleton instance
-        if (Instance == this)
-        {
-            Instance = null;
-        }
-    }
+    // Removing the singleton pattern: no OnDestroy cleanup required
 
     private async Task StartGameInternal(GameMode mode)
     {
