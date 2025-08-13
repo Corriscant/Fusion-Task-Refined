@@ -97,14 +97,23 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     }
 
     /// <summary>
-    /// Function finds unitTargetPosition, taking into account the offset of itself relative to the center of the group of units
+    /// Limits the offset magnitude so that the units are not too far apart.
     /// </summary>
-    public Vector3 GetUnitTargetPosition(Vector3 center, Vector3 bearingTargetPosition)
+    /// <param name="offset">Original offset from the group center.</param>
+    /// <param name="allowedOffset">Maximum allowed distance.</param>
+    public Vector3 ClampOffset(Vector3 offset, float allowedOffset)
     {
-        Vector3 offset = center - transform.position;
-        // here you can limit the offset so that the units are not too far apart
-        offset = Vector3.ClampMagnitude(offset, ConnectionManager.Instance.PlayerManager.unitAllowedOffset); // limit the offset to 5 meters
-                                                                                          // find the personal position for the Target of this unit, taking into account that it is offset relative to the center of the selected units
+        // limit the offset to the allowed distance
+        return Vector3.ClampMagnitude(offset, allowedOffset);
+    }
+
+    /// <summary>
+    /// Finds the personal target position for this unit, taking into account that it is offset relative to the center of the selected units.
+    /// </summary>
+    /// <param name="offset">Offset relative to the group center.</param>
+    /// <param name="bearingTargetPosition">Desired position for the group's center.</param>
+    public Vector3 GetUnitTargetPosition(Vector3 offset, Vector3 bearingTargetPosition)
+    {
         Vector3 unitTargetPosition = bearingTargetPosition - offset;
         return unitTargetPosition;
     }

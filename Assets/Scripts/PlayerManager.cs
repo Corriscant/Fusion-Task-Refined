@@ -20,6 +20,9 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField] private SelectionManager _selectionManager;
     [SerializeField] private GameObject _destinationMarkerPrefab;
 
+    [Header("Settings")]
+    [SerializeField] private GameSettings _gameSettings; // TODO: Assign in the Inspector
+
     [Header("Unit Spawn Settings")]
     [SerializeField] private NetworkPrefabRef _unitPrefab; // Prefab for the unit to be spawned.
     [SerializeField] private int unitCountPerPlayer = 5; // How many units to spawn for each player.
@@ -28,11 +31,10 @@ public class PlayerManager : NetworkBehaviour
     [Tooltip("Prefab of Cursor Echo of other players")]
     [SerializeField] private PlayerCursor PlayerCursorPrefab;
 
-    [Header("Other")]
     /// <summary>
     /// The maximum allowed offset for a unit from the center of the group.
     /// </summary>
-    [SerializeField] public int unitAllowedOffset = 1;
+    private int unitAllowedOffset;
 
     // --- State for Network Input ---
     private Vector3 _currentMousePosition;
@@ -55,6 +57,16 @@ public class PlayerManager : NetworkBehaviour
         Log($"{GetLogCallPrefix(GetType())} VContainer Inject!");
         _connectionService = connectionService;
         _networkEvents = networkEvents;
+    }
+
+    private void Awake()
+    {
+        if (_gameSettings == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} GameSettings not assigned!");
+            return;
+        }
+        unitAllowedOffset = _gameSettings.unitAllowedOffset;
     }
 
     // --- Unity & Event Subscription ---
@@ -288,7 +300,9 @@ public class PlayerManager : NetworkBehaviour
 
         foreach (var unit in changedUnits)
         {
-            var unitTargetPosition = unit.GetUnitTargetPosition(center, targetPosition);
+            Vector3 offset = center - unit.transform.position;
+            offset = unit.ClampOffset(offset, unitAllowedOffset);
+            var unitTargetPosition = unit.GetUnitTargetPosition(offset, targetPosition);
             unit.HostSetTarget(unitTargetPosition, Runner.Tick);
         }
     }
