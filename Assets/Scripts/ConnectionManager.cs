@@ -29,7 +29,7 @@ public delegate void OnInputHandler(ref NetworkInputData data);
 /// <summary>
 /// Exposes connection functionality through <see cref="IConnectionService"/> to allow dependency injection.
 /// </summary>
-public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnectionService
+public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnectionService, INetworkEvents
 {
     // --- Public Events ---
     public static event Action OnConnectingStarted; // Temporary for legacy access
@@ -40,9 +40,9 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     public event Action Connected;
     public event Action Disconnected;
 
-    public static event Action<NetworkRunner, PlayerRef> On_PlayerJoined;
-    public static event Action<NetworkRunner, PlayerRef> On_PlayerLeft;
-    public static event OnInputHandler On_Input;
+    public event Action<NetworkRunner, PlayerRef> PlayerJoined;
+    public event Action<NetworkRunner, PlayerRef> PlayerLeft;
+    public event OnInputHandler Input;
 
     // Singleton Instance
     public static ConnectionManager Instance { get; private set; }
@@ -194,7 +194,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     {
         NetworkInputData data = default;
 
-        On_Input?.Invoke(ref data);   
+        Input?.Invoke(ref data);
 
         input.Set(data);
     }
@@ -203,14 +203,14 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     {
         Log($"{GetLogCallPrefix(GetType())} Player joined: {player}");
 
-        On_PlayerJoined?.Invoke(runner, player);
+        PlayerJoined?.Invoke(runner, player);
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
         Log($"{GetLogCallPrefix(GetType())} Player left: {player}");
 
-        On_PlayerLeft?.Invoke(runner, player);
+        PlayerLeft?.Invoke(runner, player);
     }
 
     public void OnSceneLoadDone(NetworkRunner runner)
