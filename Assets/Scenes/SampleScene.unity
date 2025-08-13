@@ -1520,11 +1520,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _selectionManager: {fileID: 1096639965}
   _destinationMarkerPrefab: {fileID: 831694046346804455, guid: dd47c8c06480f1448a47302495ee6487, type: 3}
+  _gameSettings: {fileID: 11400000, guid: 59b9238a41f244fb8096ce8407409de1, type: 2}
   _unitPrefab:
     RawGuidValue: dd098a457d77e9847a3e48cd58d0dfc4
   unitCountPerPlayer: 5
   PlayerCursorPrefab: {fileID: 5459181759355313869, guid: 51e7ce9da520a564a8a82bab6437180c, type: 3}
-  unitAllowedOffset: 1
 --- !u!114 &981049794
 MonoBehaviour:
   m_ObjectHideFlags: 0
