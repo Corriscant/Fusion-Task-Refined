@@ -62,14 +62,7 @@ public class PlayerManager : NetworkBehaviour
     {
         InputManager.OnSecondaryMouseClick_World += HandleMoveCommand;
         InputManager.OnMouseMove += CacheMousePosition;
-    }
 
-    private void Start()
-    {
-        if (_connectionService == null)
-        {
-            LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
-        }
         if (_networkEvents == null)
         {
             LogError($"{GetLogCallPrefix(GetType())} Network events NIL!");
@@ -79,6 +72,14 @@ public class PlayerManager : NetworkBehaviour
         _networkEvents.PlayerJoined += HandlePlayerJoined;
         _networkEvents.PlayerLeft += HandlePlayerLeft;
         _networkEvents.Input += TryGetNetworkInput;
+    }
+
+    private void Start()
+    {
+        if (_connectionService == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
+        }
     }
 
     private void OnDisable()
