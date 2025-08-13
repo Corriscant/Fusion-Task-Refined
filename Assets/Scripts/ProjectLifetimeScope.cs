@@ -1,5 +1,7 @@
 using VContainer;
 using VContainer.Unity;
+using static Corris.Loggers.Logger;
+using static Corris.Loggers.LogUtils;
 
 /// <summary>
 /// Registers application-level dependencies for VContainer.
@@ -8,6 +10,9 @@ public class ProjectLifetimeScope : LifetimeScope
 {
     protected override void Configure(IContainerBuilder builder)
     {
+
+        Log($"{GetLogCallPrefix(GetType())} RegisterComponentInHierarchy!");
+
         builder.RegisterComponentInHierarchy<ConnectionManager>()
             .As<IConnectionService>()
             .AsSelf();

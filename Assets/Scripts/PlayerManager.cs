@@ -224,7 +224,7 @@ public class PlayerManager : NetworkBehaviour
             }
             else if (selectable is Component component)
             {
-                LogError($"Unit {component.name} is missing a NetworkObject!");
+                LogError($"{GetLogCallPrefix(GetType())} Unit {component.name} is missing a NetworkObject!");
             }
         }
 
@@ -281,7 +281,7 @@ public class PlayerManager : NetworkBehaviour
 
             if (networkUnitObject == null)
             {
-                Debug.LogError($"Failed to spawn unit for player {player}.");
+                LogError($"{GetLogCallPrefix(GetType())} Failed to spawn unit for player {player}.");
                 continue;
             }
 
