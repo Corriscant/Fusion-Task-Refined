@@ -56,9 +56,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     // Temporary property for classes still using ConnectionManager.Instance
     public NetworkRunner NetRunner => _netRunner; // Giving access to runner from other scripts
 
-    [Header("Managers")]
-    [SerializeField] public PlayerManager PlayerManager;
-
     // Prevent multiple connection attempts
     private bool _isConnecting = false;
     public bool IsConnecting => _isConnecting;
