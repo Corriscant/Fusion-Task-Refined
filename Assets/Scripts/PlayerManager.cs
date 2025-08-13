@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
+using VContainer;
 
 /// <summary>
 /// Handles game logic related to players, such as spawning units when a player joins,
@@ -12,7 +13,7 @@ using static Corris.Loggers.LogUtils;
 /// </summary>
 public class PlayerManager : NetworkBehaviour
 {
-    NetworkRunner NetRunner => ConnectionManager.Instance.NetRunner;
+    NetworkRunner NetRunner => _connectionService != null ? _connectionService.Runner : null;
 
     // --- Dependencies ---
     [Header("Dependencies")]
@@ -44,23 +45,53 @@ public class PlayerManager : NetworkBehaviour
     // Counter to assign a unique material index to each new player.
     private int _spawnedPlayersCount = 0;
 
+    // --- Dependencies ---
+    private IConnectionService _connectionService;
+    private INetworkEvents _networkEvents;
+
+    [Inject]
+    public void Construct(IConnectionService connectionService, INetworkEvents networkEvents)
+    {
+        Log($"{GetLogCallPrefix(GetType())} VContainer Inject!");
+        _connectionService = connectionService;
+        _networkEvents = networkEvents;
+    }
+
     // --- Unity & Event Subscription ---
     private void OnEnable()
     {
         InputManager.OnSecondaryMouseClick_World += HandleMoveCommand;
         InputManager.OnMouseMove += CacheMousePosition;
-        ConnectionManager.On_PlayerJoined += HandlePlayerJoined;
-        ConnectionManager.On_PlayerLeft += HandlePlayerLeft;
-        ConnectionManager.On_Input += TryGetNetworkInput;
+
+        if (_networkEvents == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Network events NIL!");
+            return;
+        }
+
+        _networkEvents.PlayerJoined += HandlePlayerJoined;
+        _networkEvents.PlayerLeft += HandlePlayerLeft;
+        _networkEvents.Input += TryGetNetworkInput;
+    }
+
+    private void Start()
+    {
+        if (_connectionService == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
+        }
     }
 
     private void OnDisable()
     {
         InputManager.OnSecondaryMouseClick_World -= HandleMoveCommand;
         InputManager.OnMouseMove -= CacheMousePosition;
-        ConnectionManager.On_PlayerLeft -= HandlePlayerLeft;
-        ConnectionManager.On_PlayerJoined -= HandlePlayerJoined;
-        ConnectionManager.On_Input -= TryGetNetworkInput;
+        if (_networkEvents != null)
+        {
+            _networkEvents.PlayerLeft -= HandlePlayerLeft;
+            _networkEvents.PlayerJoined -= HandlePlayerJoined;
+            _networkEvents.Input -= TryGetNetworkInput;
+        }
     }
 
     public override void FixedUpdateNetwork()
