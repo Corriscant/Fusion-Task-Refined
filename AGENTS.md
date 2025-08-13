@@ -34,3 +34,86 @@ Generating code with the patterns above will lead to critical failures:
 - **Update, don’t remove.** If a comment is inaccurate or outdated, **revise it** to match the updated code instead of removing it.
 - **Respect intent.** Explanatory comments exist for a reason (context, rationale, constraints). Keep them and improve clarity when necessary.
 - **When in doubt, keep it.** Prefer minimal edits over deletion.
+
+
+# AGENT GUIDELINES: Using VContainer in Unity
+
+## Goal
+Implement and wire dependencies with **VContainer** in a way that is portable across projects, minimal, and safe.
+
+---
+
+## Core Rules
+
+1. **Single Root Scope**
+   - Expect exactly one root `LifetimeScope` in the scene (the “project scope”).
+   - Class name convention: `ProjectLifetimeScope : VContainer.Unity.LifetimeScope`.
+   - All registrations happen in `protected override void Configure(IContainerBuilder builder)`.
+
+2. **Registering**
+   - **Services (providers)**: prefer components that already exist in scene/prefabs.
+     ```csharp
+     // Provide service as its interface
+     builder.RegisterComponentInHierarchy<MyService>().As<IMyService>();
+     ```
+   - **Consumers (MonoBehaviours)** that need injection:
+     ```csharp
+     builder.RegisterComponentInHierarchy<MyConsumerComponent>();
+     ```
+
+3. **Scene Entry Points**
+   - Any root `GameObject` that contains (or whose children contain) DI consumers must have a `LifetimeScope`.
+   - That scope must **Parent** to the project scope.
+
+4. **Injection Pattern for MonoBehaviours**
+   - Use method injection with `[Inject]` and store references in fields.
+   - Do NOT use injected services in `Awake()`. Use them in `Start()` or later.
+     ```csharp
+     public class MyConsumerComponent : MonoBehaviour
+     {
+         private IMyService _myService;
+
+         [Inject]
+         public void Construct(IMyService myService)
+         {
+             _myService = myService;
+         }
+
+         private void Start()
+         {
+             _myService.DoWork();
+         }
+     }
+     ```
+
+5. **Interfaces First**
+   - Prefer registering services as interfaces (`As<IMyService>()`) to keep components swappable and testable.
+
+6. **No Hidden Side Effects**
+   - Do not perform registration from arbitrary scripts. All registration stays in `*LifetimeScope.Configure(...)`.
+
+---
+
+## When Manual Unity Actions Are Required
+If an action cannot be performed by code (e.g., adding a `LifetimeScope` component in the scene, setting its **Parent** reference, creating the root `[ProjectLifetimeScope]` object), the agent must:
+
+- Leave explicit **TODO comments** in changed files near the relevant code.
+- Add a brief **Task Notes** section at the top of the response (or PR/commit message) listing:
+  - Which `GameObject` needs a `LifetimeScope`.
+  - Which `LifetimeScope.Parent` must be set and to what.
+  - Any required drag-and-drop references in the Inspector.
+
+Example Task Notes:
+Task Notes (manual steps required):
+
+1.   Add a LifetimeScope to "Managers" GameObject and set Parent = [ProjectLifetimeScope].
+
+2.   Ensure [ProjectLifetimeScope] exists in the scene root with ProjectLifetimeScope.cs attached.
+	
+
+---
+
+## Don’ts
+- Don’t call or use injected services in `Awake()`.
+- Don’t register consumers/services outside of `LifetimeScope.Configure`.
+- Don’t assume the root scope exists—if missing, create the class and note manual scene setup in Task Notes.
