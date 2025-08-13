@@ -23,7 +23,7 @@ public class Panel_Status : MonoBehaviour
     [Inject]
     public void Construct(IConnectionService connectionService)
     {
-        Log($"{GetLogCallPrefix(GetType())} VContainer called!");
+        Log($"{GetLogCallPrefix(GetType())} VContainer Inject!");
 
         this._connectionService = connectionService;
 
