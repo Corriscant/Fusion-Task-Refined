@@ -5,7 +5,7 @@ AGENTS Instructions:
 * Comments in Unity code must be written in English.
 * Comments in Delphi code must be written in Russian.
 * Follow the existing coding style, including variable and constant naming.
-* Avoid using null-coalescing operators (`??` and `??=`) with `UnityEngine.Object`. Use explicit `== null` checks instead.
+* Always use an explicit == null comparison to check for null on UnityEngine.Object and its derivatives. Avoid modern operators like ?., ??, ??= and the is null pattern, as they do not recognize Unity's "destroyed" object state and will cause a MissingReferenceException. For interface variables, use the safe cast: if (myInterface as UnityEngine.Object == null).
 
 ### Critical Guideline for Asynchronous Code in Unity
 
