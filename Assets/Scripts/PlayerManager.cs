@@ -13,7 +13,7 @@ using VContainer;
 /// </summary>
 public class PlayerManager : NetworkBehaviour
 {
-    NetworkRunner NetRunner => _connectionService?.Runner;
+    NetworkRunner NetRunner => _connectionService != null ? _connectionService.Runner : null;
 
     // --- Dependencies ---
     [Header("Dependencies")]
