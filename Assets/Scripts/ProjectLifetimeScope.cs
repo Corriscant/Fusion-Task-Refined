@@ -18,5 +18,9 @@ public class ProjectLifetimeScope : LifetimeScope
             .AsSelf();
         // Note: RegisterComponentInHierarchy already registers as Singleton by default in VContainer.
         // The .WithLifetime(Lifetime.Singleton) call is not needed and causes CS1061.
+
+        builder.RegisterComponentInHierarchy<GameLauncher>();
+        builder.RegisterComponentInHierarchy<Panel_Status>();
+        builder.RegisterComponentInHierarchy<SelectionManager>();
     }
 }

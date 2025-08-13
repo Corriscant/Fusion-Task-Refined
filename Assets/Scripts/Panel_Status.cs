@@ -16,10 +16,21 @@ public class Panel_Status : MonoBehaviour
     [SerializeField] private Color _colorConnecting = Color.yellow;
     [SerializeField] private Color _colorConnected = Color.green;
 
-    // [Inject] 
-    private IConnectionService _connectionService;
-
     private Coroutine _connectingRoutine;
+
+    private IConnectionService _connectionService;
+    // Called by VContainer to inject the dependency immediately upon its creation.
+    [Inject]
+    public void Construct(IConnectionService connectionService)
+    {
+        Log($"{GetLogCallPrefix(GetType())} VContainer called!");
+
+        this._connectionService = connectionService;
+
+        connectionService.ConnectingStarted += StartConnecting;
+        connectionService.Connected += SetConnected;
+        connectionService.Disconnected += SetUnconnected;
+    }
 
     private void Awake()
     {
@@ -27,17 +38,6 @@ public class Panel_Status : MonoBehaviour
         {
             _statusText = GetComponentInChildren<TMP_Text>();
         }
-    }
-
-    // Called by VContainer to inject the dependency immediately upon its creation.
-    [Inject]
-    public void Construct(IConnectionService connectionService)
-    {
-        this._connectionService = connectionService;
-
-        connectionService.ConnectingStarted += StartConnecting;
-        connectionService.Connected += SetConnected;
-        connectionService.Disconnected += SetUnconnected;
     }
 
     private void OnDestroy()
