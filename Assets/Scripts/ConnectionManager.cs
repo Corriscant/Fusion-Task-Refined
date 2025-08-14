@@ -11,6 +11,8 @@ using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 using UnityEngine.Windows;
 using VContainer;
+using VContainer.Unity;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
