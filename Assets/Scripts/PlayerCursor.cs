@@ -37,6 +37,10 @@ public class PlayerCursor : NetworkBehaviour
     public override void Spawned()
     {
         base.Spawned();
+
+        // Instant, cached access. No scene search.
+        VContainerBridge.Container.Inject(this);
+
         if (_playerCursorRegistry == null)
         {
             LogError($"{GetLogCallPrefix(GetType())} Cursor registry injection failed.");

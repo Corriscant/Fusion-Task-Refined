@@ -8,6 +8,13 @@ using static Corris.Loggers.LogUtils;
 /// </summary>
 public class ProjectLifetimeScope : LifetimeScope
 {
+    protected override void Awake()
+    {
+        // Initialize the bridge as soon as the scope is awake.
+        base.Awake();
+        VContainerBridge.SetContainer(this);
+    }
+
     protected override void Configure(IContainerBuilder builder)
     {
 

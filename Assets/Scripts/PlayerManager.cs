@@ -356,8 +356,8 @@ public class PlayerManager : NetworkBehaviour
                 _unitPrefab,
                 spawnPosition,
                 Quaternion.identity,
-                player,
-                (runner, obj) => _resolver.InjectGameObject(obj.gameObject)
+                player//,
+               // (runner, obj) => _resolver.InjectGameObject(obj.gameObject)
             );
 
             if (networkUnitObject == null)

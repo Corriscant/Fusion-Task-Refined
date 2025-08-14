@@ -71,7 +71,12 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
 
     public override void Spawned()
     {
+        base.Spawned();
         Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} spawned.");
+
+        // Instant, cached access. No scene search.
+        VContainerBridge.Container.Inject(this);
+
         if (_unitRegistry == null)
         {
             LogError($"{GetLogCallPrefix(GetType())} Unit registry injection failed.");
