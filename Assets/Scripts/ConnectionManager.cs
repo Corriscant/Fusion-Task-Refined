@@ -57,6 +57,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
 
     private IUnitRegistry _unitRegistry;
     private IPlayerCursorRegistry _playerCursorRegistry;
+    private ProjectLifetimeScope _projectScope;
 
     private void Awake()
     {
@@ -239,13 +240,13 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     /// <param name="obj">The spawned network object.</param>
     public void OnObjectSpawned(NetworkRunner runner, NetworkObject obj)
     {
-        var scope = FindObjectOfType<ProjectLifetimeScope>();
-        if (scope == null)
+        if (_projectScope == null)
         {
+            LogError($"{GetLogCallPrefix(GetType())} ProjectLifetimeScope was not injected");
             return;
         }
 
-        scope.Container.InjectGameObject(obj.gameObject);
+        _projectScope.Container.InjectGameObject(obj.gameObject);
     }
 
     #region INetworkRunnerCallbacks Implementation Unassigned
@@ -269,9 +270,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     #endregion
 
     [Inject]
-    public void Construct(IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry)
+    public void Construct(IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry, ProjectLifetimeScope projectScope)
     {
         _unitRegistry = unitRegistry;
         _playerCursorRegistry = playerCursorRegistry;
+        _projectScope = projectScope;
     }
 }
