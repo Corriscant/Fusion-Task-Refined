@@ -13,8 +13,6 @@ public class ProjectLifetimeScope : LifetimeScope
 
         Log($"{GetLogCallPrefix(GetType())} RegisterComponentInHierarchy!");
 
-        builder.RegisterComponent(this).As<ProjectLifetimeScope>();
-
         builder.RegisterComponentInHierarchy<ConnectionManager>()
             .As<IConnectionService>()
             .As<INetworkEvents>()

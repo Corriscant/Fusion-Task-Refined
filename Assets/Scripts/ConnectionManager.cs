@@ -57,7 +57,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
 
     private IUnitRegistry _unitRegistry;
     private IPlayerCursorRegistry _playerCursorRegistry;
-    private ProjectLifetimeScope _projectScope;
+    private IObjectResolver _resolver;
 
     private void Awake()
     {
@@ -240,13 +240,13 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     /// <param name="obj">The spawned network object.</param>
     public void OnObjectSpawned(NetworkRunner runner, NetworkObject obj)
     {
-        if (_projectScope == null)
+        if (_resolver == null)
         {
-            LogError($"{GetLogCallPrefix(GetType())} ProjectLifetimeScope was not injected");
+            LogError($"{GetLogCallPrefix(GetType())} IObjectResolver was not injected");
             return;
         }
 
-        _projectScope.Container.InjectGameObject(obj.gameObject);
+        _resolver.InjectGameObject(obj.gameObject);
     }
 
     #region INetworkRunnerCallbacks Implementation Unassigned
@@ -270,10 +270,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     #endregion
 
     [Inject]
-    public void Construct(IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry, ProjectLifetimeScope projectScope)
+    public void Construct(IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry, IObjectResolver resolver)
     {
         _unitRegistry = unitRegistry;
         _playerCursorRegistry = playerCursorRegistry;
-        _projectScope = projectScope;
+        _resolver = resolver;
     }
 }
