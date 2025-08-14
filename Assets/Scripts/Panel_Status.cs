@@ -43,7 +43,7 @@ public class Panel_Status : MonoBehaviour
     private void OnDestroy()
     {
         // Unsubscribe from connection events
-        if (_connectionService != null)
+        if (!_connectionService.IsNullOrDestroyed())
         {
             _connectionService.ConnectingStarted -= StartConnecting;
             _connectionService.Connected -= SetConnected;
@@ -53,7 +53,7 @@ public class Panel_Status : MonoBehaviour
 
     private void Start()
     {
-        if (_connectionService == null)
+        if (_connectionService.IsNullOrDestroyed())
         {
             LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
         }

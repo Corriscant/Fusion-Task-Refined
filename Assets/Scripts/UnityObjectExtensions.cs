@@ -1,7 +1,14 @@
-// A helper to correctly check for null on any object that might be a Unity Object.
+/// <summary>
+/// Provides helpers to correctly check for null on any object that might be a Unity object.
+/// </summary>
 public static class UnityObjectExtensions
 {
-    // This generic extension method can be called on any interface or class.
+    /// <summary>
+    /// Determines whether the specified object is null or a destroyed <see cref="UnityEngine.Object"/>.
+    /// This generic extension method can be called on any interface or class.
+    /// </summary>
+    /// <param name="obj">The object to check.</param>
+    /// <returns><c>true</c> if the object is null or destroyed; otherwise, <c>false</c>.</returns>
     public static bool IsNullOrDestroyed(this object obj)
     {
         // If the object is a UnityEngine.Object, use the overloaded '==' operator.

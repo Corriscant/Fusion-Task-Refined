@@ -43,7 +43,7 @@ public class GameLauncher : MonoBehaviour
 
     private void Start()
     {
-        if (_connectionService == null)
+        if (_connectionService.IsNullOrDestroyed())
         {
             LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
             enabled = false;
@@ -108,11 +108,11 @@ public class GameLauncher : MonoBehaviour
 
     private void Update()
     {
-        if (_connectionService == null)
+        if (_connectionService.IsNullOrDestroyed())
             return;
 
         bool selectionActive = SelectionManager.IsSelecting;
-        bool runnerMissing = _connectionService.Runner == null;
+        bool runnerMissing = _connectionService.Runner.IsNullOrDestroyed();
 
         _hostButton.gameObject.SetActive(runnerMissing);
         _joinButton.gameObject.SetActive(runnerMissing);

@@ -41,11 +41,11 @@ public class SelectionManager : MonoBehaviour
 
     public void Start()
     {
-        if (_connectionService as UnityEngine.Object == null)
+        if (_connectionService.IsNullOrDestroyed())
         {
             LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
         }
-        if (_inputService as UnityEngine.Object == null)
+        if (_inputService.IsNullOrDestroyed())
         {
             LogError($"{GetLogCallPrefix(GetType())} Input service NIL!");
         }
@@ -55,7 +55,7 @@ public class SelectionManager : MonoBehaviour
     public void OnEnable()
     {
         // Subscribe to input events
-        if (_inputService as UnityEngine.Object != null)
+        if (!_inputService.IsNullOrDestroyed())
         {
             _inputService.OnPrimaryMouseDown += StartSelection;
             _inputService.OnPrimaryMouseDrag += UpdateSelection;
@@ -66,7 +66,7 @@ public class SelectionManager : MonoBehaviour
     public void OnDisable()
     {
         // Unsubscribe from input events
-        if (_inputService as UnityEngine.Object != null)
+        if (!_inputService.IsNullOrDestroyed())
         {
             _inputService.OnPrimaryMouseDown -= StartSelection;
             _inputService.OnPrimaryMouseDrag -= UpdateSelection;
@@ -123,7 +123,7 @@ public class SelectionManager : MonoBehaviour
 
     private void SelectUnits()
     {
-        if (_connectionService.Runner == null)
+        if (_connectionService.Runner.IsNullOrDestroyed())
         {
             LogError($"{GetLogCallPrefix(GetType())} NetRunner is null. Cannot select units.");
             return;

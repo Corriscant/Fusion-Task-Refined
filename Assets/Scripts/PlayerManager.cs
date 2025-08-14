@@ -13,7 +13,7 @@ using VContainer;
 /// </summary>
 public class PlayerManager : NetworkBehaviour
 {
-    NetworkRunner NetRunner => _connectionService != null ? _connectionService.Runner : null;
+    NetworkRunner NetRunner => !_connectionService.IsNullOrDestroyed() ? _connectionService.Runner : null;
 
     // --- Dependencies ---
     [Header("Dependencies")]
@@ -74,13 +74,13 @@ public class PlayerManager : NetworkBehaviour
     // --- Unity & Event Subscription ---
     private void OnEnable()
     {
-        if (_inputService as UnityEngine.Object != null)
+        if (!_inputService.IsNullOrDestroyed())
         {
             _inputService.OnSecondaryMouseClick_World += HandleMoveCommand;
             _inputService.OnMouseMove += CacheMousePosition;
         }
 
-        if (_networkEvents as UnityEngine.Object == null)
+        if (_networkEvents.IsNullOrDestroyed())
         {
             LogError($"{GetLogCallPrefix(GetType())} Network events NIL!");
             return;
@@ -93,11 +93,11 @@ public class PlayerManager : NetworkBehaviour
 
     private void Start()
     {
-        if (_connectionService as UnityEngine.Object == null)
+        if (_connectionService.IsNullOrDestroyed())
         {
             LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
         }
-        if (_inputService as UnityEngine.Object == null)
+        if (_inputService.IsNullOrDestroyed())
         {
             LogError($"{GetLogCallPrefix(GetType())} Input service NIL!");
         }
@@ -105,12 +105,12 @@ public class PlayerManager : NetworkBehaviour
 
     private void OnDisable()
     {
-        if (_inputService as UnityEngine.Object != null)
+        if (!_inputService.IsNullOrDestroyed())
         {
             _inputService.OnSecondaryMouseClick_World -= HandleMoveCommand;
             _inputService.OnMouseMove -= CacheMousePosition;
         }
-        if (_networkEvents != null)
+        if (!_networkEvents.IsNullOrDestroyed())
         {
             _networkEvents.PlayerLeft -= HandlePlayerLeft;
             _networkEvents.PlayerJoined -= HandlePlayerJoined;
