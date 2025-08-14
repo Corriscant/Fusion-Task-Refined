@@ -136,6 +136,12 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         // Prevent multiple concurrent calls.
         if (_isConnecting) return;
 
+        if (_netRunner != null && !_netRunner.IsShutdown)
+        {
+            Log($"{GetLogCallPrefix(GetType())} StartGame called before previous runner shutdown");
+            return;
+        }
+
         try
         {
             _isConnecting = true;
@@ -206,6 +212,11 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         Log($"{GetLogCallPrefix(GetType())} OnShutdown triggered with reason: {shutdownReason}");
         UnitRegistry.Clear();
         PlayerCursorRegistry.Clear();
+        if (_netRunner != null)
+        {
+            Destroy(_netRunner);
+            _netRunner = null;
+        }
         Disconnected?.Invoke();
         OnDisconnected?.Invoke();
     }
@@ -214,6 +225,11 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         Log($"{GetLogCallPrefix(GetType())} OnSceneLoadStart triggered");
         UnitRegistry.Clear();
         PlayerCursorRegistry.Clear();
+        if (_netRunner != null)
+        {
+            Destroy(_netRunner);
+            _netRunner = null;
+        }
     }
 
     #region INetworkRunnerCallbacks Implementation Unassigned
