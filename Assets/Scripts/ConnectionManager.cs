@@ -112,7 +112,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
             Corris.Loggers.Logger.GetCurrentServerTick = () => _netRunner != null && _netRunner.IsRunning ? _netRunner.Tick : -1;
             Log($"{GetLogCallPrefix(GetType())} StartGame result: Ok={result.Ok}, ShutdownReason={result.ShutdownReason}, ErrorMessage={result.ErrorMessage}");
             
-            if (_netRunner.IsRunning)
+            if ((_netRunner != null) && _netRunner.IsRunning)
             {
                 Log($"{GetLogCallPrefix(GetType())} Starting game in {mode} mode. Current NetRunner tick: {_netRunner.Tick}");
             }
