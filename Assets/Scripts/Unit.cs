@@ -72,6 +72,12 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     public override void Spawned()
     {
         Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} spawned.");
+        if (_unitRegistry == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Unit registry injection failed.");
+            return;
+        }
+
         _unitRegistry.Register(Object.Id.Raw, this);
     }
 

@@ -90,6 +90,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     {
         // Create the Fusion runner and let it know that we will be providing user input
         _netRunner = gameObject.AddComponent<NetworkRunner>();
+        _netRunner.AddCallbacks(this);
         _netRunner.ProvideInput = true;
 
         // Create the NetworkSceneInfo from the current scene

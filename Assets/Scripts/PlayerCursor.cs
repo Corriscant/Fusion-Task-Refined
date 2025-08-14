@@ -37,6 +37,12 @@ public class PlayerCursor : NetworkBehaviour
     public override void Spawned()
     {
         base.Spawned();
+        if (_playerCursorRegistry == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Cursor registry injection failed.");
+            return;
+        }
+
         _playerCursorRegistry.Register(Object.InputAuthority, this);
         MaterialApplier.ApplyMaterial(MeshRenderer, MaterialIndex, "Cursor");
     }
