@@ -232,6 +232,22 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         // Runner should persist across scene loads; cleanup occurs on shutdown.
     }
 
+    /// <summary>
+    /// Performs dependency injection on network objects spawned by Fusion.
+    /// </summary>
+    /// <param name="runner">The active <see cref="NetworkRunner"/>.</param>
+    /// <param name="obj">The spawned network object.</param>
+    public void OnObjectSpawned(NetworkRunner runner, NetworkObject obj)
+    {
+        var scope = FindObjectOfType<ProjectLifetimeScope>();
+        if (scope == null)
+        {
+            return;
+        }
+
+        scope.Container.InjectGameObject(obj.gameObject);
+    }
+
     #region INetworkRunnerCallbacks Implementation Unassigned
 
 
