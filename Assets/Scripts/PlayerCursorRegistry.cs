@@ -2,45 +2,47 @@ using System.Collections.Generic;
 using Fusion;
 
 /// <summary>
-/// A static registry for all active player cursors, indexed by PlayerRef.
+/// A registry for all active player cursors, indexed by PlayerRef.
 /// Provides a fast way to look up a player's cursor.
 /// </summary>
-public static class PlayerCursorRegistry
+public class PlayerCursorRegistry : IPlayerCursorRegistry
 {
+    private readonly Dictionary<PlayerRef, PlayerCursor> _cursors = new();
+
     /// <summary>
-    /// The dictionary holding all active cursors. Key is the player's PlayerRef, value is the cursor instance.
+    /// All active cursors.
     /// </summary>
-    public static readonly Dictionary<PlayerRef, PlayerCursor> Cursors = new();
+    public IEnumerable<PlayerCursor> Cursors => _cursors.Values;
 
     /// <summary>
     /// Registers a cursor for the specified player.
     /// </summary>
-    public static void Register(PlayerRef player, PlayerCursor cursor)
+    public void Register(PlayerRef player, PlayerCursor cursor)
     {
-        Cursors[player] = cursor;
+        _cursors[player] = cursor;
     }
 
     /// <summary>
     /// Removes the cursor associated with the specified player.
     /// </summary>
-    public static void Unregister(PlayerRef player)
+    public void Unregister(PlayerRef player)
     {
-        Cursors.Remove(player);
-    }
-
-    /// <summary>
-    /// Clears the registry of all player cursors.
-    /// </summary>
-    public static void Clear()
-    {
-        Cursors.Clear();
+        _cursors.Remove(player);
     }
 
     /// <summary>
     /// Attempts to get the cursor for the specified player.
     /// </summary>
-    public static bool TryGet(PlayerRef player, out PlayerCursor cursor)
+    public bool TryGet(PlayerRef player, out PlayerCursor cursor)
     {
-        return Cursors.TryGetValue(player, out cursor);
+        return _cursors.TryGetValue(player, out cursor);
+    }
+
+    /// <summary>
+    /// Clears the registry of all player cursors.
+    /// </summary>
+    public void Clear()
+    {
+        _cursors.Clear();
     }
 }

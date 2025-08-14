@@ -51,14 +51,20 @@ public class PlayerManager : NetworkBehaviour
     private IConnectionService _connectionService;
     private INetworkEvents _networkEvents;
     private IInputService _inputService;
+    private IUnitRegistry _unitRegistry;
+    private IPlayerCursorRegistry _playerCursorRegistry;
+    private IObjectResolver _resolver;
 
     [Inject]
-    public void Construct(IConnectionService connectionService, INetworkEvents networkEvents, IInputService inputService)
+    public void Construct(IConnectionService connectionService, INetworkEvents networkEvents, IInputService inputService, IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry, IObjectResolver resolver)
     {
         Log($"{GetLogCallPrefix(GetType())} VContainer Inject!");
         _connectionService = connectionService;
         _networkEvents = networkEvents;
         _inputService = inputService;
+        _unitRegistry = unitRegistry;
+        _playerCursorRegistry = playerCursorRegistry;
+        _resolver = resolver;
     }
 
     private void Awake()
@@ -73,6 +79,23 @@ public class PlayerManager : NetworkBehaviour
 
     // --- Unity & Event Subscription ---
     private void OnEnable()
+    {
+        // Subscriptions are handled in Spawned to ensure dependencies are injected.
+    }
+
+    private void Start()
+    {
+        if (_connectionService.IsNullOrDestroyed())
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
+        }
+        if (_inputService.IsNullOrDestroyed())
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Input service NIL!");
+        }
+    }
+
+    public override void Spawned()
     {
         if (!_inputService.IsNullOrDestroyed())
         {
@@ -89,18 +112,6 @@ public class PlayerManager : NetworkBehaviour
         _networkEvents.PlayerJoined += HandlePlayerJoined;
         _networkEvents.PlayerLeft += HandlePlayerLeft;
         _networkEvents.Input += TryGetNetworkInput;
-    }
-
-    private void Start()
-    {
-        if (_connectionService.IsNullOrDestroyed())
-        {
-            LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
-        }
-        if (_inputService.IsNullOrDestroyed())
-        {
-            LogError($"{GetLogCallPrefix(GetType())} Input service NIL!");
-        }
     }
 
     private void OnDisable()
@@ -131,7 +142,7 @@ public class PlayerManager : NetworkBehaviour
         {
             if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
             {
-                if (PlayerCursorRegistry.TryGet(player, out var playerCursor))
+                if (_playerCursorRegistry.TryGet(player, out var playerCursor))
                 {
                     playerCursor.CursorPosition = input.mouseWorldPosition;
                 }
@@ -152,7 +163,7 @@ public class PlayerManager : NetworkBehaviour
 
     private void UpdateCursorsEcho()
     {
-        foreach (var cursor in PlayerCursorRegistry.Cursors.Values)
+        foreach (var cursor in _playerCursorRegistry.Cursors)
         {
             cursor.transform.position = cursor.CursorPosition;
         }
@@ -203,7 +214,13 @@ public class PlayerManager : NetworkBehaviour
 
             if (PlayerCursorPrefab != null)
             {
-                runner.Spawn(PlayerCursorPrefab, Vector3.zero, Quaternion.identity, player);
+                runner.Spawn(
+                    PlayerCursorPrefab,
+                    Vector3.zero,
+                    Quaternion.identity,
+                    player,
+                    obj => _resolver.InjectGameObject(obj.gameObject)
+                );
             }
             else
             {
@@ -244,7 +261,7 @@ public class PlayerManager : NetworkBehaviour
                 _playerMaterialIndices.Remove(player);
             }
 
-            if (PlayerCursorRegistry.TryGet(player, out var cursor))
+            if (_playerCursorRegistry.TryGet(player, out var cursor))
             {
                 runner.Despawn(cursor.Object);
             }
@@ -299,7 +316,7 @@ public class PlayerManager : NetworkBehaviour
 
         foreach (var unitId in unitIds)
         {
-            if (UnitRegistry.Units.TryGetValue(unitId, out var unit) && unit.IsOwnedBy(player))
+            if (_unitRegistry.TryGet(unitId, out var unit) && unit.IsOwnedBy(player))
             {
                 changedUnits.Add(unit);
             }
@@ -334,7 +351,13 @@ public class PlayerManager : NetworkBehaviour
         for (int i = 0; i < unitCountPerPlayer; i++)
         {
             Vector3 spawnPosition = playerSpawnCenterPosition + new Vector3(Mathf.Cos(i * Mathf.PI * 2 / unitCountPerPlayer), 0, Mathf.Sin(i * Mathf.PI * 2 / unitCountPerPlayer));
-            NetworkObject networkUnitObject = runner.Spawn(_unitPrefab, spawnPosition, Quaternion.identity, player);
+            NetworkObject networkUnitObject = runner.Spawn(
+                _unitPrefab,
+                spawnPosition,
+                Quaternion.identity,
+                player,
+                obj => _resolver.InjectGameObject(obj.gameObject)
+            );
 
             if (networkUnitObject == null)
             {
@@ -360,7 +383,7 @@ public class PlayerManager : NetworkBehaviour
     {
         _playerMaterialIndices[player] = index;
 
-        if (PlayerCursorRegistry.TryGet(player, out var cursor))
+        if (_playerCursorRegistry.TryGet(player, out var cursor))
         {
             cursor.MaterialIndex = index;
         }
@@ -388,7 +411,7 @@ public class PlayerManager : NetworkBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // Iterate over all registered units and relay their data to clients.
-        foreach (var unit in UnitRegistry.Units.Values)
+        foreach (var unit in _unitRegistry.Units)
         {
             unit.RPC_RelaySpawnedUnitInfo(unit.Object.Id, unit.name, unit.materialIndex);
         }

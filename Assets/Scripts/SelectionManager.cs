@@ -29,14 +29,16 @@ public class SelectionManager : MonoBehaviour
 
     private IConnectionService _connectionService;
     private IInputService _inputService;
+    private IUnitRegistry _unitRegistry;
 
     // Called by VContainer to inject the dependency immediately upon its creation.
     [Inject]
-    public void Construct(IConnectionService connectionService, IInputService inputService)
+    public void Construct(IConnectionService connectionService, IInputService inputService, IUnitRegistry unitRegistry)
     {
         Log($"{GetLogCallPrefix(GetType())} VContainer Inject!");
         _connectionService = connectionService;
         _inputService = inputService;
+        _unitRegistry = unitRegistry;
     }
 
     public void Start()
@@ -147,7 +149,7 @@ public class SelectionManager : MonoBehaviour
         Vector2 rightBottom_Screeen = LocalToScreenPoint(mainCamera, _canvasRect, rightBottom_Local);
         Rect selectionBox_Screen = GetRectFromPoints(leftTop_Screen, rightBottom_Screeen);
 
-        foreach (var unit in UnitRegistry.Units.Values)
+        foreach (var unit in _unitRegistry.Units)
         {
             if (unit is not ISelectableProvider { Selectable: { } selectable })
             {

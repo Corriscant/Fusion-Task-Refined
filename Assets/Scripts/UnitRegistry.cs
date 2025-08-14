@@ -2,22 +2,48 @@
 using System.Collections.Generic;
 
 /// <summary>
-/// A static registry for all active units, indexed by their raw NetworkId value (uint).
+/// A registry for all active units, indexed by their raw NetworkId value (uint).
 /// This provides a high-performance alternative to FindObjectsByType for looking up units.
 /// Units are responsible for registering themselves on spawn and unregistering on despawn.
 /// </summary>
-public static class UnitRegistry
+public class UnitRegistry : IUnitRegistry
 {
+    private readonly Dictionary<uint, Unit> _units = new();
+
     /// <summary>
-    /// The dictionary holding all active units. Key is the unit's raw NetworkId (uint), Value is the unit reference.
+    /// The collection of all active units.
     /// </summary>
-    public static readonly Dictionary<uint, Unit> Units = new();
+    public IEnumerable<Unit> Units => _units.Values;
+
+    /// <summary>
+    /// Registers the specified unit with the given NetworkId.
+    /// </summary>
+    public void Register(uint id, Unit unit)
+    {
+        _units[id] = unit;
+    }
+
+    /// <summary>
+    /// Removes the unit associated with the given NetworkId.
+    /// </summary>
+    public void Unregister(uint id)
+    {
+        _units.Remove(id);
+    }
+
+    /// <summary>
+    /// Attempts to retrieve a unit by its NetworkId.
+    /// </summary>
+    public bool TryGet(uint id, out Unit unit)
+    {
+        return _units.TryGetValue(id, out unit);
+    }
 
     /// <summary>
     /// Clears the registry of all units.
     /// </summary>
-    public static void Clear()
+    public void Clear()
     {
-        Units.Clear();
+        _units.Clear();
     }
 }
