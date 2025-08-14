@@ -58,7 +58,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
 
     private IUnitRegistry _unitRegistry;
     private IPlayerCursorRegistry _playerCursorRegistry;
-    private IObjectResolver _resolver;
+    private ProjectLifetimeScope _projectScope;
 
     private void Awake()
     {
@@ -235,19 +235,30 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     }
 
     /// <summary>
-    /// Performs dependency injection on network objects spawned by Fusion.
+    /// Invoked before a <see cref="NetworkObject"/> is fully spawned. Performs dependency injection so
+    /// that components receive their dependencies before their <c>Spawned</c> callbacks execute.
+    /// </summary>
+    /// <param name="runner">The active <see cref="NetworkRunner"/>.</param>
+    /// <param name="obj">The network object that is about to be spawned.</param>
+    public void OnBeforeSpawned(NetworkRunner runner, NetworkObject obj)
+    {
+        if (_projectScope == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} ProjectLifetimeScope was not injected");
+            return;
+        }
+
+        _projectScope.Container.InjectGameObject(obj.gameObject);
+    }
+
+    /// <summary>
+    /// Called after a <see cref="NetworkObject"/> has been spawned. Injection is already handled in
+    /// <see cref="OnBeforeSpawned"/> so no action is required here.
     /// </summary>
     /// <param name="runner">The active <see cref="NetworkRunner"/>.</param>
     /// <param name="obj">The spawned network object.</param>
     public void OnObjectSpawned(NetworkRunner runner, NetworkObject obj)
     {
-        if (_resolver == null)
-        {
-            LogError($"{GetLogCallPrefix(GetType())} IObjectResolver was not injected");
-            return;
-        }
-
-        _resolver.InjectGameObject(obj.gameObject);
     }
 
     #region INetworkRunnerCallbacks Implementation Unassigned
@@ -271,10 +282,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     #endregion
 
     [Inject]
-    public void Construct(IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry, IObjectResolver resolver)
+    public void Construct(ProjectLifetimeScope scope, IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry)
     {
+        _projectScope = scope;
         _unitRegistry = unitRegistry;
         _playerCursorRegistry = playerCursorRegistry;
-        _resolver = resolver;
     }
 }
