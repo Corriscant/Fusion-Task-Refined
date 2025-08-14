@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
+using VContainer;
 
 /// <summary>
 /// Unit class represents a controllable unit in the game.
@@ -14,6 +15,7 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     public GameObject body;
     private NetworkCharacterController _cc;
     private MeshRenderer _meshRenderer; // Cache for MeshRenderer to avoid repeated lookups
+    private IUnitRegistry _unitRegistry;
 
     /// <summary>
     /// Cached MeshRenderer component of the unit.
@@ -70,14 +72,20 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     public override void Spawned()
     {
         Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} spawned.");
-        UnitRegistry.Units[Object.Id.Raw] = this;
+        _unitRegistry.Register(Object.Id.Raw, this);
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} despawned. HasState: {hasState}");
-        UnitRegistry.Units.Remove(Object.Id.Raw);
+        _unitRegistry.Unregister(Object.Id.Raw);
         base.Despawned(runner, hasState);
+    }
+
+    [Inject]
+    public void Construct(IUnitRegistry unitRegistry)
+    {
+        _unitRegistry = unitRegistry;
     }
 
     public void SetOwner(PlayerRef newOwner) => PlayerOwner = newOwner;

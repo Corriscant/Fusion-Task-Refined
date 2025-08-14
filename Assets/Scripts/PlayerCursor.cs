@@ -2,6 +2,7 @@ using Fusion;
 using UnityEngine;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
+using VContainer;
 
 /// <summary>
 /// Networked cursor data for a player.
@@ -16,6 +17,7 @@ public class PlayerCursor : NetworkBehaviour
     public int MaterialIndex { get; set; }
 
     private MeshRenderer _meshRenderer;
+    private IPlayerCursorRegistry _playerCursorRegistry;
 
     /// <summary>
     /// Cached MeshRenderer component of the cursor.
@@ -35,7 +37,7 @@ public class PlayerCursor : NetworkBehaviour
     public override void Spawned()
     {
         base.Spawned();
-        PlayerCursorRegistry.Register(Object.InputAuthority, this);
+        _playerCursorRegistry.Register(Object.InputAuthority, this);
         MaterialApplier.ApplyMaterial(MeshRenderer, MaterialIndex, "Cursor");
     }
 
@@ -46,8 +48,13 @@ public class PlayerCursor : NetworkBehaviour
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
-        PlayerCursorRegistry.Unregister(Object.InputAuthority);
+        _playerCursorRegistry.Unregister(Object.InputAuthority);
         base.Despawned(runner, hasState);
     }
 
+    [Inject]
+    public void Construct(IPlayerCursorRegistry playerCursorRegistry)
+    {
+        _playerCursorRegistry = playerCursorRegistry;
+    }
 }

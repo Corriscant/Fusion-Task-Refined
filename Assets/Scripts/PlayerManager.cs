@@ -51,14 +51,18 @@ public class PlayerManager : NetworkBehaviour
     private IConnectionService _connectionService;
     private INetworkEvents _networkEvents;
     private IInputService _inputService;
+    private IUnitRegistry _unitRegistry;
+    private IPlayerCursorRegistry _playerCursorRegistry;
 
     [Inject]
-    public void Construct(IConnectionService connectionService, INetworkEvents networkEvents, IInputService inputService)
+    public void Construct(IConnectionService connectionService, INetworkEvents networkEvents, IInputService inputService, IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry)
     {
         Log($"{GetLogCallPrefix(GetType())} VContainer Inject!");
         _connectionService = connectionService;
         _networkEvents = networkEvents;
         _inputService = inputService;
+        _unitRegistry = unitRegistry;
+        _playerCursorRegistry = playerCursorRegistry;
     }
 
     private void Awake()
@@ -131,7 +135,7 @@ public class PlayerManager : NetworkBehaviour
         {
             if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
             {
-                if (PlayerCursorRegistry.TryGet(player, out var playerCursor))
+                if (_playerCursorRegistry.TryGet(player, out var playerCursor))
                 {
                     playerCursor.CursorPosition = input.mouseWorldPosition;
                 }
@@ -152,7 +156,7 @@ public class PlayerManager : NetworkBehaviour
 
     private void UpdateCursorsEcho()
     {
-        foreach (var cursor in PlayerCursorRegistry.Cursors.Values)
+        foreach (var cursor in _playerCursorRegistry.Cursors)
         {
             cursor.transform.position = cursor.CursorPosition;
         }
@@ -244,7 +248,7 @@ public class PlayerManager : NetworkBehaviour
                 _playerMaterialIndices.Remove(player);
             }
 
-            if (PlayerCursorRegistry.TryGet(player, out var cursor))
+            if (_playerCursorRegistry.TryGet(player, out var cursor))
             {
                 runner.Despawn(cursor.Object);
             }
@@ -299,7 +303,7 @@ public class PlayerManager : NetworkBehaviour
 
         foreach (var unitId in unitIds)
         {
-            if (UnitRegistry.Units.TryGetValue(unitId, out var unit) && unit.IsOwnedBy(player))
+            if (_unitRegistry.TryGet(unitId, out var unit) && unit.IsOwnedBy(player))
             {
                 changedUnits.Add(unit);
             }
@@ -360,7 +364,7 @@ public class PlayerManager : NetworkBehaviour
     {
         _playerMaterialIndices[player] = index;
 
-        if (PlayerCursorRegistry.TryGet(player, out var cursor))
+        if (_playerCursorRegistry.TryGet(player, out var cursor))
         {
             cursor.MaterialIndex = index;
         }
@@ -388,7 +392,7 @@ public class PlayerManager : NetworkBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // Iterate over all registered units and relay their data to clients.
-        foreach (var unit in UnitRegistry.Units.Values)
+        foreach (var unit in _unitRegistry.Units)
         {
             unit.RPC_RelaySpawnedUnitInfo(unit.Object.Id, unit.name, unit.materialIndex);
         }

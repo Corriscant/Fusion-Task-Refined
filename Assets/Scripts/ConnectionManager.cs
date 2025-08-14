@@ -10,6 +10,7 @@ using UnityEngine.SceneManagement;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 using UnityEngine.Windows;
+using VContainer;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -53,6 +54,9 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     // Prevent multiple connection attempts
     private bool _isConnecting = false;
     public bool IsConnecting => _isConnecting;
+
+    private IUnitRegistry _unitRegistry;
+    private IPlayerCursorRegistry _playerCursorRegistry;
 
     private void Awake()
     {
@@ -172,8 +176,8 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
 
     private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        UnitRegistry.Clear();
-        PlayerCursorRegistry.Clear();
+        _unitRegistry.Clear();
+        _playerCursorRegistry.Clear();
     }
 
     // --- INetworkRunnerCallbacks Implementation ---
@@ -210,8 +214,8 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
         Log($"{GetLogCallPrefix(GetType())} OnShutdown triggered with reason: {shutdownReason}");
-        UnitRegistry.Clear();
-        PlayerCursorRegistry.Clear();
+        _unitRegistry.Clear();
+        _playerCursorRegistry.Clear();
         if (_netRunner != null)
         {
             Destroy(_netRunner);
@@ -223,8 +227,8 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     public void OnSceneLoadStart(NetworkRunner runner)
     {
         Log($"{GetLogCallPrefix(GetType())} OnSceneLoadStart triggered");
-        UnitRegistry.Clear();
-        PlayerCursorRegistry.Clear();
+        _unitRegistry.Clear();
+        _playerCursorRegistry.Clear();
         // Runner should persist across scene loads; cleanup occurs on shutdown.
     }
 
@@ -248,4 +252,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
 
     #endregion
 
+    [Inject]
+    public void Construct(IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry)
+    {
+        _unitRegistry = unitRegistry;
+        _playerCursorRegistry = playerCursorRegistry;
+    }
 }
