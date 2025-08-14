@@ -109,7 +109,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
             #region LogAccessTo NetRunner.Tick
             // Provide the logger with a way to get the current server tick safely
             Corris.Loggers.Logger.LogPrefix = "";
-            Corris.Loggers.Logger.GetCurrentServerTick = () => _netRunner.IsRunning ? _netRunner.Tick : -1;
+            Corris.Loggers.Logger.GetCurrentServerTick = () => _netRunner != null && _netRunner.IsRunning ? _netRunner.Tick : -1;
             Log($"{GetLogCallPrefix(GetType())} StartGame result: Ok={result.Ok}, ShutdownReason={result.ShutdownReason}, ErrorMessage={result.ErrorMessage}");
             
             if (_netRunner.IsRunning)
@@ -225,11 +225,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         Log($"{GetLogCallPrefix(GetType())} OnSceneLoadStart triggered");
         UnitRegistry.Clear();
         PlayerCursorRegistry.Clear();
-        if (_netRunner != null)
-        {
-            Destroy(_netRunner);
-            _netRunner = null;
-        }
+        // Runner should persist across scene loads; cleanup occurs on shutdown.
     }
 
     #region INetworkRunnerCallbacks Implementation Unassigned
