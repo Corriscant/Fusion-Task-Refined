@@ -50,13 +50,15 @@ public class PlayerManager : NetworkBehaviour
     // --- Dependencies ---
     private IConnectionService _connectionService;
     private INetworkEvents _networkEvents;
+    private IInputService _inputService;
 
     [Inject]
-    public void Construct(IConnectionService connectionService, INetworkEvents networkEvents)
+    public void Construct(IConnectionService connectionService, INetworkEvents networkEvents, IInputService inputService)
     {
         Log($"{GetLogCallPrefix(GetType())} VContainer Inject!");
         _connectionService = connectionService;
         _networkEvents = networkEvents;
+        _inputService = inputService;
     }
 
     private void Awake()
@@ -72,10 +74,13 @@ public class PlayerManager : NetworkBehaviour
     // --- Unity & Event Subscription ---
     private void OnEnable()
     {
-        InputManager.OnSecondaryMouseClick_World += HandleMoveCommand;
-        InputManager.OnMouseMove += CacheMousePosition;
+        if (_inputService as UnityEngine.Object != null)
+        {
+            _inputService.OnSecondaryMouseClick_World += HandleMoveCommand;
+            _inputService.OnMouseMove += CacheMousePosition;
+        }
 
-        if (_networkEvents == null)
+        if (_networkEvents as UnityEngine.Object == null)
         {
             LogError($"{GetLogCallPrefix(GetType())} Network events NIL!");
             return;
@@ -88,16 +93,23 @@ public class PlayerManager : NetworkBehaviour
 
     private void Start()
     {
-        if (_connectionService == null)
+        if (_connectionService as UnityEngine.Object == null)
         {
             LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
+        }
+        if (_inputService as UnityEngine.Object == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Input service NIL!");
         }
     }
 
     private void OnDisable()
     {
-        InputManager.OnSecondaryMouseClick_World -= HandleMoveCommand;
-        InputManager.OnMouseMove -= CacheMousePosition;
+        if (_inputService as UnityEngine.Object != null)
+        {
+            _inputService.OnSecondaryMouseClick_World -= HandleMoveCommand;
+            _inputService.OnMouseMove -= CacheMousePosition;
+        }
         if (_networkEvents != null)
         {
             _networkEvents.PlayerLeft -= HandlePlayerLeft;

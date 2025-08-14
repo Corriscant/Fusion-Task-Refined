@@ -28,20 +28,26 @@ public class SelectionManager : MonoBehaviour
     public static bool IsSelecting { get; private set; }
 
     private IConnectionService _connectionService;
+    private IInputService _inputService;
 
     // Called by VContainer to inject the dependency immediately upon its creation.
     [Inject]
-    public void Construct(IConnectionService connectionService)
+    public void Construct(IConnectionService connectionService, IInputService inputService)
     {
         Log($"{GetLogCallPrefix(GetType())} VContainer Inject!");
-        this._connectionService = connectionService;
+        _connectionService = connectionService;
+        _inputService = inputService;
     }
 
     public void Start()
     {
-        if (_connectionService == null)
+        if (_connectionService as UnityEngine.Object == null)
         {
             LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
+        }
+        if (_inputService as UnityEngine.Object == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Input service NIL!");
         }
         _canvasRect = selectionBox.GetComponentInParent<Canvas>().GetComponent<RectTransform>();
     }
@@ -49,17 +55,23 @@ public class SelectionManager : MonoBehaviour
     public void OnEnable()
     {
         // Subscribe to input events
-        InputManager.OnPrimaryMouseDown += StartSelection;
-        InputManager.OnPrimaryMouseDrag += UpdateSelection;
-        InputManager.OnPrimaryMouseUp += EndSelection;
+        if (_inputService as UnityEngine.Object != null)
+        {
+            _inputService.OnPrimaryMouseDown += StartSelection;
+            _inputService.OnPrimaryMouseDrag += UpdateSelection;
+            _inputService.OnPrimaryMouseUp += EndSelection;
+        }
     }
 
     public void OnDisable()
     {
         // Unsubscribe from input events
-        InputManager.OnPrimaryMouseDown -= StartSelection;
-        InputManager.OnPrimaryMouseDrag -= UpdateSelection;
-        InputManager.OnPrimaryMouseUp -= EndSelection;
+        if (_inputService as UnityEngine.Object != null)
+        {
+            _inputService.OnPrimaryMouseDown -= StartSelection;
+            _inputService.OnPrimaryMouseDrag -= UpdateSelection;
+            _inputService.OnPrimaryMouseUp -= EndSelection;
+        }
     }
 
     public void StartSelection(Vector2 startPosition)

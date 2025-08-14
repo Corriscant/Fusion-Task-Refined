@@ -1,21 +1,23 @@
 // Generic input handler, decoupled from game logic.
 using System;
-using Unity.VisualScripting;
 using UnityEngine;
 
-public class InputManager : MonoBehaviour
+/// <summary>
+/// Provides input events for other systems.
+/// </summary>
+public class InputManager : MonoBehaviour, IInputService
 {
     // --- Primary (usually Left) Mouse Button Events ---
-    public static event Action<Vector2> OnPrimaryMouseDown;
-    public static event Action<Vector2> OnPrimaryMouseDrag;
-    public static event Action OnPrimaryMouseUp;
+    public event Action<Vector2> OnPrimaryMouseDown;
+    public event Action<Vector2> OnPrimaryMouseDrag;
+    public event Action OnPrimaryMouseUp;
 
     // --- Secondary (usually Right) Mouse Button Events ---
     // This event was created for the move command
-    public static event Action<Vector3> OnSecondaryMouseClick_World;
+    public event Action<Vector3> OnSecondaryMouseClick_World;
 
     // --- Mouse movement  ---
-    public static event Action<Vector3> OnMouseMove;
+    public event Action<Vector3> OnMouseMove;
 
     // Camera used for raycasting
     [SerializeField] private Camera mainCamera;
