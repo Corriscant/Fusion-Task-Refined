@@ -3,9 +3,10 @@ using Fusion;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
-using VContainer;
 
 /// <summary>
 /// Handles game logic related to players, such as spawning units when a player joins,
@@ -219,7 +220,7 @@ public class PlayerManager : NetworkBehaviour
                     Vector3.zero,
                     Quaternion.identity,
                     player,
-                    obj => _resolver.InjectGameObject(obj.gameObject)
+                    (runner, obj) => _resolver.InjectGameObject(obj.gameObject)
                 );
             }
             else
@@ -356,7 +357,7 @@ public class PlayerManager : NetworkBehaviour
                 spawnPosition,
                 Quaternion.identity,
                 player,
-                obj => _resolver.InjectGameObject(obj.gameObject)
+                (runner, obj) => _resolver.InjectGameObject(obj.gameObject)
             );
 
             if (networkUnitObject == null)
