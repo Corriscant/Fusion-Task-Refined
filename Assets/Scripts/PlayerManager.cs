@@ -78,6 +78,23 @@ public class PlayerManager : NetworkBehaviour
     // --- Unity & Event Subscription ---
     private void OnEnable()
     {
+        // Subscriptions are handled in Spawned to ensure dependencies are injected.
+    }
+
+    private void Start()
+    {
+        if (_connectionService.IsNullOrDestroyed())
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
+        }
+        if (_inputService.IsNullOrDestroyed())
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Input service NIL!");
+        }
+    }
+
+    public override void Spawned()
+    {
         if (!_inputService.IsNullOrDestroyed())
         {
             _inputService.OnSecondaryMouseClick_World += HandleMoveCommand;
@@ -93,18 +110,6 @@ public class PlayerManager : NetworkBehaviour
         _networkEvents.PlayerJoined += HandlePlayerJoined;
         _networkEvents.PlayerLeft += HandlePlayerLeft;
         _networkEvents.Input += TryGetNetworkInput;
-    }
-
-    private void Start()
-    {
-        if (_connectionService.IsNullOrDestroyed())
-        {
-            LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
-        }
-        if (_inputService.IsNullOrDestroyed())
-        {
-            LogError($"{GetLogCallPrefix(GetType())} Input service NIL!");
-        }
     }
 
     private void OnDisable()
