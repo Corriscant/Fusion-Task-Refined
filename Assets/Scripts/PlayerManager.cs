@@ -79,6 +79,22 @@ public class PlayerManager : NetworkBehaviour
     private void OnEnable()
     {
         // Subscriptions are handled in Spawned to ensure dependencies are injected.
+
+        if (!_inputService.IsNullOrDestroyed())
+        {
+            _inputService.OnSecondaryMouseClick_World += HandleMoveCommand;
+            _inputService.OnMouseMove += CacheMousePosition;
+        }
+
+        if (_networkEvents.IsNullOrDestroyed())
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Network events NIL!");
+            return;
+        }
+
+        _networkEvents.PlayerJoined += HandlePlayerJoined;
+        _networkEvents.PlayerLeft += HandlePlayerLeft;
+        _networkEvents.Input += TryGetNetworkInput;
     }
 
     private void Start()
@@ -95,6 +111,7 @@ public class PlayerManager : NetworkBehaviour
 
     public override void Spawned()
     {
+        /*
         if (!_inputService.IsNullOrDestroyed())
         {
             _inputService.OnSecondaryMouseClick_World += HandleMoveCommand;
@@ -110,6 +127,7 @@ public class PlayerManager : NetworkBehaviour
         _networkEvents.PlayerJoined += HandlePlayerJoined;
         _networkEvents.PlayerLeft += HandlePlayerLeft;
         _networkEvents.Input += TryGetNetworkInput;
+        */
     }
 
     private void OnDisable()
