@@ -9,7 +9,7 @@ public interface IPlayerCursorRegistry
     /// <summary>
     /// All cursors currently tracked by the registry.
     /// </summary>
-    IEnumerable<PlayerCursor> Cursors { get; }
+    IReadOnlyList<PlayerCursor> Cursors { get; }
 
     /// <summary>
     /// Registers a cursor for the specified player.

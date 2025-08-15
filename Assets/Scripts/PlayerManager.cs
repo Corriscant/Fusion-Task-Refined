@@ -168,8 +168,10 @@ public class PlayerManager : NetworkBehaviour
 
     private void UpdateCursorsEcho()
     {
-        foreach (var cursor in _playerCursorRegistry.Cursors)
+        var cursors = _playerCursorRegistry.Cursors;
+        for (int i = 0, count = cursors.Count; i < count; i++)
         {
+            var cursor = cursors[i];
             cursor.transform.position = cursor.CursorPosition;
         }
     }
