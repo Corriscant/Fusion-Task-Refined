@@ -84,6 +84,12 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
         }
 
         _unitRegistry.Register(Object.Id.Raw, this);
+
+        // Host immediately broadcasts unit data to all clients.
+        if (Object.HasStateAuthority)
+        {
+            RPC_RelaySpawnedUnitInfo(name, materialIndex);
+        }
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
@@ -199,23 +205,13 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
         HasTarget = false; 
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]
-    public void RPC_RelaySpawnedUnitInfo(NetworkId unitId, String unitName, int materialIndex)
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer, Channel = RpcChannel.Reliable)]
+    public void RPC_RelaySpawnedUnitInfo(String unitName, int materialIndex)
     {
         Log($"{GetLogCallPrefix(GetType())} RPC_RelaySpawnedUnitInfo {unitName}");
 
-        if (Runner.TryFindObject(unitId, out var networkObject))
-        {
-            if (networkObject.TryGetComponent<Unit>(out var unit))
-            {
-                unit.name = unitName;
-                unit.materialIndex = materialIndex;
-                MaterialApplier.ApplyMaterial(unit.MeshRenderer, materialIndex, "Unit");
-            }
-        }
-        else
-        {
-            LogError($"{GetLogCallPrefix(GetType())} Failed to find the unit from unitId.");
-        }
+        name = unitName;
+        this.materialIndex = materialIndex;
+        MaterialApplier.ApplyMaterial(MeshRenderer, materialIndex, "Unit");
     }
 }

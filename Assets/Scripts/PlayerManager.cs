@@ -1,6 +1,5 @@
 // Manages player lifecycle events like joining and leaving.
 using Fusion;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
@@ -230,9 +229,6 @@ public class PlayerManager : NetworkBehaviour
 
             AssignPlayerColor(player, _spawnedPlayersCount);
             _spawnedPlayersCount++;
-
-            // Synchronize unit data (names, materials). Delayed to allow spawning for everyone.
-            StartCoroutine(SyncUnitsData(runner));
         }
 
     }
@@ -402,19 +398,4 @@ public class PlayerManager : NetworkBehaviour
         }
     }
 
-    /// <summary>
-    /// Waits a moment and then tells all units to broadcast their info (name, material) to all clients.
-    /// This ensures that all clients have the correct visual representation for all units.
-    /// </summary>
-    private IEnumerator SyncUnitsData(NetworkRunner runner)
-    {
-        // Wait briefly to ensure all initial objects have been spawned across all clients.
-        yield return new WaitForSeconds(0.5f);
-
-        // Iterate over all registered units and relay their data to clients.
-        foreach (var unit in _unitRegistry.Units)
-        {
-            unit.RPC_RelaySpawnedUnitInfo(unit.Object.Id, unit.name, unit.materialIndex);
-        }
-    }
 }
