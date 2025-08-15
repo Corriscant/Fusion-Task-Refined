@@ -79,6 +79,8 @@ public class GameLauncher : MonoBehaviour
         hostButton.onClick.AddListener(async () => await _connectionService.StartGame(GameMode.Host));
         joinButton.onClick.AddListener(async () => await _connectionService.StartGame(GameMode.Client));
         exitButton.onClick.AddListener(QuitGame);
+
+        UpdateMenuLayout();
     }
 
     private Button CreateButton(Transform parent, Vector2 anchoredPos, string text)
@@ -145,7 +147,8 @@ public class GameLauncher : MonoBehaviour
             var rect = button.GetComponent<RectTransform>();
             if (button.gameObject.activeSelf)
             {
-                rect.anchoredPosition = new Vector2(menuOffset.x, -(menuOffset.y + offset));
+                var anchoredPos = rect.anchoredPosition;
+                rect.anchoredPosition = new Vector2(anchoredPos.x, -(menuOffset.y + offset));
                 offset += buttonHeight + buttonSpacing;
             }
         }
