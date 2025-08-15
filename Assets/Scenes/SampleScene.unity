@@ -2277,6 +2277,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _selectionManager: {fileID: 1096639965}
   _destinationMarkerPrefab: {fileID: 831694046346804455, guid: dd47c8c06480f1448a47302495ee6487, type: 3}
+  _mainCamera: {fileID: 330585545}
   _gameSettings: {fileID: 11400000, guid: 59b9238a41f244fb8096ce8407409de1, type: 2}
   _unitPrefab:
     RawGuidValue: dd098a457d77e9847a3e48cd58d0dfc4
@@ -2720,8 +2721,6 @@ MonoBehaviour:
   buttonSpacing: 2
   buttonWidth: 200
   buttonHeight: 40
-  buttonColor: {r: 0.499288, g: 0.6415094, b: 0.61051244, a: 0.717}
-  menuOffset: {x: 5, y: 5}
   hostButton: {fileID: 560006305}
   joinButton: {fileID: 69457608}
   exitButton: {fileID: 1397237152}
