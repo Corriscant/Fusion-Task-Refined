@@ -23,8 +23,6 @@ public class GameLauncher : MonoBehaviour
     [SerializeField] private float buttonSpacing = 2f;
     [SerializeField] private float buttonWidth = 200f;
     [SerializeField] private float buttonHeight = 40f;
-    [SerializeField] private Color buttonColor = new Color(1f, 1f, 1f, 0.717f);
-    [SerializeField] private Vector2 menuOffset = new Vector2(5f, 5f); // Offset from top-left corner
 
     [SerializeField] private Button hostButton;
     [SerializeField] private Button joinButton;
@@ -52,20 +50,11 @@ public class GameLauncher : MonoBehaviour
         StartMenu();
     }
 
+    /// <summary>
+    /// Parameters the buttons in MainMenu and sets up their click listeners.
+    /// </summary>
     private void StartMenu()
     {
-        /*
-        var canvasGo = new GameObject("CanvasMenu");
-        var canvas = canvasGo.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasGo.AddComponent<CanvasScaler>();
-        canvasGo.AddComponent<GraphicRaycaster>();
-
-        _hostButton = CreateButton(canvas.transform, new Vector2(menuOffset.x, -menuOffset.y), "Host");
-        _joinButton = CreateButton(canvas.transform, new Vector2(menuOffset.x, -(menuOffset.y + buttonHeight + buttonSpacing)), "Join");
-        _exitButton = CreateButton(canvas.transform, new Vector2(menuOffset.x, -(menuOffset.y + 2 * (buttonHeight + buttonSpacing))), "Exit");
-        */
-
         if (hostButton == null || joinButton == null || exitButton == null)
         {
             LogError($"{GetLogCallPrefix(GetType())} Buttons are not assigned in the inspector!");
@@ -75,40 +64,6 @@ public class GameLauncher : MonoBehaviour
         hostButton.onClick.AddListener(async () => await _connectionService.StartGame(GameMode.Host));
         joinButton.onClick.AddListener(async () => await _connectionService.StartGame(GameMode.Client));
         exitButton.onClick.AddListener(QuitGame);
-    }
-
-    private Button CreateButton(Transform parent, Vector2 anchoredPos, string text)
-    {
-        var go = new GameObject(text + "Button");
-        go.transform.SetParent(parent);
-        var rect = go.AddComponent<RectTransform>();
-        rect.sizeDelta = new Vector2(buttonWidth, buttonHeight);
-        rect.anchorMin = new Vector2(0f, 1f);
-        rect.anchorMax = new Vector2(0f, 1f);
-        rect.pivot = new Vector2(0f, 1f);
-        rect.anchoredPosition = anchoredPos;
-
-        var image = go.AddComponent<Image>();
-
-        image.color = buttonColor;
-
-        var button = go.AddComponent<Button>();
-
-        var textGo = new GameObject("Text");
-        textGo.transform.SetParent(go.transform);
-        var textRect = textGo.AddComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = Vector2.zero;
-        textRect.offsetMax = Vector2.zero;
-
-        var label = textGo.AddComponent<Text>();
-        label.text = text;
-        label.alignment = TextAnchor.MiddleCenter;
-        label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        label.color = Color.black;
-
-        return button;
     }
 
     private void Update()
