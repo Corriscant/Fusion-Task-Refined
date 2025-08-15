@@ -8,7 +8,7 @@ public interface IUnitRegistry
     /// <summary>
     /// All units currently tracked by the registry.
     /// </summary>
-    IEnumerable<Unit> Units { get; }
+    IReadOnlyList<Unit> Units { get; }
 
     /// <summary>
     /// Registers the specified unit with the given NetworkId.

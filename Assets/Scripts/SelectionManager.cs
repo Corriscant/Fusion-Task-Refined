@@ -149,15 +149,19 @@ public class SelectionManager : MonoBehaviour
         Vector2 rightBottom_Screeen = LocalToScreenPoint(mainCamera, _canvasRect, rightBottom_Local);
         Rect selectionBox_Screen = GetRectFromPoints(leftTop_Screen, rightBottom_Screeen);
 
-        foreach (var unit in _unitRegistry.Units)
+        var units = _unitRegistry.Units;
+        for (int i = 0; i < units.Count; i++)
         {
+            Unit unit = units[i];
             if (unit is not ISelectableProvider { Selectable: { } selectable })
             {
                 continue;
             }
 
             if (!selectable.CanBeSelectedBy(localPlayer))
+            {
                 continue;
+            }
 
             Vector3 unitPosition_Screen = mainCamera.WorldToScreenPoint(unit.Position);
 

@@ -9,11 +9,12 @@ using System.Collections.Generic;
 public class UnitRegistry : IUnitRegistry
 {
     private readonly Dictionary<uint, Unit> _units = new();
+    private readonly List<Unit> _unitList = new();
 
     /// <summary>
     /// The collection of all active units.
     /// </summary>
-    public IEnumerable<Unit> Units => _units.Values;
+    public IReadOnlyList<Unit> Units => _unitList;
 
     /// <summary>
     /// Registers the specified unit with the given NetworkId.
@@ -21,6 +22,7 @@ public class UnitRegistry : IUnitRegistry
     public void Register(uint id, Unit unit)
     {
         _units[id] = unit;
+        _unitList.Add(unit);
     }
 
     /// <summary>
@@ -28,7 +30,11 @@ public class UnitRegistry : IUnitRegistry
     /// </summary>
     public void Unregister(uint id)
     {
-        _units.Remove(id);
+        if (_units.TryGetValue(id, out Unit unit))
+        {
+            _units.Remove(id);
+            _unitList.Remove(unit);
+        }
     }
 
     /// <summary>
@@ -45,5 +51,6 @@ public class UnitRegistry : IUnitRegistry
     public void Clear()
     {
         _units.Clear();
+        _unitList.Clear();
     }
 }
