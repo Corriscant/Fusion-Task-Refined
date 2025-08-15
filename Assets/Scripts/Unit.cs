@@ -166,6 +166,7 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     private void MoveUnit()
     {
         Vector3 direction = (TargetPosition - transform.position).normalized;
+        direction.y = 0f; // disable pitch movement
         _cc.Move(direction);
     }
 
