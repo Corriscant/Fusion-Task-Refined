@@ -229,6 +229,8 @@ public class PlayerManager : NetworkBehaviour
 
             AssignPlayerColor(player, _spawnedPlayersCount);
             _spawnedPlayersCount++;
+
+            SyncExistingUnitsToPlayer(player);
         }
 
     }
@@ -394,6 +396,31 @@ public class PlayerManager : NetworkBehaviour
                     unit.materialIndex = index;
                     MaterialApplier.ApplyMaterial(unit.MeshRenderer, index, "Unit");
                     unit.RPC_RelaySpawnedUnitInfo(unit.name, index);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sends info about all spawned units to a newly joined player.
+    /// </summary>
+    /// <param name="targetPlayer">Player that should receive unit data.</param>
+    private void SyncExistingUnitsToPlayer(PlayerRef targetPlayer)
+    {
+        foreach (var entry in _spawnedPlayers)
+        {
+            var owner = entry.Key;
+            if (!_playerMaterialIndices.TryGetValue(owner, out var index))
+            {
+                continue;
+            }
+
+            var units = entry.Value;
+            foreach (var networkObject in units)
+            {
+                if (networkObject != null && networkObject.TryGetComponent<Unit>(out var unit))
+                {
+                    unit.RPC_RelaySpawnedUnitInfoToPlayer(targetPlayer, unit.name, index);
                 }
             }
         }

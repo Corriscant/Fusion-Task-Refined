@@ -198,16 +198,32 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     private void ClearTarget()
     {
         TargetPosition = Vector3.zero; // Reset target data
-        HasTarget = false; 
+        HasTarget = false;
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer, Channel = RpcChannel.Reliable)]
-    public void RPC_RelaySpawnedUnitInfo(String unitName, int materialIndex)
+    /// <summary>
+    /// Applies unit name and material locally.
+    /// </summary>
+    /// <param name="unitName">Name of the unit.</param>
+    /// <param name="materialIndex">Material index to apply.</param>
+    private void ApplyUnitInfo(String unitName, int materialIndex)
     {
         Log($"{GetLogCallPrefix(GetType())} RPC_RelaySpawnedUnitInfo {unitName}");
 
         name = unitName;
         this.materialIndex = materialIndex;
         MaterialApplier.ApplyMaterial(MeshRenderer, materialIndex, "Unit");
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer, Channel = RpcChannel.Reliable)]
+    public void RPC_RelaySpawnedUnitInfo(String unitName, int materialIndex)
+    {
+        ApplyUnitInfo(unitName, materialIndex);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer, Channel = RpcChannel.Reliable)]
+    public void RPC_RelaySpawnedUnitInfoToPlayer([RpcTarget] PlayerRef targetPlayer, String unitName, int materialIndex)
+    {
+        ApplyUnitInfo(unitName, materialIndex);
     }
 }
