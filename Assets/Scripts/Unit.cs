@@ -85,11 +85,7 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
 
         _unitRegistry.Register(Object.Id.Raw, this);
 
-        // Host immediately broadcasts unit data to all clients.
-        if (Object.HasStateAuthority)
-        {
-            RPC_RelaySpawnedUnitInfo(name, materialIndex);
-        }
+        // Host broadcasts unit data after assigning material index.
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)

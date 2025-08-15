@@ -393,6 +393,7 @@ public class PlayerManager : NetworkBehaviour
                 {
                     unit.materialIndex = index;
                     MaterialApplier.ApplyMaterial(unit.MeshRenderer, index, "Unit");
+                    unit.RPC_RelaySpawnedUnitInfo(unit.name, index);
                 }
             }
         }
