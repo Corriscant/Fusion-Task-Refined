@@ -215,12 +215,23 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
         MaterialApplier.ApplyMaterial(MeshRenderer, materialIndex, "Unit");
     }
 
+    /// <summary>
+    /// Relays this unit's name and material to all clients.
+    /// </summary>
+    /// <param name="unitName">Name of the unit.</param>
+    /// <param name="materialIndex">Material index to apply.</param>
     [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer, Channel = RpcChannel.Reliable)]
     public void RPC_RelaySpawnedUnitInfo(String unitName, int materialIndex)
     {
         ApplyUnitInfo(unitName, materialIndex);
     }
 
+    /// <summary>
+    /// Relays this unit's name and material to a specific player.
+    /// </summary>
+    /// <param name="targetPlayer">Player who receives the data.</param>
+    /// <param name="unitName">Name of the unit.</param>
+    /// <param name="materialIndex">Material index to apply.</param>
     [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer, Channel = RpcChannel.Reliable)]
     public void RPC_RelaySpawnedUnitInfoToPlayer([RpcTarget] PlayerRef targetPlayer, String unitName, int materialIndex)
     {
