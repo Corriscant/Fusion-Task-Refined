@@ -48,6 +48,9 @@ public class PlayerManager : NetworkBehaviour
     // Counter to assign a unique material index to each new player.
     private int _spawnedPlayersCount = 0;
 
+    // Buffer to reuse when fetching active players without allocations.
+    private List<PlayerRef> _activePlayersCache = new();
+
     // --- Dependencies ---
     private IConnectionService _connectionService;
     private INetworkEvents _networkEvents;
@@ -143,8 +146,15 @@ public class PlayerManager : NetworkBehaviour
     private void HostUpdateCursorPositions()
     {
         // Get cursor data from all active players
-        foreach (var player in NetRunner.ActivePlayers)
+        _activePlayersCache.Clear();
+        if (NetRunner == null)
         {
+            return;
+        }
+        NetRunner.GetPlayerList(_activePlayersCache);
+        for (int i = 0, count = _activePlayersCache.Count; i < count; i++)
+        {
+            var player = _activePlayersCache[i];
             if (NetRunner.TryGetInputForPlayer<NetworkInputData>(player, out var input))
             {
                 if (_playerCursorRegistry.TryGet(player, out var playerCursor))
