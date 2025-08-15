@@ -19,6 +19,7 @@ public class PlayerManager : NetworkBehaviour
     [Header("Dependencies")]
     [SerializeField] private SelectionManager _selectionManager;
     [SerializeField] private GameObject _destinationMarkerPrefab;
+    [SerializeField] private Camera _mainCamera;
 
     [Header("Settings")]
     [SerializeField] private GameSettings _gameSettings; // TODO: Assign in the Inspector
@@ -92,6 +93,10 @@ public class PlayerManager : NetworkBehaviour
         if (_inputService.IsNullOrDestroyed())
         {
             LogError($"{GetLogCallPrefix(GetType())} Input service NIL!");
+        }
+        if (_mainCamera.IsNullOrDestroyed())
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Main camera is not assigned!");
         }
     }
 
@@ -179,7 +184,7 @@ public class PlayerManager : NetworkBehaviour
     /// </summary>
     private Vector3 GetMouseWorldPosition()
     {
-        var ray = Camera.main.ScreenPointToRay(_currentMousePosition);
+        var ray = _mainCamera.ScreenPointToRay(_currentMousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
             return hit.point;
