@@ -29,9 +29,6 @@ public class GameLauncher : MonoBehaviour
     [SerializeField] private Button hostButton;
     [SerializeField] private Button joinButton;
     [SerializeField] private Button exitButton;
-
-    private Button[] _buttons;
-    private float _initialTopOffset;
     #endregion GUI
 
     private IConnectionService _connectionService;
@@ -75,14 +72,9 @@ public class GameLauncher : MonoBehaviour
             return;
         }
 
-        _buttons = new[] { hostButton, joinButton, exitButton };
-        _initialTopOffset = hostButton.GetComponent<RectTransform>().anchoredPosition.y;
-
         hostButton.onClick.AddListener(async () => await _connectionService.StartGame(GameMode.Host));
         joinButton.onClick.AddListener(async () => await _connectionService.StartGame(GameMode.Client));
         exitButton.onClick.AddListener(QuitGame);
-
-        UpdateMenuLayout();
     }
 
     private Button CreateButton(Transform parent, Vector2 anchoredPos, string text)
@@ -134,27 +126,6 @@ public class GameLauncher : MonoBehaviour
         hostButton.interactable = interactable;
         joinButton.interactable = interactable;
         exitButton.interactable = !selectionActive;
-
-        UpdateMenuLayout();
-    }
-
-    /// <summary>
-    /// Repositions active buttons so that there are no empty gaps in the menu.
-    /// The initial vertical offset defined in the inspector is preserved.
-    /// </summary>
-    private void UpdateMenuLayout()
-    {
-        float y = _initialTopOffset;
-        foreach (var button in _buttons)
-        {
-            var rect = button.GetComponent<RectTransform>();
-            if (button.gameObject.activeSelf)
-            {
-                var anchoredPos = rect.anchoredPosition;
-                rect.anchoredPosition = new Vector2(anchoredPos.x, y);
-                y -= buttonHeight + buttonSpacing;
-            }
-        }
     }
 
     private void QuitGame()
