@@ -20,6 +20,10 @@ It was created to demonstrate code culture and style. Initially, it was a test a
     * Download **Fusion SDK v2.0.6** from the [Photon Engine website](https://www.photonengine.com/sdks#fusion).
     * In the Unity Editor, go to **Assets -> Import Package -> Custom Package...**
     * Select the downloaded `fusion.v2.0.6.unitypackage` file and import all assets.
+4.  **Verify VContainer Dependency:**
+    * This project uses **VContainer** for dependency injection.
+    * The Unity Package Manager should automatically resolve and install this package when you open the project. If you encounter any compilation errors related to `VContainer`, please check the **Window > Package Manager** to ensure it was installed correctly.	
+
 
 ## Configuration
 
