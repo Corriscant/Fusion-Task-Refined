@@ -14,7 +14,72 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_GroupName: Default Local Group
   m_GUID: bcb890151fabb3243909712140dd0adb
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 49743f17233b35a428a49bfbd6aaebe7
+    m_Address: UnitPlayer1_Material.mat
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Material
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 51e7ce9da520a564a8a82bab6437180c
+    m_Address: PlayerCursorEcho.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Prefab
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 74d615d6e30169846bb363dca82c36de
+    m_Address: UnitPlayer3_Material.mat
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Material
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7c44ef3d9bbe23140bf3b3b6afb7c07b
+    m_Address: GroundMaterial.mat
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Material
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9151bda23c8e3248889c6d123f360f1
+    m_Address: UnitPlayer4_Material.mat
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Material
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0304d241fa2ab94a837301966a3a01e
+    m_Address: SelectedMaterial.mat
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Material
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c62b017ec05b86643a4dab212a806c90
+    m_Address: DestinationMarker.mat
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Material
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d4ef7b50f3f04675b23f28f84e291aca
+    m_Address: PlayerMaterialList.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd098a457d77e9847a3e48cd58d0dfc4
+    m_Address: Unit_A_Prefab.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Prefab
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd47c8c06480f1448a47302495ee6487
+    m_Address: DestinationMarker.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Prefab
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f41db636c8d285b4d9064d4b83e6ce5c
+    m_Address: UnitPlayer2_Material.mat
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Material
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 08e92032611f0f44c977ceb4c6c9c04c, type: 2}
   m_SchemaSet:
