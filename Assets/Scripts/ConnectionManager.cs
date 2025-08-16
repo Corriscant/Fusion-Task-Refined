@@ -29,7 +29,7 @@ public delegate void OnInputHandler(ref NetworkInputData data);
 /// <summary>
 /// Exposes connection functionality through <see cref="IConnectionService"/> to allow dependency injection.
 /// </summary>
-public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnectionService, INetworkEvents
+public class ConnectionManager : NetworkRunnerCallbacksBase, IConnectionService, INetworkEvents
 {
     // --- Public Events ---
     public event Action ConnectingStarted;
@@ -165,10 +165,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         }
     }
 
-    // --- INetworkRunnerCallbacks Implementation ---
-    #region INetworkRunnerCallbacks Implementation
+    // --- NetworkRunnerCallbacksBase Overrides ---
+    #region NetworkRunnerCallbacksBase Overrides
 
-    public void OnInput(NetworkRunner runner, NetworkInput input)
+    public override void OnInput(NetworkRunner runner, NetworkInput input)
     {
         NetworkInputData data = default;
 
@@ -177,21 +177,21 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         input.Set(data);
     }
 
-    public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
+    public override void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
         Log($"{GetLogCallPrefix(GetType())} Player joined: {player}");
 
         PlayerJoined?.Invoke(runner, player);
     }
 
-    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
+    public override void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
         Log($"{GetLogCallPrefix(GetType())} Player left: {player}");
 
         PlayerLeft?.Invoke(runner, player);
     }
 
-    public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
+    public override void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
         Log($"{GetLogCallPrefix(GetType())} OnShutdown triggered with reason: {shutdownReason}");
         if (_netRunner != null)
@@ -201,51 +201,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         }
         Disconnected?.Invoke();
     }
-    public void OnSceneLoadStart(NetworkRunner runner)
-    {
-        Log($"{GetLogCallPrefix(GetType())} OnSceneLoadStart triggered");
-        // Runner should persist across scene loads; cleanup occurs on shutdown.
-    }
-
-    #region INetworkRunnerCallbacks Implementation Unassigned
-
-    public void OnSceneLoadDone(NetworkRunner runner)
-    {
-        // HostManager prefab is no longer required after the refactor.
-    }
-
-    /// <summary>
-    /// Injection is handled by <see cref="NetworkObjectInjector"/>.
-    /// </summary>
-    /// <param name="runner">The active <see cref="NetworkRunner"/>.</param>
-    /// <param name="obj">The network object that is about to be spawned.</param>
-    public void OnBeforeSpawned(NetworkRunner runner, NetworkObject obj)
-    {
-    }
-
-    /// <summary>
-    /// No additional logic is required after spawn.
-    /// </summary>
-    /// <param name="runner">The active <see cref="NetworkRunner"/>.</param>
-    /// <param name="obj">The spawned network object.</param>
-    public void OnObjectSpawned(NetworkRunner runner, NetworkObject obj)
-    {
-    }
-    public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { Log($"{GetLogCallPrefix(GetType())} OnInputMissing triggered"); }
-    public void OnConnectedToServer(NetworkRunner runner) { Log($"{GetLogCallPrefix(GetType())} OnConnectedToServer triggered"); }
-    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { Log($"{GetLogCallPrefix(GetType())} OnDisconnectedFromServer triggered"); }
-    public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { Log($"{GetLogCallPrefix(GetType())} OnConnectRequest triggered"); }
-    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { Log($"{GetLogCallPrefix(GetType())} OnConnectFailed triggered"); }
-    public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { Log($"{GetLogCallPrefix(GetType())} OnUserSimulationMessage triggered"); }
-    public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { Log($"{GetLogCallPrefix(GetType())} OnSessionListUpdated triggered"); }
-    public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { Log($"{GetLogCallPrefix(GetType())} OnCustomAuthenticationResponse triggered"); }
-    public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { Log($"{GetLogCallPrefix(GetType())} OnHostMigration triggered"); }
-    public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { Log($"{GetLogCallPrefix(GetType())} OnObjectExitAOI triggered"); }
-    public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { Log($"{GetLogCallPrefix(GetType())} OnObjectEnterAOI triggered"); }
-    public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { Log($"{GetLogCallPrefix(GetType())} OnReliableDataReceived triggered"); }
-    public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { Log($"{GetLogCallPrefix(GetType())} OnReliableDataProgress triggered"); }
-    #endregion INetworkRunnerCallbacks Implementation Unassigned
-
     #endregion
 
     [Inject]
