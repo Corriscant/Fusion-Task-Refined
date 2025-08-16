@@ -1,6 +1,7 @@
 using Fusion;
 using UnityEngine;
 using VContainer;
+using VContainer.Unity;
 
 /// <summary>
 /// Injects dependencies into network-spawned objects before their spawn callbacks run.

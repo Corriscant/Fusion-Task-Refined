@@ -211,11 +211,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         PlayerLeft?.Invoke(runner, player);
     }
 
-    public void OnSceneLoadDone(NetworkRunner runner)
-    {
-        // HostManager prefab is no longer required after the refactor.
-    }
-
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
         Log($"{GetLogCallPrefix(GetType())} OnShutdown triggered with reason: {shutdownReason}");
@@ -237,6 +232,13 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         // Runner should persist across scene loads; cleanup occurs on shutdown.
     }
 
+    #region INetworkRunnerCallbacks Implementation Unassigned
+
+    public void OnSceneLoadDone(NetworkRunner runner)
+    {
+        // HostManager prefab is no longer required after the refactor.
+    }
+
     /// <summary>
     /// Injection is handled by <see cref="NetworkObjectInjector"/>.
     /// </summary>
@@ -254,11 +256,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     public void OnObjectSpawned(NetworkRunner runner, NetworkObject obj)
     {
     }
-
-
-    #region INetworkRunnerCallbacks Implementation Unassigned
-
-
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { Log($"{GetLogCallPrefix(GetType())} OnInputMissing triggered"); }
     public void OnConnectedToServer(NetworkRunner runner) { Log($"{GetLogCallPrefix(GetType())} OnConnectedToServer triggered"); }
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { Log($"{GetLogCallPrefix(GetType())} OnDisconnectedFromServer triggered"); }
