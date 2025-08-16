@@ -2668,6 +2668,7 @@ GameObject:
   - component: {fileID: 1168897077}
   - component: {fileID: 1168897076}
   - component: {fileID: 1168897078}
+  - component: {fileID: 1168897079}
   m_Layer: 0
   m_Name: ConnectionManager
   m_TagString: Untagged
@@ -2685,8 +2686,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f62f8fee0f2c2694ab35124fef1b228b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!4 &1168897077
 Transform:
   m_ObjectHideFlags: 0
@@ -2718,6 +2719,18 @@ MonoBehaviour:
     TypeName: ProjectLifetimeScope
   autoRun: 1
   autoInjectGameObjects: []
+--- !u!114 &1168897079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168897075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d71c6a161efb40628384c75d95d6bdff, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!1 &1190834457
 GameObject:
   m_ObjectHideFlags: 0

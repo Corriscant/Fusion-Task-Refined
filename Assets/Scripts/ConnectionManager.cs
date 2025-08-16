@@ -54,8 +54,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     private bool _isConnecting = false;
     public bool IsConnecting => _isConnecting;
 
-    private IUnitRegistry _unitRegistry;
-    private IPlayerCursorRegistry _playerCursorRegistry;
+    private SceneLoadHandler _sceneLoadHandler;
     private NetworkObjectInjector _networkObjectInjector;
 
     private void Awake()
@@ -72,16 +71,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         Log($"{GetLogCallPrefix(GetType())} ConnectionManager awake!");
     }
 
-    private void OnEnable()
-    {
-        SceneManager.sceneLoaded += HandleSceneLoaded;
-    }
-
-    private void OnDisable()
-    {
-        SceneManager.sceneLoaded -= HandleSceneLoaded;
-    }
-
     // Removing the singleton pattern: no OnDestroy cleanup required
 
     private async Task StartGameInternal(GameMode mode)
@@ -92,6 +81,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         if (!_networkObjectInjector.IsNullOrDestroyed())
         {
             _netRunner.AddCallbacks(_networkObjectInjector);
+        }
+        if (!_sceneLoadHandler.IsNullOrDestroyed())
+        {
+            _netRunner.AddCallbacks(_sceneLoadHandler);
         }
         _netRunner.ProvideInput = true;
 
@@ -179,12 +172,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         }
     }
 
-    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        _unitRegistry.Clear();
-        _playerCursorRegistry.Clear();
-    }
-
     // --- INetworkRunnerCallbacks Implementation ---
     #region INetworkRunnerCallbacks Implementation
 
@@ -214,8 +201,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
         Log($"{GetLogCallPrefix(GetType())} OnShutdown triggered with reason: {shutdownReason}");
-        _unitRegistry.Clear();
-        _playerCursorRegistry.Clear();
         if (_netRunner != null)
         {
             Destroy(_netRunner);
@@ -227,8 +212,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     public void OnSceneLoadStart(NetworkRunner runner)
     {
         Log($"{GetLogCallPrefix(GetType())} OnSceneLoadStart triggered");
-        _unitRegistry.Clear();
-        _playerCursorRegistry.Clear();
         // Runner should persist across scene loads; cleanup occurs on shutdown.
     }
 
@@ -274,10 +257,9 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     #endregion
 
     [Inject]
-    public void Construct(IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry, NetworkObjectInjector networkObjectInjector)
+    public void Construct(SceneLoadHandler sceneLoadHandler, NetworkObjectInjector networkObjectInjector)
     {
-        _unitRegistry = unitRegistry;
-        _playerCursorRegistry = playerCursorRegistry;
+        _sceneLoadHandler = sceneLoadHandler;
         _networkObjectInjector = networkObjectInjector;
     }
 }
