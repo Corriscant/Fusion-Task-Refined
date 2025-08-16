@@ -117,3 +117,42 @@ Task Notes (manual steps required):
 - Don’t call or use injected services in `Awake()`.
 - Don’t register consumers/services outside of `LifetimeScope.Configure`.
 - Don’t assume the root scope exists—if missing, create the class and note manual scene setup in Task Notes.
+
+---
+
+**Unity Object Null-Check Rule**
+
+When checking if a variable referencing a `UnityEngine.Object` (especially via an interface) is null or has been destroyed, always prefer using the `IsNullOrDestroyed()` extension method.
+
+-   **Don't:**
+    ```csharp
+    if (_networkObjectInjector as UnityEngine.Object != null) { ... }
+    ```
+
+-   **Do:**
+    ```csharp
+    if (!_networkObjectInjector.IsNullOrDestroyed()) { ... }
+    ```
+
+This approach is cleaner, more readable, and encapsulates Unity's specific object lifecycle logic in a single, reusable place.
+
+---
+
+**VContainer Usage Rule: `InjectGameObject`**
+
+When dynamically instantiating a prefab and injecting its dependencies, the `InjectGameObject` method must be used.
+
+This method is an extension provided by VContainer. Always ensure the necessary `using` directive is included at the top of the C# file.
+
+-   **Required `using`:**
+    ```csharp
+    using VContainer.Unity;
+    ```
+
+-   **Example Usage:**
+    ```csharp
+    // File must contain 'using VContainer.Unity;'
+    var playerInstance = container.InjectGameObject(playerPrefab);
+    ```
+
+Failure to include `using VContainer.Unity;` will result in a compile error, as the `InjectGameObject` extension method will not be resolved.

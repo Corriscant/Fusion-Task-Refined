@@ -89,7 +89,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         // Create the Fusion runner and let it know that we will be providing user input
         _netRunner = gameObject.AddComponent<NetworkRunner>();
         _netRunner.AddCallbacks(this);
-        if (_networkObjectInjector as UnityEngine.Object != null)
+        if (!_networkObjectInjector.IsNullOrDestroyed())
         {
             _netRunner.AddCallbacks(_networkObjectInjector);
         }
