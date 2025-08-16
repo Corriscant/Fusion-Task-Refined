@@ -1,6 +1,7 @@
 using Fusion;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
@@ -210,13 +211,13 @@ namespace FusionTask.Gameplay
     /// </summary>
     /// <param name="unitName">Name of the unit.</param>
     /// <param name="materialIndex">Material index to apply.</param>
-    private void ApplyUnitInfo(String unitName, int materialIndex)
+    private async Task ApplyUnitInfo(String unitName, int materialIndex)
     {
         Log($"{GetLogCallPrefix(GetType())} RPC_RelaySpawnedUnitInfo {unitName}");
 
         name = unitName;
         this.materialIndex = materialIndex;
-        MaterialApplier.ApplyMaterial(MeshRenderer, materialIndex, "Unit");
+        await MaterialApplier.ApplyMaterialAsync(MeshRenderer, materialIndex, "Unit");
     }
 
     /// <summary>
@@ -227,7 +228,7 @@ namespace FusionTask.Gameplay
     [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer, Channel = RpcChannel.Reliable)]
     public void RPC_RelaySpawnedUnitInfo(String unitName, int materialIndex)
     {
-        ApplyUnitInfo(unitName, materialIndex);
+        _ = ApplyUnitInfo(unitName, materialIndex);
     }
 
     /// <summary>
@@ -239,7 +240,7 @@ namespace FusionTask.Gameplay
     [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer, Channel = RpcChannel.Reliable)]
     public void RPC_RelaySpawnedUnitInfoToPlayer([RpcTarget] PlayerRef targetPlayer, String unitName, int materialIndex)
     {
-        ApplyUnitInfo(unitName, materialIndex);
+        _ = ApplyUnitInfo(unitName, materialIndex);
     }
     }
 }

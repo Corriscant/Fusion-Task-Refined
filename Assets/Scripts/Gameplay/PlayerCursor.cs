@@ -51,12 +51,12 @@ namespace FusionTask.Gameplay
             }
 
             _playerCursorRegistry.Register(Object.InputAuthority, this);
-            MaterialApplier.ApplyMaterial(MeshRenderer, MaterialIndex, "Cursor");
+            _ = MaterialApplier.ApplyMaterialAsync(MeshRenderer, MaterialIndex, "Cursor");
         }
 
         private void OnMaterialIndexChanged()
         {
-            MaterialApplier.ApplyMaterial(MeshRenderer, MaterialIndex, "Cursor");
+            _ = MaterialApplier.ApplyMaterialAsync(MeshRenderer, MaterialIndex, "Cursor");
         }
 
         public override void Despawned(NetworkRunner runner, bool hasState)

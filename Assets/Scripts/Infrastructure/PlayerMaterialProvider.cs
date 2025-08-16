@@ -7,26 +7,46 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace FusionTask.Infrastructure
 {
     /// <summary>
-    /// Provides player materials and caches them to avoid duplicate loading.
+    /// Provides player materials via Addressables and caches them to avoid duplicate loading.
     /// </summary>
     public static class PlayerMaterialProvider
     {
-        private const string MaterialListAddress = "PlayerMaterialList.mat";
+        private static PlayerMaterialProviderSettings _settings;
         private static AsyncOperationHandle<PlayerMaterialList> _handle;
 
         private static readonly Dictionary<int, Material> _materials = new();
         private static PlayerMaterialList _materialList;
 
+        /// <summary>
+        /// Initializes the provider with configuration settings.
+        /// </summary>
+        /// <param name="settings">Settings containing the Addressable reference to the material list.</param>
+        public static void Initialize(PlayerMaterialProviderSettings settings)
+        {
+            _settings = settings;
+        }
+
+        /// <summary>
+        /// Asynchronously loads and returns a material for the given index using Addressables.
+        /// </summary>
+        /// <param name="index">Index of the material in the list.</param>
+        /// <returns>The loaded material or null if not found.</returns>
         public static async Task<Material> GetMaterialAsync(int index)
         {
+            if (_settings == null || _settings.MaterialListReference == null)
+                return null;
+
             if (!_handle.IsValid())
-                _handle = Addressables.LoadAssetAsync<PlayerMaterialList>(MaterialListAddress);
+                _handle = _settings.MaterialListReference.LoadAssetAsync();
 
             _materialList = await _handle.Task;
             if (_materialList == null || index < 0 || index >= _materialList.Materials.Count)
                 return null;
 
-            return _materialList.Materials[index];
+            var material = _materialList.Materials[index];
+            if (material != null)
+                _materials[index] = material;
+            return material;
         }
 
         /// <summary>
@@ -39,16 +59,19 @@ namespace FusionTask.Infrastructure
                 return material;
             }
 
-            if (_materialList == null)
+            if (_settings == null || _settings.MaterialListReference == null)
             {
-                _materialList = Resources.Load<PlayerMaterialList>("PlayerMaterialList");
-                if (_materialList == null)
-                {
-                    return null;
-                }
+                return null;
             }
 
-            if (index < 0 || index >= _materialList.Materials.Count)
+            if (!_handle.IsValid())
+            {
+                _handle = _settings.MaterialListReference.LoadAssetAsync();
+            }
+
+            _materialList = _handle.WaitForCompletion();
+
+            if (_materialList == null || index < 0 || index >= _materialList.Materials.Count)
             {
                 return null;
             }
@@ -59,6 +82,19 @@ namespace FusionTask.Infrastructure
                 _materials[index] = material;
             }
             return material;
+        }
+
+        /// <summary>
+        /// Releases loaded Addressable resources and clears caches.
+        /// </summary>
+        public static void Release()
+        {
+            if (_handle.IsValid())
+            {
+                Addressables.Release(_handle);
+            }
+            _materials.Clear();
+            _materialList = null;
         }
     }
 }

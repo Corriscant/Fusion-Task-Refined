@@ -13,6 +13,8 @@ namespace FusionTask.Infrastructure
     /// </summary>
     public class ProjectLifetimeScope : LifetimeScope
     {
+        [SerializeField] private PlayerMaterialProviderSettings _playerMaterialSettings;
+
         protected override void Awake()
         {
             // Initialize the bridge as soon as the scope is awake.
@@ -42,6 +44,14 @@ namespace FusionTask.Infrastructure
 
             builder.Register<UnitRegistry>(Lifetime.Singleton).As<IUnitRegistry>();
             builder.Register<PlayerCursorRegistry>(Lifetime.Singleton).As<IPlayerCursorRegistry>();
+
+            PlayerMaterialProvider.Initialize(_playerMaterialSettings);
+        }
+
+        protected override void OnDestroy()
+        {
+            PlayerMaterialProvider.Release();
+            base.OnDestroy();
         }
     }
 }

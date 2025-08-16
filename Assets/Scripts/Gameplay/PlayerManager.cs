@@ -405,7 +405,7 @@ namespace FusionTask.Gameplay
                 if (networkObject != null && networkObject.TryGetComponent<Unit>(out var unit))
                 {
                     unit.materialIndex = index;
-                    MaterialApplier.ApplyMaterial(unit.MeshRenderer, index, "Unit");
+                    _ = MaterialApplier.ApplyMaterialAsync(unit.MeshRenderer, index, "Unit");
                     unit.RPC_RelaySpawnedUnitInfo(unit.name, index);
                 }
             }
