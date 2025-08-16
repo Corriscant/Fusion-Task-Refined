@@ -9,9 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
-using UnityEngine.Windows;
 using VContainer;
-using VContainer.Unity;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -58,7 +56,7 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
 
     private IUnitRegistry _unitRegistry;
     private IPlayerCursorRegistry _playerCursorRegistry;
-    private ProjectLifetimeScope _projectScope;
+    private NetworkObjectInjector _networkObjectInjector;
 
     private void Awake()
     {
@@ -91,6 +89,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         // Create the Fusion runner and let it know that we will be providing user input
         _netRunner = gameObject.AddComponent<NetworkRunner>();
         _netRunner.AddCallbacks(this);
+        if (_networkObjectInjector as UnityEngine.Object != null)
+        {
+            _netRunner.AddCallbacks(_networkObjectInjector);
+        }
         _netRunner.ProvideInput = true;
 
         // Create the NetworkSceneInfo from the current scene
@@ -236,31 +238,23 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     }
 
     /// <summary>
-    /// Invoked before a <see cref="NetworkObject"/> is fully spawned. Performs dependency injection so
-    /// that components receive their dependencies before their <c>Spawned</c> callbacks execute.
+    /// Injection is handled by <see cref="NetworkObjectInjector"/>.
     /// </summary>
     /// <param name="runner">The active <see cref="NetworkRunner"/>.</param>
     /// <param name="obj">The network object that is about to be spawned.</param>
     public void OnBeforeSpawned(NetworkRunner runner, NetworkObject obj)
     {
-        if (_projectScope == null)
-        {
-            LogError($"{GetLogCallPrefix(GetType())} ProjectLifetimeScope was not injected");
-            return;
-        }
-
-        _projectScope.Container.InjectGameObject(obj.gameObject);
     }
 
     /// <summary>
-    /// Called after a <see cref="NetworkObject"/> has been spawned. Injection is already handled in
-    /// <see cref="OnBeforeSpawned"/> so no action is required here.
+    /// No additional logic is required after spawn.
     /// </summary>
     /// <param name="runner">The active <see cref="NetworkRunner"/>.</param>
     /// <param name="obj">The spawned network object.</param>
     public void OnObjectSpawned(NetworkRunner runner, NetworkObject obj)
     {
     }
+
 
     #region INetworkRunnerCallbacks Implementation Unassigned
 
@@ -283,10 +277,10 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
     #endregion
 
     [Inject]
-    public void Construct(ProjectLifetimeScope scope, IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry)
+    public void Construct(IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry, NetworkObjectInjector networkObjectInjector)
     {
-        _projectScope = scope;
         _unitRegistry = unitRegistry;
         _playerCursorRegistry = playerCursorRegistry;
+        _networkObjectInjector = networkObjectInjector;
     }
 }

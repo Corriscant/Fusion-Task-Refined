@@ -32,6 +32,7 @@ public class ProjectLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<Panel_Status>();
         builder.RegisterComponentInHierarchy<SelectionManager>();
         builder.RegisterComponentInHierarchy<PlayerManager>();
+        builder.RegisterComponentInHierarchy<NetworkObjectInjector>();
 
         builder.Register<UnitRegistry>(Lifetime.Singleton).As<IUnitRegistry>();
         builder.Register<PlayerCursorRegistry>(Lifetime.Singleton).As<IPlayerCursorRegistry>();
