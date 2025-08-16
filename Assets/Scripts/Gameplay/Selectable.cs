@@ -3,11 +3,13 @@ using UnityEngine;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 
-/// <summary>
-/// Component that makes a unit selectable. Attach to a unit prefab to enable selection.
-/// </summary>
-public class Selectable : NetworkBehaviour, ISelectable
+namespace FusionTask.Gameplay
 {
+    /// <summary>
+    /// Component that makes a unit selectable. Attach to a unit prefab to enable selection.
+    /// </summary>
+    public class Selectable : NetworkBehaviour, ISelectable
+    {
     [SerializeField] private bool isSelectable = true;
     [SerializeField] private GameObject selectedIndicator;
 
@@ -58,5 +60,6 @@ public class Selectable : NetworkBehaviour, ISelectable
 
         // Currently selection is allowed only for the owner. Extend this logic to include allies if needed.
         return _unit.PlayerOwner == player;
+    }
     }
 }

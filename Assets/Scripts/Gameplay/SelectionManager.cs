@@ -6,14 +6,18 @@ using UnityEngine.UIElements;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 using VContainer;
+using FusionTask.Networking;
+using FusionTask.Infrastructure;
 
-/// <summary>
-/// Manages drag-box selection of units: listens for mouse events,
-/// draws the selection rectangle and keeps track of the currently
-/// highlighted units.
-/// </summary>
-public class SelectionManager : MonoBehaviour
+namespace FusionTask.Gameplay
 {
+    /// <summary>
+    /// Manages drag-box selection of units: listens for mouse events,
+    /// draws the selection rectangle and keeps track of the currently
+    /// highlighted units.
+    /// </summary>
+    public class SelectionManager : MonoBehaviour
+    {
     [SerializeField] private RectTransform selectionBox; // UI for selection box
     [SerializeField] private Camera mainCamera; // Camera for raycasting
     [SerializeField] private LayerMask selectableLayer; // Layer for units
@@ -192,5 +196,6 @@ public class SelectionManager : MonoBehaviour
         float height = Mathf.Abs(point1.y - point2.y);
 
         return new Rect(xMin, yMin, width, height);
+    }
     }
 }

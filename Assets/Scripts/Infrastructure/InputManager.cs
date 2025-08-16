@@ -2,11 +2,13 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// Provides input events for other systems.
-/// </summary>
-public class InputManager : MonoBehaviour, IInputService
+namespace FusionTask.Infrastructure
 {
+    /// <summary>
+    /// Provides input events for other systems.
+    /// </summary>
+    public class InputManager : MonoBehaviour, IInputService
+    {
     // --- Primary (usually Left) Mouse Button Events ---
     public event Action<Vector2> OnPrimaryMouseDown;
     public event Action<Vector2> OnPrimaryMouseDrag;
@@ -80,4 +82,5 @@ public class InputManager : MonoBehaviour, IInputService
         OnMouseMove?.Invoke(Input.mousePosition);
     }
 
+    }
 }

@@ -5,13 +5,16 @@ using UnityEngine;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 using VContainer;
+using FusionTask.Infrastructure;
 
-/// <summary>
-/// Unit class represents a controllable unit in the game.
-/// </summary>
-[RequireComponent(typeof(Selectable))]
-public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
+namespace FusionTask.Gameplay
 {
+    /// <summary>
+    /// Unit class represents a controllable unit in the game.
+    /// </summary>
+    [RequireComponent(typeof(Selectable))]
+    public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
+    {
     public GameObject body;
     private NetworkCharacterController _cc;
     private MeshRenderer _meshRenderer; // Cache for MeshRenderer to avoid repeated lookups
@@ -237,5 +240,6 @@ public class Unit : NetworkBehaviour, IPositionable, ISelectableProvider
     public void RPC_RelaySpawnedUnitInfoToPlayer([RpcTarget] PlayerRef targetPlayer, String unitName, int materialIndex)
     {
         ApplyUnitInfo(unitName, materialIndex);
+    }
     }
 }

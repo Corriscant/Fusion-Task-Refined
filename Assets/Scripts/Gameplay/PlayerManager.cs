@@ -6,14 +6,18 @@ using VContainer;
 using VContainer.Unity;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
+using FusionTask.Networking;
+using FusionTask.Infrastructure;
 
-/// <summary>
-/// Handles game logic related to players, such as spawning units when a player joins,
-/// cleaning up when they leave, and processing their commands via RPC while streaming cursor data through NetworkInput.
-/// </summary>
-public class PlayerManager : NetworkBehaviour
+namespace FusionTask.Gameplay
 {
-    NetworkRunner NetRunner => !_connectionService.IsNullOrDestroyed() ? _connectionService.Runner : null;
+    /// <summary>
+    /// Handles game logic related to players, such as spawning units when a player joins,
+    /// cleaning up when they leave, and processing their commands via RPC while streaming cursor data through NetworkInput.
+    /// </summary>
+    public class PlayerManager : NetworkBehaviour
+    {
+        NetworkRunner NetRunner => !_connectionService.IsNullOrDestroyed() ? _connectionService.Runner : null;
 
     // --- Dependencies ---
     [Header("Dependencies")]
@@ -433,4 +437,5 @@ public class PlayerManager : NetworkBehaviour
         }
     }
 
+    }
 }

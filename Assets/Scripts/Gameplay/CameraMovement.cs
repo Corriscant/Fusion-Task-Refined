@@ -1,15 +1,18 @@
 using UnityEngine;
 
-public class CameraMovement : MonoBehaviour
+namespace FusionTask.Gameplay
 {
-    [SerializeField] private float speed = 10f;
-
-    private void Update()
+    public class CameraMovement : MonoBehaviour
     {
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
+        [SerializeField] private float speed = 10f;
 
-        Vector3 direction = new Vector3(horizontal, 0f, vertical);
-        transform.Translate(direction * speed * Time.deltaTime, Space.World);
+        private void Update()
+        {
+            float horizontal = Input.GetAxis("Horizontal");
+            float vertical = Input.GetAxis("Vertical");
+
+            Vector3 direction = new Vector3(horizontal, 0f, vertical);
+            transform.Translate(direction * speed * Time.deltaTime, Space.World);
+        }
     }
 }

@@ -3,32 +3,35 @@ using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
-/// <summary>
-/// Injects dependencies into network-spawned objects before their spawn callbacks run.
-/// </summary>
-// TODO: Attach this component to a GameObject in the scene.
-public class NetworkObjectInjector : NetworkRunnerCallbacksBase
+namespace FusionTask.Networking
 {
-    private IObjectResolver _resolver;
-
-    [Inject]
-    public void Construct(IObjectResolver resolver)
+    /// <summary>
+    /// Injects dependencies into network-spawned objects before their spawn callbacks run.
+    /// </summary>
+    // TODO: Attach this component to a GameObject in the scene.
+    public class NetworkObjectInjector : NetworkRunnerCallbacksBase
     {
-        _resolver = resolver;
-    }
+        private IObjectResolver _resolver;
 
-    public override void OnBeforeSpawned(NetworkRunner runner, NetworkObject obj)
-    {
-        if (obj == null)
+        [Inject]
+        public void Construct(IObjectResolver resolver)
         {
-            return;
+            _resolver = resolver;
         }
 
-        if (_resolver == null)
+        public override void OnBeforeSpawned(NetworkRunner runner, NetworkObject obj)
         {
-            return;
-        }
+            if (obj == null)
+            {
+                return;
+            }
 
-        _resolver.InjectGameObject(obj.gameObject);
+            if (_resolver == null)
+            {
+                return;
+            }
+
+            _resolver.InjectGameObject(obj.gameObject);
+        }
     }
 }

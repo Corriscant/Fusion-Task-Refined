@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using FusionTask.Infrastructure;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 using VContainer;
@@ -15,22 +16,22 @@ using VContainer;
 using UnityEditor;
 #endif
 
-/// <summary>
-/// This structure is used to encapsulate player input for network transmission.
-/// </summary>
-public delegate void OnInputHandler(ref NetworkInputData data);
-
-/// <summary>
-/// Manages the core network connection and session lifecycle using Photon Fusion.
-/// This class is responsible for initializing the NetworkRunner, handling top-level network callbacks,
-/// and delegating game-specific logic to specialized managers (e.g., PlayerManager).
-/// It also collects input from other systems to provide it to the network simulation via OnInput.
-/// </summary>
-/// <summary>
-/// Exposes connection functionality through <see cref="IConnectionService"/> to allow dependency injection.
-/// </summary>
-public class ConnectionManager : NetworkRunnerCallbacksBase, IConnectionService, INetworkEvents
+namespace FusionTask.Networking
 {
+    /// <summary>
+    /// This structure is used to encapsulate player input for network transmission.
+    /// </summary>
+    public delegate void OnInputHandler(ref NetworkInputData data);
+
+    /// <summary>
+    /// Manages the core network connection and session lifecycle using Photon Fusion.
+    /// This class is responsible for initializing the NetworkRunner, handling top-level network callbacks,
+    /// and delegating game-specific logic to specialized managers (e.g., PlayerManager).
+    /// It also collects input from other systems to provide it to the network simulation via OnInput.
+    /// Exposes connection functionality through <see cref="IConnectionService"/> to allow dependency injection.
+    /// </summary>
+    public class ConnectionManager : NetworkRunnerCallbacksBase, IConnectionService, INetworkEvents
+    {
     // --- Public Events ---
     public event Action ConnectingStarted;
     public event Action Connected;
@@ -208,5 +209,6 @@ public class ConnectionManager : NetworkRunnerCallbacksBase, IConnectionService,
     {
         _sceneLoadHandler = sceneLoadHandler;
         _networkObjectInjector = networkObjectInjector;
+    }
     }
 }

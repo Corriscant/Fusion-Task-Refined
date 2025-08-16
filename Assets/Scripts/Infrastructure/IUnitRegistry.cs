@@ -1,32 +1,36 @@
 using System.Collections.Generic;
+using FusionTask.Gameplay;
 
-/// <summary>
-/// Provides access to the collection of active units.
-/// </summary>
-public interface IUnitRegistry
+namespace FusionTask.Infrastructure
 {
     /// <summary>
-    /// All units currently tracked by the registry.
+    /// Provides access to the collection of active units.
     /// </summary>
-    IReadOnlyList<Unit> Units { get; }
+    public interface IUnitRegistry
+    {
+        /// <summary>
+        /// All units currently tracked by the registry.
+        /// </summary>
+        IReadOnlyList<Unit> Units { get; }
 
-    /// <summary>
-    /// Registers the specified unit with the given NetworkId.
-    /// </summary>
-    void Register(uint id, Unit unit);
+        /// <summary>
+        /// Registers the specified unit with the given NetworkId.
+        /// </summary>
+        void Register(uint id, Unit unit);
 
-    /// <summary>
-    /// Removes the unit associated with the given NetworkId.
-    /// </summary>
-    void Unregister(uint id);
+        /// <summary>
+        /// Removes the unit associated with the given NetworkId.
+        /// </summary>
+        void Unregister(uint id);
 
-    /// <summary>
-    /// Attempts to retrieve a unit by its NetworkId.
-    /// </summary>
-    bool TryGet(uint id, out Unit unit);
+        /// <summary>
+        /// Attempts to retrieve a unit by its NetworkId.
+        /// </summary>
+        bool TryGet(uint id, out Unit unit);
 
-    /// <summary>
-    /// Clears the registry of all units.
-    /// </summary>
-    void Clear();
+        /// <summary>
+        /// Clears the registry of all units.
+        /// </summary>
+        void Clear();
+    }
 }

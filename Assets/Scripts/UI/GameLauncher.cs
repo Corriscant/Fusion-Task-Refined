@@ -5,19 +5,24 @@ using Fusion;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 using VContainer;
+using FusionTask.Networking;
+using FusionTask.Gameplay;
+using FusionTask.Infrastructure;
 
 // This directive is needed because Application.Quit() doesn't stop play mode in the editor.
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-/// <summary>
-/// This class is responsible for the main menu UI, allowing the user to
-/// host a game, join a game, or exit the application. It communicates with the
-/// connection service via dependency injection.
-/// </summary>
-public class GameLauncher : MonoBehaviour
+namespace FusionTask.UI
 {
+    /// <summary>
+    /// This class is responsible for the main menu UI, allowing the user to
+    /// host a game, join a game, or exit the application. It communicates with the
+    /// connection service via dependency injection.
+    /// </summary>
+    public class GameLauncher : MonoBehaviour
+    {
     [Header("Menu")]
     [SerializeField] private Button hostButton;
     [SerializeField] private Button joinButton;
@@ -86,5 +91,6 @@ public class GameLauncher : MonoBehaviour
         // This quits the built application.
         Application.Quit();
 #endif
+    }
     }
 }

@@ -1,67 +1,71 @@
 using System.Collections.Generic;
 using Fusion;
+using FusionTask.Gameplay;
 
-/// <summary>
-/// A registry for all active player cursors, indexed by PlayerRef.
-/// Provides a fast way to look up a player's cursor.
-/// </summary>
-public class PlayerCursorRegistry : IPlayerCursorRegistry
+namespace FusionTask.Infrastructure
 {
-    private readonly Dictionary<PlayerRef, PlayerCursor> _cursors = new();
-    private readonly List<PlayerCursor> _cursorList = new();
-
     /// <summary>
-    /// All active cursors.
+    /// A registry for all active player cursors, indexed by PlayerRef.
+    /// Provides a fast way to look up a player's cursor.
     /// </summary>
-    public IReadOnlyList<PlayerCursor> Cursors => _cursorList;
-
-    /// <summary>
-    /// Registers a cursor for the specified player.
-    /// </summary>
-    public void Register(PlayerRef player, PlayerCursor cursor)
+    public class PlayerCursorRegistry : IPlayerCursorRegistry
     {
-        if (_cursors.TryGetValue(player, out var existing))
+        private readonly Dictionary<PlayerRef, PlayerCursor> _cursors = new();
+        private readonly List<PlayerCursor> _cursorList = new();
+
+        /// <summary>
+        /// All active cursors.
+        /// </summary>
+        public IReadOnlyList<PlayerCursor> Cursors => _cursorList;
+
+        /// <summary>
+        /// Registers a cursor for the specified player.
+        /// </summary>
+        public void Register(PlayerRef player, PlayerCursor cursor)
         {
-            int index = _cursorList.IndexOf(existing);
-            if (index >= 0)
+            if (_cursors.TryGetValue(player, out var existing))
             {
-                _cursorList[index] = cursor;
+                int index = _cursorList.IndexOf(existing);
+                if (index >= 0)
+                {
+                    _cursorList[index] = cursor;
+                }
+            }
+            else
+            {
+                _cursorList.Add(cursor);
+            }
+
+            _cursors[player] = cursor;
+        }
+
+        /// <summary>
+        /// Removes the cursor associated with the specified player.
+        /// </summary>
+        public void Unregister(PlayerRef player)
+        {
+            if (_cursors.TryGetValue(player, out var cursor))
+            {
+                _cursorList.Remove(cursor);
+                _cursors.Remove(player);
             }
         }
-        else
+
+        /// <summary>
+        /// Attempts to get the cursor for the specified player.
+        /// </summary>
+        public bool TryGet(PlayerRef player, out PlayerCursor cursor)
         {
-            _cursorList.Add(cursor);
+            return _cursors.TryGetValue(player, out cursor);
         }
 
-        _cursors[player] = cursor;
-    }
-
-    /// <summary>
-    /// Removes the cursor associated with the specified player.
-    /// </summary>
-    public void Unregister(PlayerRef player)
-    {
-        if (_cursors.TryGetValue(player, out var cursor))
+        /// <summary>
+        /// Clears the registry of all player cursors.
+        /// </summary>
+        public void Clear()
         {
-            _cursorList.Remove(cursor);
-            _cursors.Remove(player);
+            _cursors.Clear();
+            _cursorList.Clear();
         }
-    }
-
-    /// <summary>
-    /// Attempts to get the cursor for the specified player.
-    /// </summary>
-    public bool TryGet(PlayerRef player, out PlayerCursor cursor)
-    {
-        return _cursors.TryGetValue(player, out cursor);
-    }
-
-    /// <summary>
-    /// Clears the registry of all player cursors.
-    /// </summary>
-    public void Clear()
-    {
-        _cursors.Clear();
-        _cursorList.Clear();
     }
 }

@@ -4,13 +4,17 @@ using System.Collections;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 using VContainer;
+using FusionTask.Networking;
+using FusionTask.Infrastructure;
 
-/// <summary>
-/// This class manages the status panel in the UI, displaying connection status
-/// by listening to events from the connection service.
-/// </summary>
-public class Panel_Status : MonoBehaviour
+namespace FusionTask.UI
 {
+    /// <summary>
+    /// This class manages the status panel in the UI, displaying connection status
+    /// by listening to events from the connection service.
+    /// </summary>
+    public class Panel_Status : MonoBehaviour
+    {
     [SerializeField] private TMP_Text _statusText;
     [SerializeField] private Color _colorUnconnected = Color.white;
     [SerializeField] private Color _colorConnecting = Color.yellow;
@@ -100,6 +104,7 @@ public class Panel_Status : MonoBehaviour
             StopCoroutine(_connectingRoutine);
             _connectingRoutine = null;
         }
+    }
     }
 }
 

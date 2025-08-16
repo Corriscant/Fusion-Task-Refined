@@ -1,34 +1,38 @@
 using System.Collections.Generic;
 using UnityEngine;
+using FusionTask.Gameplay;
 
-/// <summary>
-/// Extension methods for Lists.
-/// </summary>
-public static class ListExtensions
+namespace FusionTask.Infrastructure
 {
     /// <summary>
-    /// Extension method to get the center point of a list of items that implement IPositionable.
-    /// Call example:
-    /// Vector3 centerPoint = selectedUnits.GetCenter();
+    /// Extension methods for Lists.
     /// </summary>
-    /// <param name="units"></param>
-    /// <returns>Returns the center of the group of units</returns>
-    public static Vector3 GetCenter<T>(this List<T> items) where T : IPositionable
+    public static class ListExtensions
     {
-        if (items == null || items.Count == 0)
+        /// <summary>
+        /// Extension method to get the center point of a list of items that implement IPositionable.
+        /// Call example:
+        /// Vector3 centerPoint = selectedUnits.GetCenter();
+        /// </summary>
+        /// <param name="units"></param>
+        /// <returns>Returns the center of the group of units</returns>
+        public static Vector3 GetCenter<T>(this List<T> items) where T : IPositionable
         {
-            return Vector3.zero;
-        }
-
-        var center = Vector3.zero;
-        foreach (var item in items)
-        {
-            if (item != null)
+            if (items == null || items.Count == 0)
             {
-                center += item.Position;
+                return Vector3.zero;
             }
+
+            var center = Vector3.zero;
+            foreach (var item in items)
+            {
+                if (item != null)
+                {
+                    center += item.Position;
+                }
+            }
+            center /= items.Count;
+            return center;
         }
-        center /= items.Count;
-        return center;
     }
 }
