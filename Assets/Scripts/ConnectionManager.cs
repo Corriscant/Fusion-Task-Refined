@@ -32,10 +32,6 @@ public delegate void OnInputHandler(ref NetworkInputData data);
 public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnectionService, INetworkEvents
 {
     // --- Public Events ---
-    public static event Action OnConnectingStarted; // Temporary for legacy access
-    public static event Action OnConnected; // Temporary for legacy access
-    public static event Action OnDisconnected; // Temporary for legacy access
-
     public event Action ConnectingStarted;
     public event Action Connected;
     public event Action Disconnected;
@@ -148,17 +144,14 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
         {
             _isConnecting = true;
             ConnectingStarted?.Invoke();
-            OnConnectingStarted?.Invoke();
             await StartGameInternal(mode);
             if (_netRunner != null && _netRunner.IsRunning)
             {
                 Connected?.Invoke();
-                OnConnected?.Invoke();
             }
             else
             {
                 Disconnected?.Invoke();
-                OnDisconnected?.Invoke();
             }
         }
         catch (Exception ex)
@@ -207,7 +200,6 @@ public class ConnectionManager : MonoBehaviour, INetworkRunnerCallbacks, IConnec
             _netRunner = null;
         }
         Disconnected?.Invoke();
-        OnDisconnected?.Invoke();
     }
     public void OnSceneLoadStart(NetworkRunner runner)
     {
