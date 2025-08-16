@@ -18,16 +18,10 @@ using UnityEditor;
 /// </summary>
 public class GameLauncher : MonoBehaviour
 {
-    #region GUI
     [Header("Menu")]
-    [SerializeField] private float buttonSpacing = 2f;
-    [SerializeField] private float buttonWidth = 200f;
-    [SerializeField] private float buttonHeight = 40f;
-
     [SerializeField] private Button hostButton;
     [SerializeField] private Button joinButton;
     [SerializeField] private Button exitButton;
-    #endregion GUI
 
     private IConnectionService _connectionService;
     // Called by VContainer to inject the dependency immediately upon its creation.
