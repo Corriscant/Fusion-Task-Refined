@@ -1038,7 +1038,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   parentReference:
-    TypeName: ProjectLifetimeScope
+    TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
 --- !u!1 &347864834
@@ -2716,7 +2716,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   parentReference:
-    TypeName: ProjectLifetimeScope
+    TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
 --- !u!114 &1168897079
@@ -2775,9 +2775,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9af79891b00a33147b3856b6baa951ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buttonSpacing: 2
-  buttonWidth: 200
-  buttonHeight: 40
   hostButton: {fileID: 560006305}
   joinButton: {fileID: 69457608}
   exitButton: {fileID: 1397237152}
@@ -3003,6 +3000,7 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
+  _playerMaterialSettings: {fileID: 11400000, guid: 0a08ba9d34384b4b82a91a39f9c7af4e, type: 2}
 --- !u!1 &1620159955
 GameObject:
   m_ObjectHideFlags: 0
@@ -3121,7 +3119,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   parentReference:
-    TypeName: ProjectLifetimeScope
+    TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
 --- !u!1 &1932837410
@@ -3174,7 +3172,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   parentReference:
-    TypeName: ProjectLifetimeScope
+    TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
 --- !u!1660057539 &9223372036854775807
