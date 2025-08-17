@@ -22,7 +22,6 @@ namespace FusionTask.Gameplay
         private MeshRenderer _meshRenderer;
         private IPlayerCursorRegistry _playerCursorRegistry;
         private IMaterialApplier _materialApplier;
-        private IGameFactory _gameFactory;
 
         /// <summary>
         /// Cached MeshRenderer component of the cursor.
@@ -64,19 +63,14 @@ namespace FusionTask.Gameplay
         public override void Despawned(NetworkRunner runner, bool hasState)
         {
             _playerCursorRegistry.Unregister(Object.InputAuthority);
-            if (!_gameFactory.IsNullOrDestroyed())
-            {
-                _gameFactory.Release(Object);
-            }
             base.Despawned(runner, hasState);
         }
 
         [Inject]
-        public void Construct(IPlayerCursorRegistry playerCursorRegistry, IMaterialApplier materialApplier, IGameFactory gameFactory)
+        public void Construct(IPlayerCursorRegistry playerCursorRegistry, IMaterialApplier materialApplier)
         {
             _playerCursorRegistry = playerCursorRegistry;
             _materialApplier = materialApplier;
-            _gameFactory = gameFactory;
         }
 
         /// <summary>
