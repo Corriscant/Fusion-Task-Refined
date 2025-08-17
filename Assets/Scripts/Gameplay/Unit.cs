@@ -20,6 +20,7 @@ namespace FusionTask.Gameplay
     private NetworkCharacterController _cc;
     private MeshRenderer _meshRenderer; // Cache for MeshRenderer to avoid repeated lookups
     private IUnitRegistry _unitRegistry;
+    private IMaterialApplier _materialApplier;
 
     /// <summary>
     /// Cached MeshRenderer component of the unit.
@@ -100,9 +101,10 @@ namespace FusionTask.Gameplay
     }
 
     [Inject]
-    public void Construct(IUnitRegistry unitRegistry)
+    public void Construct(IUnitRegistry unitRegistry, IMaterialApplier materialApplier)
     {
         _unitRegistry = unitRegistry;
+        _materialApplier = materialApplier;
     }
 
     public void SetOwner(PlayerRef newOwner) => PlayerOwner = newOwner;
@@ -217,7 +219,7 @@ namespace FusionTask.Gameplay
 
         name = unitName;
         this.materialIndex = materialIndex;
-        await MaterialApplier.ApplyMaterialAsync(MeshRenderer, materialIndex, "Unit");
+        await _materialApplier.ApplyMaterialAsync(MeshRenderer, materialIndex, "Unit");
     }
 
     /// <summary>

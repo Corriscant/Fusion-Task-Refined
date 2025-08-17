@@ -59,9 +59,10 @@ namespace FusionTask.Gameplay
     private IUnitRegistry _unitRegistry;
     private IPlayerCursorRegistry _playerCursorRegistry;
     private IObjectResolver _resolver;
+    private IMaterialApplier _materialApplier;
 
     [Inject]
-    public void Construct(IConnectionService connectionService, INetworkEvents networkEvents, IInputService inputService, IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry, IObjectResolver resolver)
+    public void Construct(IConnectionService connectionService, INetworkEvents networkEvents, IInputService inputService, IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry, IObjectResolver resolver, IMaterialApplier materialApplier)
     {
         Log($"{GetLogCallPrefix(GetType())} VContainer Inject!");
         _connectionService = connectionService;
@@ -70,6 +71,7 @@ namespace FusionTask.Gameplay
         _unitRegistry = unitRegistry;
         _playerCursorRegistry = playerCursorRegistry;
         _resolver = resolver;
+        _materialApplier = materialApplier;
     }
 
     private void Awake()
@@ -405,7 +407,7 @@ namespace FusionTask.Gameplay
                 if (networkObject != null && networkObject.TryGetComponent<Unit>(out var unit))
                 {
                     unit.materialIndex = index;
-                    _ = MaterialApplier.ApplyMaterialAsync(unit.MeshRenderer, index, "Unit");
+                    _ = _materialApplier.ApplyMaterialAsync(unit.MeshRenderer, index, "Unit");
                     unit.RPC_RelaySpawnedUnitInfo(unit.name, index);
                 }
             }

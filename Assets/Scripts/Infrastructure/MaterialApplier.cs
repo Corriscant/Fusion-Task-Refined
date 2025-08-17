@@ -8,8 +8,19 @@ namespace FusionTask.Infrastructure
     /// <summary>
     /// Provides utility methods for applying materials to mesh renderers.
     /// </summary>
-    public static class MaterialApplier
+    public class MaterialApplier : IMaterialApplier
     {
+        private readonly IPlayerMaterialProvider _playerMaterialProvider;
+
+        /// <summary>
+        /// Creates a new material applier.
+        /// </summary>
+        /// <param name="playerMaterialProvider">Provider for retrieving materials.</param>
+        public MaterialApplier(IPlayerMaterialProvider playerMaterialProvider)
+        {
+            _playerMaterialProvider = playerMaterialProvider;
+        }
+
         /// <summary>
         /// Applies a material to the given mesh renderer using the material index.
         /// Logs errors or success messages using the provided entity name.
@@ -19,7 +30,7 @@ namespace FusionTask.Infrastructure
         /// <param name="entityName">Name of the entity for logging purposes.</param>
         /// <param name="propertyBlock">Optional property block for per-instance material properties.</param>
         /// <returns>True if the material was successfully applied, otherwise false.</returns>
-        public static bool ApplyMaterial(MeshRenderer renderer, int index, string entityName, MaterialPropertyBlock propertyBlock = null)
+        public bool ApplyMaterial(MeshRenderer renderer, int index, string entityName, MaterialPropertyBlock propertyBlock = null)
         {
             if (renderer == null)
             {
@@ -27,7 +38,7 @@ namespace FusionTask.Infrastructure
                 return false;
             }
 
-            var material = PlayerMaterialProvider.GetMaterial(index);
+            var material = _playerMaterialProvider.GetMaterial(index);
 
             if (material == null)
             {
@@ -54,7 +65,7 @@ namespace FusionTask.Infrastructure
         /// <param name="entityName">Name of the entity for logging purposes.</param>
         /// <param name="propertyBlock">Optional property block for per-instance material properties.</param>
         /// <returns>True if the material was successfully applied, otherwise false.</returns>
-        public static async Task<bool> ApplyMaterialAsync(MeshRenderer renderer, int index, string entityName, MaterialPropertyBlock propertyBlock = null)
+        public async Task<bool> ApplyMaterialAsync(MeshRenderer renderer, int index, string entityName, MaterialPropertyBlock propertyBlock = null)
         {
             if (renderer == null)
             {
@@ -62,7 +73,7 @@ namespace FusionTask.Infrastructure
                 return false;
             }
 
-            var material = await PlayerMaterialProvider.GetMaterialAsync(index);
+            var material = await _playerMaterialProvider.GetMaterialAsync(index);
 
             if (material == null)
             {

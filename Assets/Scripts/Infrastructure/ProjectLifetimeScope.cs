@@ -15,6 +15,7 @@ namespace FusionTask.Infrastructure
     public class ProjectLifetimeScope : LifetimeScope
     {
         [SerializeField] private PlayerMaterialProviderSettings _playerMaterialSettings;
+        private IPlayerMaterialProvider _playerMaterialProvider;
 
         protected override void Awake()
         {
@@ -46,12 +47,19 @@ namespace FusionTask.Infrastructure
             builder.Register<UnitRegistry>(Lifetime.Singleton).As<IUnitRegistry>();
             builder.Register<PlayerCursorRegistry>(Lifetime.Singleton).As<IPlayerCursorRegistry>();
 
-            PlayerMaterialProvider.Initialize(_playerMaterialSettings);
+            builder.RegisterInstance(_playerMaterialSettings);
+            builder.Register<PlayerMaterialProvider>(Lifetime.Singleton).As<IPlayerMaterialProvider>();
+            builder.Register<MaterialApplier>(Lifetime.Singleton).As<IMaterialApplier>();
+
+            builder.RegisterBuildCallback(container =>
+            {
+                _playerMaterialProvider = container.Resolve<IPlayerMaterialProvider>();
+            });
         }
 
         protected override void OnDestroy()
         {
-            PlayerMaterialProvider.Release();
+            _playerMaterialProvider.Release();
             base.OnDestroy();
         }
     }

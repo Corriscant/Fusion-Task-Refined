@@ -21,6 +21,7 @@ namespace FusionTask.Gameplay
 
         private MeshRenderer _meshRenderer;
         private IPlayerCursorRegistry _playerCursorRegistry;
+        private IMaterialApplier _materialApplier;
 
         /// <summary>
         /// Cached MeshRenderer component of the cursor.
@@ -51,12 +52,12 @@ namespace FusionTask.Gameplay
             }
 
             _playerCursorRegistry.Register(Object.InputAuthority, this);
-            _ = MaterialApplier.ApplyMaterialAsync(MeshRenderer, MaterialIndex, "Cursor");
+            _ = _materialApplier.ApplyMaterialAsync(MeshRenderer, MaterialIndex, "Cursor");
         }
 
         private void OnMaterialIndexChanged()
         {
-            _ = MaterialApplier.ApplyMaterialAsync(MeshRenderer, MaterialIndex, "Cursor");
+            _ = _materialApplier.ApplyMaterialAsync(MeshRenderer, MaterialIndex, "Cursor");
         }
 
         public override void Despawned(NetworkRunner runner, bool hasState)
@@ -66,9 +67,10 @@ namespace FusionTask.Gameplay
         }
 
         [Inject]
-        public void Construct(IPlayerCursorRegistry playerCursorRegistry)
+        public void Construct(IPlayerCursorRegistry playerCursorRegistry, IMaterialApplier materialApplier)
         {
             _playerCursorRegistry = playerCursorRegistry;
+            _materialApplier = materialApplier;
         }
     }
 }

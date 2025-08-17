@@ -9,19 +9,19 @@ namespace FusionTask.Infrastructure
     /// <summary>
     /// Provides player materials via Addressables and caches them to avoid duplicate loading.
     /// </summary>
-    public static class PlayerMaterialProvider
+    public class PlayerMaterialProvider : IPlayerMaterialProvider
     {
-        private static PlayerMaterialProviderSettings _settings;
-        private static AsyncOperationHandle<PlayerMaterialList> _handle;
+        private readonly PlayerMaterialProviderSettings _settings;
+        private AsyncOperationHandle<PlayerMaterialList> _handle;
 
-        private static readonly Dictionary<int, Material> _materials = new();
-        private static PlayerMaterialList _materialList;
+        private readonly Dictionary<int, Material> _materials = new();
+        private PlayerMaterialList _materialList;
 
         /// <summary>
         /// Initializes the provider with configuration settings.
         /// </summary>
         /// <param name="settings">Settings containing the Addressable reference to the material list.</param>
-        public static void Initialize(PlayerMaterialProviderSettings settings)
+        public PlayerMaterialProvider(PlayerMaterialProviderSettings settings)
         {
             _settings = settings;
         }
@@ -31,7 +31,7 @@ namespace FusionTask.Infrastructure
         /// </summary>
         /// <param name="index">Index of the material in the list.</param>
         /// <returns>The loaded material or null if not found.</returns>
-        public static async Task<Material> GetMaterialAsync(int index)
+        public async Task<Material> GetMaterialAsync(int index)
         {
             if (_settings == null || _settings.MaterialListReference == null)
                 return null;
@@ -52,7 +52,7 @@ namespace FusionTask.Infrastructure
         /// <summary>
         /// Returns a material for the given index. The material is loaded once and then cached.
         /// </summary>
-        public static Material GetMaterial(int index)
+        public Material GetMaterial(int index)
         {
             if (_materials.TryGetValue(index, out var material) && material != null)
             {
@@ -87,7 +87,7 @@ namespace FusionTask.Infrastructure
         /// <summary>
         /// Releases loaded Addressable resources and clears caches.
         /// </summary>
-        public static void Release()
+        public void Release()
         {
             if (_handle.IsValid())
             {
