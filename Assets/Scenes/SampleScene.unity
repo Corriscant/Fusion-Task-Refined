@@ -2323,10 +2323,7 @@ MonoBehaviour:
   _destinationMarkerPrefab: {fileID: 831694046346804455, guid: dd47c8c06480f1448a47302495ee6487, type: 3}
   _mainCamera: {fileID: 330585545}
   _gameSettings: {fileID: 11400000, guid: 59b9238a41f244fb8096ce8407409de1, type: 2}
-  _unitPrefab:
-    RawGuidValue: dd098a457d77e9847a3e48cd58d0dfc4
   unitCountPerPlayer: 5
-  PlayerCursorPrefab: {fileID: 5459181759355313869, guid: 51e7ce9da520a564a8a82bab6437180c, type: 3}
 --- !u!114 &981049794
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3001,6 +2998,55 @@ MonoBehaviour:
   autoRun: 1
   autoInjectGameObjects: []
   _playerMaterialSettings: {fileID: 11400000, guid: 0a08ba9d34384b4b82a91a39f9c7af4e, type: 2}
+--- !u!1 &1616270887
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1616270888}
+  - component: {fileID: 1616270889}
+  m_Layer: 0
+  m_Name: GameFactory
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1616270888
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1616270887}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1932837411}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1616270889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1616270887}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b6f54f296e3f5e4ca714828bd39361e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DelayIfSceneManagerIsBusy: 1
+  _unitPrefab: {fileID: 7825028864449127991, guid: dd098a457d77e9847a3e48cd58d0dfc4, type: 3}
+  _cursorPrefab: {fileID: -8487732924325373455, guid: 51e7ce9da520a564a8a82bab6437180c, type: 3}
+  _unitWarmup: 10
+  _cursorWarmup: 4
 --- !u!1 &1620159955
 GameObject:
   m_ObjectHideFlags: 0
@@ -3157,6 +3203,7 @@ Transform:
   - {fileID: 1096639966}
   - {fileID: 981049792}
   - {fileID: 501776852}
+  - {fileID: 1616270888}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1932837412
