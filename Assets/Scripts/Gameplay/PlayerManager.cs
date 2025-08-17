@@ -1,6 +1,7 @@
 // Manages player lifecycle events like joining and leaving.
 using Fusion;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -29,12 +30,7 @@ namespace FusionTask.Gameplay
     [SerializeField] private GameSettings _gameSettings; // TODO: Assign in the Inspector
 
     [Header("Unit Spawn Settings")]
-    [SerializeField] private NetworkPrefabRef _unitPrefab; // Prefab for the unit to be spawned.
     [SerializeField] private int unitCountPerPlayer = 5; // How many units to spawn for each player.
-
-    [Header("Other")]
-    [Tooltip("Prefab of Cursor Echo of other players")]
-    [SerializeField] private PlayerCursor PlayerCursorPrefab;
 
     /// <summary>
     /// The maximum allowed offset for a unit from the center of the group.
@@ -58,11 +54,11 @@ namespace FusionTask.Gameplay
     private IInputService _inputService;
     private IUnitRegistry _unitRegistry;
     private IPlayerCursorRegistry _playerCursorRegistry;
-    private IObjectResolver _resolver;
     private IMaterialApplier _materialApplier;
+    private IGameFactory _gameFactory;
 
     [Inject]
-    public void Construct(IConnectionService connectionService, INetworkEvents networkEvents, IInputService inputService, IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry, IObjectResolver resolver, IMaterialApplier materialApplier)
+    public void Construct(IConnectionService connectionService, INetworkEvents networkEvents, IInputService inputService, IUnitRegistry unitRegistry, IPlayerCursorRegistry playerCursorRegistry, IMaterialApplier materialApplier, IGameFactory gameFactory)
     {
         Log($"{GetLogCallPrefix(GetType())} VContainer Inject!");
         _connectionService = connectionService;
@@ -70,8 +66,8 @@ namespace FusionTask.Gameplay
         _inputService = inputService;
         _unitRegistry = unitRegistry;
         _playerCursorRegistry = playerCursorRegistry;
-        _resolver = resolver;
         _materialApplier = materialApplier;
+        _gameFactory = gameFactory;
     }
 
     private void Awake()
@@ -123,6 +119,8 @@ namespace FusionTask.Gameplay
         _networkEvents.PlayerJoined += HandlePlayerJoined;
         _networkEvents.PlayerLeft += HandlePlayerLeft;
         _networkEvents.Input += TryGetNetworkInput;
+
+        _ = _gameFactory.WarmupPools();
     }
 
     private void OnDisable()
@@ -220,32 +218,10 @@ namespace FusionTask.Gameplay
     /// </summary>
     public void HandlePlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        // Spawning logic should only be executed on the server/host.
         if (runner.IsServer)
         {
-            SpawnPlayerUnits(runner, player);
-
-            if (PlayerCursorPrefab != null)
-            {
-                runner.Spawn(
-                    PlayerCursorPrefab,
-                    Vector3.zero,
-                    Quaternion.identity,
-                    player,
-                    (runner, obj) => _resolver.InjectGameObject(obj.gameObject)
-                );
-            }
-            else
-            {
-                LogWarning($"{GetLogCallPrefix(GetType())} PlayerCursor prefab is null. Cannot spawn cursor for player {player}.");
-            }
-
-            AssignPlayerColor(player, _spawnedPlayersCount);
-            _spawnedPlayersCount++;
-
-            SyncExistingUnitsToPlayer(player);
+            _ = SpawnPlayerUnitsAsync(runner, player);
         }
-
     }
 
     /// <summary>
@@ -352,40 +328,32 @@ namespace FusionTask.Gameplay
 
     /// <summary>
     /// Spawns the initial set of units for a given player.
-    /// </summary>
-    private void SpawnPlayerUnits(NetworkRunner runner, PlayerRef player)
-    {
-        // Calculate a unique spawn center for the player to avoid overlap.
-        var playerSpawnCenterPosition = new Vector3((player.RawEncoded % runner.Config.Simulation.PlayerCount) * 3, 1, 0);
-        var unitList = new List<NetworkObject>();
 
-        // Spawn units in a circle around the player's spawn center.
+    /// <summary>
+    /// Spawns units and a cursor for the specified player using the factory.
+    /// </summary>
+    private async System.Threading.Tasks.Task SpawnPlayerUnitsAsync(NetworkRunner runner, PlayerRef player)
+    {
+        var playerSpawnCenterPosition = new Vector3((player.RawEncoded % runner.Config.Simulation.PlayerCount) * 3, 1, 0);
+        var unitList = new System.Collections.Generic.List<NetworkObject>();
+
         for (int i = 0; i < unitCountPerPlayer; i++)
         {
             Vector3 spawnPosition = playerSpawnCenterPosition + new Vector3(Mathf.Cos(i * Mathf.PI * 2 / unitCountPerPlayer), 0, Mathf.Sin(i * Mathf.PI * 2 / unitCountPerPlayer));
-            NetworkObject networkUnitObject = runner.Spawn(
-                _unitPrefab,
-                spawnPosition,
-                Quaternion.identity,
-                player//,
-               // (runner, obj) => _resolver.InjectGameObject(obj.gameObject)
-            );
-
-            if (networkUnitObject == null)
-            {
-                LogError($"{GetLogCallPrefix(GetType())} Failed to spawn unit for player {player}.");
-                continue;
-            }
-
-            var unit = networkUnitObject.GetComponent<Unit>();
+            var unit = await _gameFactory.CreateUnit(spawnPosition, Quaternion.identity, player);
             unit.SetOwner(player);
             unit.name = $"Unit_{player.RawEncoded}_{i}";
-
-            unitList.Add(networkUnitObject);
+            unitList.Add(unit.Object);
         }
 
-        // Add the list of spawned units to our dictionary for tracking.
         _spawnedPlayers.Add(player, unitList);
+
+        await _gameFactory.CreateCursor(Vector3.zero, Quaternion.identity, player);
+
+        AssignPlayerColor(player, _spawnedPlayersCount);
+        _spawnedPlayersCount++;
+
+        SyncExistingUnitsToPlayer(player);
     }
 
     /// <summary>

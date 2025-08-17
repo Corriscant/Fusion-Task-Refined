@@ -21,6 +21,7 @@ namespace FusionTask.Gameplay
     private MeshRenderer _meshRenderer; // Cache for MeshRenderer to avoid repeated lookups
     private IUnitRegistry _unitRegistry;
     private IMaterialApplier _materialApplier;
+    private IGameFactory _gameFactory;
 
     /// <summary>
     /// Cached MeshRenderer component of the unit.
@@ -97,19 +98,35 @@ namespace FusionTask.Gameplay
     {
         Log($"{GetLogCallPrefix(GetType())} Unit {gameObject.name} despawned. HasState: {hasState}");
         _unitRegistry.Unregister(Object.Id.Raw);
+        if (!_gameFactory.IsNullOrDestroyed())
+        {
+            _gameFactory.Release(Object);
+        }
         base.Despawned(runner, hasState);
     }
 
     [Inject]
-    public void Construct(IUnitRegistry unitRegistry, IMaterialApplier materialApplier)
+    public void Construct(IUnitRegistry unitRegistry, IMaterialApplier materialApplier, IGameFactory gameFactory)
     {
         _unitRegistry = unitRegistry;
         _materialApplier = materialApplier;
+        _gameFactory = gameFactory;
     }
 
     public void SetOwner(PlayerRef newOwner) => PlayerOwner = newOwner;
 
     public bool IsOwnedBy(PlayerRef player) => PlayerOwner == player;
+
+    /// <summary>
+    /// Resets cached state before reusing the unit from the pool.
+    /// </summary>
+    public void ResetState()
+    {
+        TargetPosition = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+        HasTarget = false;
+        lastCommandServerTick = 0f;
+        PlayerOwner = default;
+    }
 
     private void Awake()
     {

@@ -53,6 +53,7 @@ namespace FusionTask.Networking
 
     private SceneLoadHandler _sceneLoadHandler;
     private NetworkObjectInjector _networkObjectInjector;
+    private INetworkObjectPool _networkObjectPool;
 
     private void Awake()
     {
@@ -82,6 +83,10 @@ namespace FusionTask.Networking
         if (!_sceneLoadHandler.IsNullOrDestroyed())
         {
             _netRunner.AddCallbacks(_sceneLoadHandler);
+        }
+        if (_networkObjectPool != null)
+        {
+            _netRunner.SetObjectPool(_networkObjectPool);
         }
         _netRunner.ProvideInput = true;
 
@@ -205,10 +210,11 @@ namespace FusionTask.Networking
     #endregion
 
     [Inject]
-    public void Construct(SceneLoadHandler sceneLoadHandler, NetworkObjectInjector networkObjectInjector)
+    public void Construct(SceneLoadHandler sceneLoadHandler, NetworkObjectInjector networkObjectInjector, INetworkObjectPool networkObjectPool)
     {
         _sceneLoadHandler = sceneLoadHandler;
         _networkObjectInjector = networkObjectInjector;
+        _networkObjectPool = networkObjectPool;
     }
     }
 }

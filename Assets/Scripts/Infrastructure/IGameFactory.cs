@@ -1,0 +1,34 @@
+using System.Threading.Tasks;
+using Fusion;
+using UnityEngine;
+using FusionTask.Gameplay;
+
+namespace FusionTask.Infrastructure
+{
+    /// <summary>
+    /// Factory interface for spawning and recycling networked game objects.
+    /// </summary>
+    public interface IGameFactory
+    {
+        /// <summary>
+        /// Spawns a unit for the given owner at the specified position and rotation.
+        /// </summary>
+        Task<Unit> CreateUnit(Vector3 position, Quaternion rotation, PlayerRef owner);
+
+        /// <summary>
+        /// Spawns a cursor for the given owner at the specified position and rotation.
+        /// </summary>
+        Task<PlayerCursor> CreateCursor(Vector3 position, Quaternion rotation, PlayerRef owner);
+
+        /// <summary>
+        /// Returns a network object back to its pool.
+        /// </summary>
+        void Release(NetworkObject obj);
+
+        /// <summary>
+        /// Preloads objects for all pools.
+        /// </summary>
+        Task WarmupPools();
+    }
+}
+

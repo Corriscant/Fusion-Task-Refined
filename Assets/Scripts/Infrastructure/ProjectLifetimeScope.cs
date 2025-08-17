@@ -1,6 +1,7 @@
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
+using Fusion;
 using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 using FusionTask.Networking;
@@ -43,6 +44,9 @@ namespace FusionTask.Infrastructure
             builder.RegisterComponentInHierarchy<PlayerManager>();
             builder.RegisterComponentInHierarchy<NetworkObjectInjector>();
             builder.RegisterComponentInHierarchy<SceneLoadHandler>();
+            builder.RegisterComponentInHierarchy<GameFactory>()
+                .As<IGameFactory>()
+                .As<INetworkObjectPool>();
 
             builder.Register<UnitRegistry>(Lifetime.Singleton).As<IUnitRegistry>();
             builder.Register<PlayerCursorRegistry>(Lifetime.Singleton).As<IPlayerCursorRegistry>();
