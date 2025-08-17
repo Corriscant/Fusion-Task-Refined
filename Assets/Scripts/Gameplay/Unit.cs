@@ -126,6 +126,7 @@ namespace FusionTask.Gameplay
         HasTarget = false;
         lastCommandServerTick = 0f;
         PlayerOwner = default;
+        materialIndex = 0;
     }
 
     private void Awake()
