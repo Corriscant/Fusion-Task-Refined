@@ -46,7 +46,7 @@ namespace FusionTask.Infrastructure
             builder.RegisterComponentInHierarchy<SceneLoadHandler>();
             builder.RegisterComponentInHierarchy<GameFactory>()
                 .As<IGameFactory>()
-                .As<INetworkObjectPool>();
+                .As<INetworkObjectProvider>();
 
             builder.Register<UnitRegistry>(Lifetime.Singleton).As<IUnitRegistry>();
             builder.Register<PlayerCursorRegistry>(Lifetime.Singleton).As<IPlayerCursorRegistry>();

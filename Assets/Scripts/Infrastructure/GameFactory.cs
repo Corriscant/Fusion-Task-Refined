@@ -12,7 +12,7 @@ namespace FusionTask.Infrastructure
     /// Creates and recycles networked objects through pooling.
     /// </summary>
     // TODO: Attach this component to a GameObject in the scene and assign prefab references.
-    public class GameFactory : MonoBehaviour, IGameFactory, INetworkObjectPool
+    public class GameFactory : NetworkObjectProviderDefault, IGameFactory
     {
         [Header("Prefabs")]
         [SerializeField] private NetworkObject _unitPrefab;
@@ -104,19 +104,22 @@ namespace FusionTask.Infrastructure
             }
         }
 
-        NetworkObject INetworkObjectPool.AcquireInstance(NetworkRunner runner, NetworkPrefabInfo info)
+        /// <summary>
+        /// Provides an instance of the requested prefab from the appropriate pool.
+        /// </summary>
+        protected override NetworkObject InstantiatePrefab(NetworkRunner runner, NetworkObject prefab)
         {
-            if (info.Prefab == _unitPrefab)
+            if (prefab == _unitPrefab)
             {
                 return _unitPool.Get().GetAwaiter().GetResult();
             }
 
-            if (info.Prefab == _cursorPrefab)
+            if (prefab == _cursorPrefab)
             {
                 return _cursorPool.Get().GetAwaiter().GetResult();
             }
 
-            var instance = Instantiate(info.Prefab);
+            var instance = Instantiate(prefab);
             if (_resolver != null)
             {
                 _resolver.InjectGameObject(instance.gameObject);
@@ -124,7 +127,10 @@ namespace FusionTask.Infrastructure
             return instance;
         }
 
-        void INetworkObjectPool.ReleaseInstance(NetworkRunner runner, NetworkObject instance, bool isSceneObject)
+        /// <summary>
+        /// Returns the instance to the corresponding pool instead of destroying it.
+        /// </summary>
+        protected override void DestroyPrefabInstance(NetworkRunner runner, NetworkPrefabId prefabId, NetworkObject instance)
         {
             Release(instance);
         }

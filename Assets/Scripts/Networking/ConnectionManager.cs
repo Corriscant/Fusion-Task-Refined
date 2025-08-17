@@ -53,7 +53,7 @@ namespace FusionTask.Networking
 
     private SceneLoadHandler _sceneLoadHandler;
     private NetworkObjectInjector _networkObjectInjector;
-    private INetworkObjectPool _networkObjectPool;
+    private INetworkObjectProvider _networkObjectProvider;
 
     private void Awake()
     {
@@ -84,10 +84,6 @@ namespace FusionTask.Networking
         {
             _netRunner.AddCallbacks(_sceneLoadHandler);
         }
-        if (_networkObjectPool != null)
-        {
-            _netRunner.SetObjectPool(_networkObjectPool);
-        }
         _netRunner.ProvideInput = true;
 
         // Create the NetworkSceneInfo from the current scene
@@ -107,7 +103,8 @@ namespace FusionTask.Networking
                 GameMode = mode,
                 SessionName = "TestRoom",
                 Scene = scene,
-                SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
+                SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>(),
+                ObjectProvider = _networkObjectProvider
             });
 
             #region LogAccessTo NetRunner.Tick
@@ -210,11 +207,11 @@ namespace FusionTask.Networking
     #endregion
 
     [Inject]
-    public void Construct(SceneLoadHandler sceneLoadHandler, NetworkObjectInjector networkObjectInjector, INetworkObjectPool networkObjectPool)
+    public void Construct(SceneLoadHandler sceneLoadHandler, NetworkObjectInjector networkObjectInjector, INetworkObjectProvider networkObjectProvider)
     {
         _sceneLoadHandler = sceneLoadHandler;
         _networkObjectInjector = networkObjectInjector;
-        _networkObjectPool = networkObjectPool;
+        _networkObjectProvider = networkObjectProvider;
     }
     }
 }
