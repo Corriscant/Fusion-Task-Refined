@@ -9,6 +9,7 @@ using static Corris.Loggers.Logger;
 using static Corris.Loggers.LogUtils;
 using FusionTask.Networking;
 using FusionTask.Infrastructure;
+using System.Linq;
 
 namespace FusionTask.Gameplay
 {
@@ -334,7 +335,7 @@ namespace FusionTask.Gameplay
     /// </summary>
     private async Task SpawnPlayerUnitsAsync(NetworkRunner runner, PlayerRef player)
     {
-        int activePlayerCount = runner.ActivePlayers.Count;
+        int activePlayerCount = runner.ActivePlayers.Count();
         if (activePlayerCount == 0)
         {
             LogWarning($"{GetLogCallPrefix(GetType())} Active player count is zero. Using origin for spawn.");
