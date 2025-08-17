@@ -332,7 +332,7 @@ namespace FusionTask.Gameplay
     /// <summary>
     /// Spawns units and a cursor for the specified player using the factory.
     /// </summary>
-    private async System.Threading.Tasks.Task SpawnPlayerUnitsAsync(NetworkRunner runner, PlayerRef player)
+    private async Task SpawnPlayerUnitsAsync(NetworkRunner runner, PlayerRef player)
     {
         var playerSpawnCenterPosition = new Vector3((player.RawEncoded % runner.Config.Simulation.PlayerCount) * 3, 1, 0);
         var unitList = new System.Collections.Generic.List<NetworkObject>();
@@ -341,7 +341,6 @@ namespace FusionTask.Gameplay
         {
             Vector3 spawnPosition = playerSpawnCenterPosition + new Vector3(Mathf.Cos(i * Mathf.PI * 2 / unitCountPerPlayer), 0, Mathf.Sin(i * Mathf.PI * 2 / unitCountPerPlayer));
             var unit = await _gameFactory.CreateUnit(runner, spawnPosition, Quaternion.identity, player);
-            unit.SetOwner(player);
             unit.name = $"Unit_{player.RawEncoded}_{i}";
             unitList.Add(unit.Object);
         }
@@ -350,7 +349,7 @@ namespace FusionTask.Gameplay
 
         await _gameFactory.CreateCursor(runner, Vector3.zero, Quaternion.identity, player);
 
-        AssignPlayerColor(player, _spawnedPlayersCount);
+        await AssignPlayerColor(player, _spawnedPlayersCount);
         _spawnedPlayersCount++;
 
         SyncExistingUnitsToPlayer(player);
@@ -359,7 +358,7 @@ namespace FusionTask.Gameplay
     /// <summary>
     /// Assigns a material index to the given player and applies it to all related objects.
     /// </summary>
-    private void AssignPlayerColor(PlayerRef player, int index)
+    private async Task AssignPlayerColor(PlayerRef player, int index)
     {
         _playerMaterialIndices[player] = index;
 
@@ -375,7 +374,7 @@ namespace FusionTask.Gameplay
                 if (networkObject != null && networkObject.TryGetComponent<Unit>(out var unit))
                 {
                     unit.materialIndex = index;
-                    _ = _materialApplier.ApplyMaterialAsync(unit.MeshRenderer, index, "Unit");
+                    await _materialApplier.ApplyMaterialAsync(unit.MeshRenderer, index, "Unit");
                     unit.RPC_RelaySpawnedUnitInfo(unit.name, index);
                 }
             }

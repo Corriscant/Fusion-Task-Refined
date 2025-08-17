@@ -62,20 +62,21 @@ namespace FusionTask.Infrastructure
         public async Task<Unit> CreateUnit(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
         {
             var obj = await _unitPool.Get();
-            obj.transform.SetPositionAndRotation(position, rotation);
-            runner.Spawn(obj, position, rotation, owner);
             var unit = obj.GetComponent<Unit>();
             unit.ResetState();
+            unit.SetOwner(owner);
+            obj.transform.SetPositionAndRotation(position, rotation);
+            runner.Spawn(obj, position, rotation, owner);
             return unit;
         }
 
         public async Task<PlayerCursor> CreateCursor(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
         {
             var obj = await _cursorPool.Get();
-            obj.transform.SetPositionAndRotation(position, rotation);
-            runner.Spawn(obj, position, rotation, owner);
             var cursor = obj.GetComponent<PlayerCursor>();
             cursor.ResetState();
+            obj.transform.SetPositionAndRotation(position, rotation);
+            runner.Spawn(obj, position, rotation, owner);
             return cursor;
         }
 
@@ -107,12 +108,16 @@ namespace FusionTask.Infrastructure
         {
             if (prefab == _unitPrefab)
             {
-                return _unitPool.Get().GetAwaiter().GetResult();
+                var obj = _unitPool.Get().GetAwaiter().GetResult();
+                obj.GetComponent<Unit>().ResetState();
+                return obj;
             }
 
             if (prefab == _cursorPrefab)
             {
-                return _cursorPool.Get().GetAwaiter().GetResult();
+                var obj = _cursorPool.Get().GetAwaiter().GetResult();
+                obj.GetComponent<PlayerCursor>().ResetState();
+                return obj;
             }
 
             var instance = Instantiate(prefab);
