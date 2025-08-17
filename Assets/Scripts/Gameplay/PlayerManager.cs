@@ -340,7 +340,7 @@ namespace FusionTask.Gameplay
         for (int i = 0; i < unitCountPerPlayer; i++)
         {
             Vector3 spawnPosition = playerSpawnCenterPosition + new Vector3(Mathf.Cos(i * Mathf.PI * 2 / unitCountPerPlayer), 0, Mathf.Sin(i * Mathf.PI * 2 / unitCountPerPlayer));
-            var unit = await _gameFactory.CreateUnit(spawnPosition, Quaternion.identity, player);
+            var unit = await _gameFactory.CreateUnit(runner, spawnPosition, Quaternion.identity, player);
             unit.SetOwner(player);
             unit.name = $"Unit_{player.RawEncoded}_{i}";
             unitList.Add(unit.Object);
@@ -348,7 +348,7 @@ namespace FusionTask.Gameplay
 
         _spawnedPlayers.Add(player, unitList);
 
-        await _gameFactory.CreateCursor(Vector3.zero, Quaternion.identity, player);
+        await _gameFactory.CreateCursor(runner, Vector3.zero, Quaternion.identity, player);
 
         AssignPlayerColor(player, _spawnedPlayersCount);
         _spawnedPlayersCount++;

@@ -25,13 +25,11 @@ namespace FusionTask.Infrastructure
         private AsyncObjectPool<NetworkObject> _unitPool;
         private AsyncObjectPool<NetworkObject> _cursorPool;
 
-        private IConnectionService _connectionService;
         private IObjectResolver _resolver;
 
         [Inject]
-        public void Construct(IConnectionService connectionService, IObjectResolver resolver)
+        public void Construct(IObjectResolver resolver)
         {
-            _connectionService = connectionService;
             _resolver = resolver;
         }
 
@@ -61,22 +59,20 @@ namespace FusionTask.Infrastructure
             return Task.FromResult(instance);
         }
 
-        public async Task<Unit> CreateUnit(Vector3 position, Quaternion rotation, PlayerRef owner)
+        public async Task<Unit> CreateUnit(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
         {
             var obj = await _unitPool.Get();
             obj.transform.SetPositionAndRotation(position, rotation);
-            var runner = _connectionService.Runner;
             runner.Spawn(obj, position, rotation, owner);
             var unit = obj.GetComponent<Unit>();
             unit.ResetState();
             return unit;
         }
 
-        public async Task<PlayerCursor> CreateCursor(Vector3 position, Quaternion rotation, PlayerRef owner)
+        public async Task<PlayerCursor> CreateCursor(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
         {
             var obj = await _cursorPool.Get();
             obj.transform.SetPositionAndRotation(position, rotation);
-            var runner = _connectionService.Runner;
             runner.Spawn(obj, position, rotation, owner);
             var cursor = obj.GetComponent<PlayerCursor>();
             cursor.ResetState();
