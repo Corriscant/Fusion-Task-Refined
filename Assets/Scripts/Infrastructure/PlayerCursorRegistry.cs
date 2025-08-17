@@ -11,6 +11,9 @@ namespace FusionTask.Infrastructure
     public class PlayerCursorRegistry : IPlayerCursorRegistry
     {
         private readonly Dictionary<PlayerRef, PlayerCursor> _cursors = new();
+        /// <summary>
+        /// Cached list of player cursors for fast index-based iteration.
+        /// </summary>
         private readonly List<PlayerCursor> _cursorList = new();
 
         /// <summary>

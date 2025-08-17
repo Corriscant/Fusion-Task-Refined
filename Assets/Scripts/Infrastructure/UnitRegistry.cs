@@ -12,6 +12,9 @@ namespace FusionTask.Infrastructure
     public class UnitRegistry : IUnitRegistry
     {
         private readonly Dictionary<uint, Unit> _units = new();
+        /// <summary>
+        /// Cached list of units for fast index-based iteration.
+        /// </summary>
         private readonly List<Unit> _unitList = new();
 
         /// <summary>
