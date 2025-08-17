@@ -334,7 +334,13 @@ namespace FusionTask.Gameplay
     /// </summary>
     private async Task SpawnPlayerUnitsAsync(NetworkRunner runner, PlayerRef player)
     {
-        var playerSpawnCenterPosition = new Vector3((player.RawEncoded % runner.Config.Simulation.PlayerCount) * 3, 1, 0);
+        int activePlayerCount = runner.ActivePlayers.Count;
+        if (activePlayerCount == 0)
+        {
+            LogWarning($"{GetLogCallPrefix(GetType())} Active player count is zero. Using origin for spawn.");
+        }
+        int column = activePlayerCount > 0 ? player.RawEncoded % activePlayerCount : 0;
+        var playerSpawnCenterPosition = new Vector3(column * 3, 1, 0);
         var unitList = new System.Collections.Generic.List<NetworkObject>();
 
         for (int i = 0; i < unitCountPerPlayer; i++)

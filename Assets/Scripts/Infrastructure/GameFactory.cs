@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Fusion;
 using UnityEngine;
@@ -59,25 +58,39 @@ namespace FusionTask.Infrastructure
             return Task.FromResult(instance);
         }
 
-        public async Task<Unit> CreateUnit(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
+        public Task<Unit> CreateUnit(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
         {
-            var obj = await _unitPool.Get();
-            var unit = obj.GetComponent<Unit>();
-            unit.ResetState();
-            unit.SetOwner(owner);
-            obj.transform.SetPositionAndRotation(position, rotation);
-            runner.Spawn(obj, position, rotation, owner);
-            return unit;
+            NetworkObject spawned = runner.Spawn(
+                _unitPrefab,
+                position,
+                rotation,
+                owner,
+                (r, obj) =>
+                {
+                    var unit = obj.GetComponent<Unit>();
+                    unit.ResetState();
+                    unit.SetOwner(owner);
+                }
+            );
+
+            return Task.FromResult(spawned.GetComponent<Unit>());
         }
 
-        public async Task<PlayerCursor> CreateCursor(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
+        public Task<PlayerCursor> CreateCursor(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
         {
-            var obj = await _cursorPool.Get();
-            var cursor = obj.GetComponent<PlayerCursor>();
-            cursor.ResetState();
-            obj.transform.SetPositionAndRotation(position, rotation);
-            runner.Spawn(obj, position, rotation, owner);
-            return cursor;
+            NetworkObject spawned = runner.Spawn(
+                _cursorPrefab,
+                position,
+                rotation,
+                owner,
+                (r, obj) =>
+                {
+                    var cursor = obj.GetComponent<PlayerCursor>();
+                    cursor.ResetState();
+                }
+            );
+
+            return Task.FromResult(spawned.GetComponent<PlayerCursor>());
         }
 
         public void Release(NetworkObject obj)
