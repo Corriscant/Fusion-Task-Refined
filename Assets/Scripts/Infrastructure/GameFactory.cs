@@ -68,7 +68,7 @@ namespace FusionTask.Infrastructure
                 (r, obj) =>
                 {
                     var unit = obj.GetComponent<Unit>();
-                    unit.ResetState();
+                    unit.ResetNetworkState();
                     unit.SetOwner(owner);
                 }
             );
@@ -129,7 +129,6 @@ namespace FusionTask.Infrastructure
             if (prefab == _cursorPrefab)
             {
                 var obj = _cursorPool.Get().GetAwaiter().GetResult();
-                obj.GetComponent<PlayerCursor>().ResetState();
                 return obj;
             }
 

@@ -112,15 +112,22 @@ namespace FusionTask.Gameplay
     public bool IsOwnedBy(PlayerRef player) => PlayerOwner == player;
 
     /// <summary>
-    /// Resets cached state before reusing the unit from the pool.
+    /// Resets non-networked cached state before reusing the unit from the pool.
     /// </summary>
     public void ResetState()
     {
+        lastCommandServerTick = 0f;
+        materialIndex = 0;
+    }
+
+    /// <summary>
+    /// Resets networked members after Fusion attaches the object.
+    /// </summary>
+    public void ResetNetworkState()
+    {
         TargetPosition = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
         HasTarget = false;
-        lastCommandServerTick = 0f;
         PlayerOwner = default;
-        materialIndex = 0;
     }
 
     private void Awake()
