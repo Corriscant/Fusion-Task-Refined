@@ -11,5 +11,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 930b372d5fb749828d96caa55a621dcf, type: 3}
   m_Name: GameSettings
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   unitAllowedOffset: 3
+  playerSpawnDistance: 5

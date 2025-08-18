@@ -38,6 +38,11 @@ namespace FusionTask.Gameplay
     /// </summary>
     private int unitAllowedOffset;
 
+    /// <summary>
+    /// Distance from the center for player spawn positions.
+    /// </summary>
+    private float playerSpawnDistance;
+
     // --- State for Network Input ---
     private Vector3 _currentMousePosition;
 
@@ -79,6 +84,7 @@ namespace FusionTask.Gameplay
             return;
         }
         unitAllowedOffset = _gameSettings.unitAllowedOffset;
+        playerSpawnDistance = _gameSettings.playerSpawnDistance;
     }
 
     // --- Unity & Event Subscription ---
@@ -332,13 +338,28 @@ namespace FusionTask.Gameplay
     /// </summary>
     private async Task SpawnPlayerUnitsAsync(NetworkRunner runner, PlayerRef player)
     {
-        int activePlayerCount = runner.ActivePlayers.Count();
-        if (activePlayerCount == 0)
+        // Determine the spawn center using a star-like pattern for the first four players.
+        Vector3 playerSpawnCenterPosition;
+        switch (_spawnedPlayersCount)
         {
-            LogWarning($"{GetLogCallPrefix(GetType())} Active player count is zero. Using origin for spawn.");
+            case 0: // First player - bottom-left
+                playerSpawnCenterPosition = new Vector3(-playerSpawnDistance, 1f, -playerSpawnDistance);
+                break;
+            case 1: // Second player - top-right
+                playerSpawnCenterPosition = new Vector3(playerSpawnDistance, 1f, playerSpawnDistance);
+                break;
+            case 2: // Third player - bottom-right
+                playerSpawnCenterPosition = new Vector3(playerSpawnDistance, 1f, -playerSpawnDistance);
+                break;
+            case 3: // Fourth player - top-left
+                playerSpawnCenterPosition = new Vector3(-playerSpawnDistance, 1f, playerSpawnDistance);
+                break;
+            default: // Any subsequent players
+                float randomX = Random.Range(-playerSpawnDistance, playerSpawnDistance);
+                float randomZ = Random.Range(-playerSpawnDistance, playerSpawnDistance);
+                playerSpawnCenterPosition = new Vector3(randomX, 1f, randomZ);
+                break;
         }
-        int column = activePlayerCount > 0 ? player.RawEncoded % activePlayerCount : 0;
-        var playerSpawnCenterPosition = new Vector3(column * 3, 1, 0);
         var unitList = new System.Collections.Generic.List<NetworkObject>();
 
         for (int i = 0; i < unitCountPerPlayer; i++)

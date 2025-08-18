@@ -12,5 +12,10 @@ namespace FusionTask.Gameplay
         /// The maximum allowed offset for a unit from the center of the group.
         /// </summary>
         public int unitAllowedOffset = 1;
+
+        /// <summary>
+        /// Distance from the scene center at which player groups spawn.
+        /// </summary>
+        public float playerSpawnDistance = 5f;
     }
 }
