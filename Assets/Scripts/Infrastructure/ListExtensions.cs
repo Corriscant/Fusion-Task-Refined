@@ -24,14 +24,22 @@ namespace FusionTask.Infrastructure
             }
 
             var center = Vector3.zero;
+            var validItems = 0;
             foreach (var item in items)
             {
-                if (item != null)
+                if (!item.IsNullOrDestroyed())
                 {
                     center += item.Position;
+                    validItems++;
                 }
             }
-            center /= items.Count;
+
+            if (validItems == 0)
+            {
+                return Vector3.zero;
+            }
+
+            center /= validItems;
             return center;
         }
     }
