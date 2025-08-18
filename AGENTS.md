@@ -157,3 +157,31 @@ This method is an extension provided by VContainer. Always ensure the necessary 
     ```
 
 Failure to include `using VContainer.Unity;` will result in a compile error, as the `InjectGameObject` extension method will not be resolved.
+
+---
+## Heuristic for Skipping Trivial Unit Tests
+
+Avoid generating unit tests for methods that are simple, single-line wrappers or proxies for trusted framework APIs. A method is considered a trivial wrapper and should be skipped if it meets **all** of the following criteria:
+
+1. The method body consists of a **single line**.
+2. This line is a single `return` statement.
+3. The returned value is a direct call to a method from a stable, well-tested framework (e.g., `UnityEngine` API, `.NET System` libraries) with no additional logic, calculations, or transformations.
+
+**Example of a method to SKIP testing:**
+This is a simple proxy call to the Unity Engine. We trust that `Vector3.ClampMagnitude` is already tested by Unity.
+```csharp
+public Vector3 ClampOffset(Vector3 offset, float allowedOffset)
+{
+    return Vector3.ClampMagnitude(offset, allowedOffset);
+}
+```
+
+**Example of a simple method that SHOULD BE TESTED:**
+Although this method is a single line, it contains original business logic (the condition health > 0) that belongs to our application and must be verified.
+
+```csharp
+public string GetStatus(int health)
+{
+    return health > 0 ? "Alive" : "Dead";
+}
+```
