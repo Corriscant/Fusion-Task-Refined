@@ -20,6 +20,7 @@ namespace FusionTask.Infrastructure
 
     // --- Mouse movement  ---
     public event Action<Vector3> OnMouseMove;
+    public event Action OnRespawn;
 
     // Camera used for raycasting
     [SerializeField] private Camera mainCamera;
@@ -33,6 +34,7 @@ namespace FusionTask.Infrastructure
         ProcessPrimaryMouseInput();
         ProcessSecondaryMouseInput();
         ProcessMousePosition();
+        ProcessRespawnInput();
     }
 
     /// <summary>
@@ -80,6 +82,17 @@ namespace FusionTask.Infrastructure
     private void ProcessMousePosition()
     {
         OnMouseMove?.Invoke(Input.mousePosition);
+    }
+
+    /// <summary>
+    /// Detects the spacebar press for the respawn command.
+    /// </summary>
+    private void ProcessRespawnInput()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            OnRespawn?.Invoke();
+        }
     }
 
     }

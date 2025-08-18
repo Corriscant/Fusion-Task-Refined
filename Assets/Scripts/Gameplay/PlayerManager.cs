@@ -53,6 +53,8 @@ namespace FusionTask.Gameplay
     private Dictionary<PlayerRef, int> _playerMaterialIndices = new();
     // Counter to assign a unique material index to each new player.
     private int _spawnedPlayersCount = 0;
+    // Stores original spawn centers for players to support respawns.
+    private Dictionary<PlayerRef, Vector3> _playerSpawnPositions = new();
 
     // --- Dependencies ---
     private IConnectionService _connectionService;
@@ -115,6 +117,7 @@ namespace FusionTask.Gameplay
         {
             _inputService.OnSecondaryMouseClick_World += HandleMoveCommand;
             _inputService.OnMouseMove += CacheMousePosition;
+            _inputService.OnRespawn += HandleRespawnRequest;
         }
 
         if (_networkEvents.IsNullOrDestroyed())
@@ -136,6 +139,7 @@ namespace FusionTask.Gameplay
         {
             _inputService.OnSecondaryMouseClick_World -= HandleMoveCommand;
             _inputService.OnMouseMove -= CacheMousePosition;
+            _inputService.OnRespawn -= HandleRespawnRequest;
         }
         if (!_networkEvents.IsNullOrDestroyed())
         {
@@ -254,6 +258,7 @@ namespace FusionTask.Gameplay
                 // Remove the player from the dictionary.
                 _spawnedPlayers.Remove(player);
                 _playerMaterialIndices.Remove(player);
+                _playerSpawnPositions.Remove(player);
             }
 
             if (_playerCursorRegistry.TryGet(player, out var cursor))
@@ -299,6 +304,28 @@ namespace FusionTask.Gameplay
     }
 
     /// <summary>
+    /// Initiates a respawn request for the local player.
+    /// </summary>
+    private void HandleRespawnRequest()
+    {
+        if (_selectionManager != null)
+        {
+            _selectionManager.ClearSelection();
+        }
+        RPC_RequestRespawn();
+    }
+
+    /// <summary>
+    /// RPC from clients requesting their units to be respawned.
+    /// </summary>
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsServer)]
+    private void RPC_RequestRespawn(RpcInfo info = default)
+    {
+        var player = info.Source != PlayerRef.None ? info.Source : Runner.LocalPlayer;
+        _ = RespawnPlayerUnitsAsync(player);
+    }
+
+    /// <summary>
     /// RPC called by clients to request movement for a group of units.
     /// Executed on the state authority to validate ownership and apply targets.
     /// </summary>
@@ -338,9 +365,23 @@ namespace FusionTask.Gameplay
     /// </summary>
     private async Task SpawnPlayerUnitsAsync(NetworkRunner runner, PlayerRef player)
     {
-        // Determine the spawn center using a star-like pattern for the first four players.
+        Vector3 playerSpawnCenterPosition = GetPlayerSpawnCenter(player);
+        await SpawnUnitsForPlayerAsync(runner, player, playerSpawnCenterPosition);
+        SyncExistingUnitsToPlayer(player);
+    }
+
+    /// <summary>
+    /// Returns the stored spawn center for a player or calculates a new one.
+    /// </summary>
+    private Vector3 GetPlayerSpawnCenter(PlayerRef player)
+    {
+        if (_playerSpawnPositions.TryGetValue(player, out var center))
+        {
+            return center;
+        }
+
         Vector3 playerSpawnCenterPosition;
-        switch (_spawnedPlayersCount)
+        switch (_playerSpawnPositions.Count)
         {
             case 0: // First player - bottom-left
                 playerSpawnCenterPosition = new Vector3(-playerSpawnDistance, 1f, -playerSpawnDistance);
@@ -360,7 +401,45 @@ namespace FusionTask.Gameplay
                 playerSpawnCenterPosition = new Vector3(randomX, 1f, randomZ);
                 break;
         }
-        var unitList = new System.Collections.Generic.List<NetworkObject>();
+
+        _playerSpawnPositions.Add(player, playerSpawnCenterPosition);
+        return playerSpawnCenterPosition;
+    }
+
+    /// <summary>
+    /// Removes existing units and respawns them at the original coordinates.
+    /// </summary>
+    private async Task RespawnPlayerUnitsAsync(PlayerRef player)
+    {
+        var runner = NetRunner;
+        if (runner == null)
+        {
+            return;
+        }
+
+        if (_spawnedPlayers.TryGetValue(player, out var networkObjects))
+        {
+            for (int i = 0; i < networkObjects.Count; i++)
+            {
+                var networkObject = networkObjects[i];
+                if (networkObject != null)
+                {
+                    runner.Despawn(networkObject);
+                }
+            }
+            _spawnedPlayers.Remove(player);
+        }
+
+        Vector3 playerSpawnCenterPosition = GetPlayerSpawnCenter(player);
+        await SpawnUnitsForPlayerAsync(runner, player, playerSpawnCenterPosition);
+    }
+
+    /// <summary>
+    /// Creates player units at the given position and ensures color assignment.
+    /// </summary>
+    private async Task SpawnUnitsForPlayerAsync(NetworkRunner runner, PlayerRef player, Vector3 playerSpawnCenterPosition)
+    {
+        var unitList = new List<NetworkObject>();
 
         for (int i = 0; i < unitCountPerPlayer; i++)
         {
@@ -370,14 +449,22 @@ namespace FusionTask.Gameplay
             unitList.Add(unit.Object);
         }
 
-        _spawnedPlayers.Add(player, unitList);
+        _spawnedPlayers[player] = unitList;
 
-        _gameFactory.CreateCursor(runner, Vector3.zero, Quaternion.identity, player);
+        if (!_playerCursorRegistry.TryGet(player, out _))
+        {
+            _gameFactory.CreateCursor(runner, Vector3.zero, Quaternion.identity, player);
+        }
 
-        await AssignPlayerColor(player, _spawnedPlayersCount);
-        _spawnedPlayersCount++;
+        int index;
+        if (!_playerMaterialIndices.TryGetValue(player, out index))
+        {
+            index = _spawnedPlayersCount;
+            _playerMaterialIndices[player] = index;
+            _spawnedPlayersCount++;
+        }
 
-        SyncExistingUnitsToPlayer(player);
+        await AssignPlayerColor(player, index);
     }
 
     /// <summary>

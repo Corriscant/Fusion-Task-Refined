@@ -13,5 +13,6 @@ namespace FusionTask.Infrastructure
         event Action OnPrimaryMouseUp;
         event Action<Vector3> OnSecondaryMouseClick_World;
         event Action<Vector3> OnMouseMove;
+        event Action OnRespawn;
     }
 }
