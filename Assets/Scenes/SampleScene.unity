@@ -170,7 +170,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -309,7 +309,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.392}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -767,7 +767,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -782,17 +782,19 @@ MonoBehaviour:
     Controls:
     Box-select units, then RMB to move.
 
-    WSAD: Camera move
+    Space: Reset units position
+
+    WSAD:
+    Camera move
 
 
-    Photon Fusion
-    use:
+    Photon Fusion use:
 
 
-    INetworkRunnerCallbacks.OnInput(): Cursor tracking
+    INetworkRunnerCallbacks.OnInput():
+    Cursor tracking
 
-    [Networked]:
-    Unit state
+    [Networked]: Unit state
 
     RPC:  Commands'
   m_isRightToLeft: 0
@@ -1913,7 +1915,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 145.075, y: -201.49}
+  m_AnchoredPosition: {x: 145.075, y: -215.4}
   m_SizeDelta: {x: 290.15, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &771168986
@@ -1970,7 +1972,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.392}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
