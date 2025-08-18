@@ -58,7 +58,10 @@ namespace FusionTask.Infrastructure
             return Task.FromResult(instance);
         }
 
-        public Task<Unit> CreateUnit(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
+        /// <summary>
+        /// Spawns a unit for the given owner at the specified position and rotation.
+        /// </summary>
+        public Unit CreateUnit(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
         {
             NetworkObject spawned = runner.Spawn(
                 _unitPrefab,
@@ -73,10 +76,22 @@ namespace FusionTask.Infrastructure
                 }
             );
 
-            return Task.FromResult(spawned.GetComponent<Unit>());
+            return spawned.GetComponent<Unit>();
         }
 
-        public Task<PlayerCursor> CreateCursor(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
+        /// <summary>
+        /// Asynchronously spawns a unit for the given owner at the specified position and rotation.
+        /// Useful when assets require asynchronous loading.
+        /// </summary>
+        public Task<Unit> CreateUnitAsync(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
+        {
+            return Task.FromResult(CreateUnit(runner, position, rotation, owner));
+        }
+
+        /// <summary>
+        /// Spawns a cursor for the given owner at the specified position and rotation.
+        /// </summary>
+        public PlayerCursor CreateCursor(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
         {
             NetworkObject spawned = runner.Spawn(
                 _cursorPrefab,
@@ -90,7 +105,16 @@ namespace FusionTask.Infrastructure
                 }
             );
 
-            return Task.FromResult(spawned.GetComponent<PlayerCursor>());
+            return spawned.GetComponent<PlayerCursor>();
+        }
+
+        /// <summary>
+        /// Asynchronously spawns a cursor for the given owner at the specified position and rotation.
+        /// Useful when assets require asynchronous loading.
+        /// </summary>
+        public Task<PlayerCursor> CreateCursorAsync(NetworkRunner runner, Vector3 position, Quaternion rotation, PlayerRef owner)
+        {
+            return Task.FromResult(CreateCursor(runner, position, rotation, owner));
         }
 
         public void Release(NetworkObject obj)
