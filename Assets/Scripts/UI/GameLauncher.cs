@@ -29,12 +29,14 @@ namespace FusionTask.UI
     [SerializeField] private Button exitButton;
 
     private IConnectionService _connectionService;
+    private ISelectionService _selectionService;
     // Called by VContainer to inject the dependency immediately upon its creation.
     [Inject]
-    public void Construct(IConnectionService connectionService)
+    public void Construct(IConnectionService connectionService, ISelectionService selectionService)
     {
         Log($"{GetLogCallPrefix(GetType())} VContainer Inject!");
-        this._connectionService = connectionService;
+        _connectionService = connectionService;
+        _selectionService = selectionService;
     }
 
     private void Start()
@@ -42,6 +44,12 @@ namespace FusionTask.UI
         if (_connectionService.IsNullOrDestroyed())
         {
             LogError($"{GetLogCallPrefix(GetType())} Connection service NIL!");
+            enabled = false;
+            return;
+        }
+        if (_selectionService as UnityEngine.Object == null)
+        {
+            LogError($"{GetLogCallPrefix(GetType())} Selection service NIL!");
             enabled = false;
             return;
         }
@@ -70,7 +78,7 @@ namespace FusionTask.UI
         if (_connectionService.IsNullOrDestroyed())
             return;
 
-        bool selectionActive = SelectionManager.IsSelecting;
+        bool selectionActive = _selectionService.IsSelecting;
         bool runnerMissing = _connectionService.Runner.IsNullOrDestroyed();
 
         hostButton.gameObject.SetActive(runnerMissing);

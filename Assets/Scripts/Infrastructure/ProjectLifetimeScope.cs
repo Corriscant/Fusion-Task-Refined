@@ -40,7 +40,7 @@ namespace FusionTask.Infrastructure
             builder.RegisterComponentInHierarchy<InputManager>().As<IInputService>();
             builder.RegisterComponentInHierarchy<GameLauncher>();
             builder.RegisterComponentInHierarchy<Panel_Status>();
-            builder.RegisterComponentInHierarchy<SelectionManager>();
+            builder.RegisterComponentInHierarchy<SelectionManager>().As<ISelectionService>();
             builder.RegisterComponentInHierarchy<PlayerManager>();
             builder.RegisterComponentInHierarchy<NetworkObjectInjector>();
             builder.RegisterComponentInHierarchy<SceneLoadHandler>();

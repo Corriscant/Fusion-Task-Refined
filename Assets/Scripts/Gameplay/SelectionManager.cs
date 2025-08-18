@@ -1,4 +1,5 @@
 using Fusion; // for PlayerRef
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -16,7 +17,7 @@ namespace FusionTask.Gameplay
     /// draws the selection rectangle and keeps track of the currently
     /// highlighted units.
     /// </summary>
-    public class SelectionManager : MonoBehaviour
+    public class SelectionManager : MonoBehaviour, ISelectionService
     {
     [SerializeField] private RectTransform selectionBox; // UI for selection box
     [SerializeField] private Camera mainCamera; // Camera for raycasting
@@ -29,7 +30,14 @@ namespace FusionTask.Gameplay
     public List<ISelectable> SelectedUnits => _selectedUnits;
 
     // Indicates whether a frame selection is currently active
-    public static bool IsSelecting { get; private set; }
+    private bool _isSelecting;
+    public bool IsSelecting => _isSelecting;
+
+    /// <summary>
+    /// Triggered when the selection state changes.
+    /// The boolean parameter is <c>true</c> when selection starts and <c>false</c> when it ends.
+    /// </summary>
+    public event Action<bool> SelectionStateChanged;
 
     private IConnectionService _connectionService;
     private IInputService _inputService;
@@ -93,12 +101,13 @@ namespace FusionTask.Gameplay
         _startPosition = localPoint;
 
         selectionBox.gameObject.SetActive(true);
-        IsSelecting = true;
+        _isSelecting = true;
+        SelectionStateChanged?.Invoke(true);
     }
 
     public void UpdateSelection(Vector2 currentPosition)
     {
-        if (!IsSelecting) return;
+        if (!_isSelecting) return;
         // Convert current position to local coordinates of the Canvas
         RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, currentPosition, mainCamera, out Vector2 localPoint);
 
@@ -110,11 +119,12 @@ namespace FusionTask.Gameplay
 
     public void EndSelection()
     {
-        if (!IsSelecting) return;
+        if (!_isSelecting) return;
         selectionBox.gameObject.SetActive(false);
 
         SelectUnits();
-        IsSelecting = false;
+        _isSelecting = false;
+        SelectionStateChanged?.Invoke(false);
     }
 
     public void ClearSelection()
