@@ -328,9 +328,6 @@ namespace FusionTask.Gameplay
     // --- Private Methods ---
 
     /// <summary>
-    /// Spawns the initial set of units for a given player.
-
-    /// <summary>
     /// Spawns units and a cursor for the specified player using the factory.
     /// </summary>
     private async Task SpawnPlayerUnitsAsync(NetworkRunner runner, PlayerRef player)
