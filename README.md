@@ -1,8 +1,15 @@
 # Photon Fusion Test Sample
 
-This project is a small test of Photon Fusion in a Host-Client mode.
+This project is a technical sample demonstrating a multiplayer setup using **Photon Fusion** in a Host-Client mode. 
+Initially created as a successful test assignment, it has been significantly refactored and enhanced to serve as a public demonstration of modern development practices and code culture.
 
-It was created to demonstrate code culture and style. Initially, it was a test assignment for Tense Games (which was successfully completed). Later, it was refactored to test some new technologies (OpenAI Codex), to verify the migration process to a newer Photon Fusion version (2.0.3 -> 2.0.6), and to create cleaner code.
+The core of the refactoring process was performed using **OpenAI Codex** as the primary AI-assisted development environment. This approach was central to implementing a cleaner architecture and successfully executing a version migration of the **Photon Fusion** SDK from 2.0.3 to 2.0.6.
+
+The resulting architecture showcases proficiency in various technologies and patterns, including:
+* **VContainer** for Dependency Injection 
+* **Addressables** for asset management
+* **NUnit** for unit testing
+* **Object Pooling** for performance optimization
 
 ## Prerequisites
 
