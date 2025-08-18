@@ -6,6 +6,7 @@ AGENTS Instructions:
 * Comments in Delphi code must be written in Russian.
 * Follow the existing coding style, including variable and constant naming.
 * Always use an explicit == null comparison to check for null on UnityEngine.Object and its derivatives. Avoid modern operators like ?., ??, ??= and the is null pattern, as they do not recognize Unity's "destroyed" object state and will cause a MissingReferenceException. For interface variables, use the safe cast: if (myInterface as UnityEngine.Object == null).
+* Ensure the Tests folder for unit tests is placed within the Assets directory, not at the project root.
 
 ### Critical Guideline for Asynchronous Code in Unity
 
