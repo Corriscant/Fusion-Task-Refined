@@ -53,7 +53,7 @@ namespace FusionTask.Tests.Editor
         public void HasReachedTarget_ReturnsTrueWhenFarAwayOnYAxis()
         {
             Vector3 target = new Vector3(5f, 0f, 5f);
-            _gameObject.transform.position = new Vector3(5.8f, 100f, 5.6f); // Far on Y but within 1 unit on XZ
+            _gameObject.transform.position = new Vector3(5.7f, 100f, 5.6f); // Far on Y but within 1 unit on XZ
 
             bool reached = (bool)_hasReachedTargetMethod.Invoke(_unit, new object[] { target });
 
