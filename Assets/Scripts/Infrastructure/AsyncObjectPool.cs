@@ -58,14 +58,16 @@ namespace FusionTask.Infrastructure
         }
 
         /// <summary>
-        /// Pre-creates the specified number of objects and immediately releases them back to the pool.
+        /// Ensures the pool contains at least the specified number of objects
+        /// by creating and enqueuing new instances.
         /// </summary>
         public async Task Warmup(int count)
         {
-            for (int i = 0; i < count; i++)
+            while (_objects.Count < count)
             {
-                var instance = await Get();
-                Release(instance);
+                var instance = await _factory();
+                instance.gameObject.SetActive(false);
+                _objects.Enqueue(instance);
             }
         }
     }
