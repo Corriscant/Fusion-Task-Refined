@@ -37,5 +37,27 @@ namespace FusionTask.Tests.Editor
 
             Assert.IsTrue(reached);
         }
+
+        [Test]
+        public void HasReachedTarget_ReturnsFalseBeyondOneUnitRadiusXZ()
+        {
+            Vector3 target = new Vector3(5f, 0f, 5f);
+            _gameObject.transform.position = new Vector3(7f, 0f, 5f); // Distance on X axis is 2 units
+
+            bool reached = (bool)_hasReachedTargetMethod.Invoke(_unit, new object[] { target });
+
+            Assert.IsFalse(reached);
+        }
+
+        [Test]
+        public void HasReachedTarget_ReturnsTrueWhenFarAwayOnYAxis()
+        {
+            Vector3 target = new Vector3(5f, 0f, 5f);
+            _gameObject.transform.position = new Vector3(5.7f, 100f, 5.6f); // Far on Y but within 1 unit on XZ
+
+            bool reached = (bool)_hasReachedTargetMethod.Invoke(_unit, new object[] { target });
+
+            Assert.IsTrue(reached);
+        }
     }
 }
