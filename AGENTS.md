@@ -6,7 +6,7 @@ AGENTS Instructions:
 * Comments in Delphi code must be written in Russian.
 * Follow the existing coding style, including variable and constant naming.
 * Always use an explicit == null comparison to check for null on UnityEngine.Object and its derivatives. Avoid modern operators like ?., ??, ??= and the is null pattern, as they do not recognize Unity's "destroyed" object state and will cause a MissingReferenceException. For interface variables, use the safe cast: if (myInterface as UnityEngine.Object == null).
-* Ensure the Tests folder for unit tests is placed within the Assets directory, not at the project root.
+
 
 ### Critical Guideline for Asynchronous Code in Unity
 
@@ -185,3 +185,10 @@ public string GetStatus(int health)
     return health > 0 ? "Alive" : "Dead";
 }
 ```
+
+* To prevent namespace conflicts, always add using Assert = NUnit.Framework.Assert; to every unit test file.
+* Ensure the Tests folder for unit tests is placed within the Assets directory, not at the project root.
+* To avoid code duplication, use `[SetUp]` for initialization and `[TearDown]` for cleanup in test files.
+* Do not write unit tests for methods with hard dependencies on unmockable external frameworks (e.g., `Fusion.NetworkObject`).
+* Instead, report the specific untestable dependency to the user.
+* Advise that the code should be refactored to use an interface for testability.
