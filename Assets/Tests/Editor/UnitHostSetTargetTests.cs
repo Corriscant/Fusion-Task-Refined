@@ -6,6 +6,9 @@ using UnityEngine;
 using Fusion;
 using FusionTask.Gameplay;
 
+// Create a specific alias for NUnit's Assert class to resolve ambiguity.
+using Assert = NUnit.Framework.Assert;
+
 namespace FusionTask.Tests.Editor
 {
     /// <summary>
