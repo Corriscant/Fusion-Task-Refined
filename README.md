@@ -3,7 +3,7 @@
 This project is a technical sample demonstrating a multiplayer setup using **Photon Fusion** in a Host-Client mode. 
 Initially created as a successful test assignment, it has been significantly refactored and enhanced to serve as a public demonstration of modern development practices and code culture.
 
-The core of the refactoring process was performed using **OpenAI Codex** as the primary AI-assisted development environment. This approach was central to implementing a cleaner architecture and successfully executing a version migration of the **Photon Fusion** SDK from 2.0.3 to 2.0.6.
+The core of the refactoring process was performed using **OpenAI Codex** as the primary AI-assisted development environment. This approach was central to implementing a cleaner architecture and successfully executing a version migration of the **Photon Fusion** SDK from 2.0.3 to 2.0.6. I've shared a detailed breakdown of this experience in my article, [Vibe coding with OpenAI Codex](https://www.linkedin.com/pulse/vibe-coding-openai-codex-dmitrii-fedotov-bnhhe).
 
 The resulting architecture showcases proficiency in various technologies and patterns, including:
 * **VContainer** for Dependency Injection 
