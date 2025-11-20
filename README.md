@@ -40,6 +40,15 @@ After installation, you need to verify the Photon App ID.
 2.  The project includes a pre-configured demo App ID, which you will see in the **Fusion App Id** field.
 3.  This ID is provided for convenience and operates on a free plan with a limit of 20 concurrent users. If you intend to use this project as a basis for your own, please replace it with your own App ID from the [Photon Dashboard](https://dashboard.photonengine.com/en-US/account/signin).
 
+
+## Addressables & Fusion prefab table
+
+Before you build or run the project for multiplayer testing, make sure the Addressables catalog and Fusion prefab table are up to date so clients can resolve networked prefabs:
+
+1.  **Build Addressables content:** open **Window → Asset Management → Addressables** and choose **Build → New Build → Default Build Script** (aka “Build Player Content”).
+
+2.  **Rebuild the Fusion prefab table:** go to **Tools → Fusion → Rebuild Prefab Table**.
+
 ## How to Test
 
 To test the multiplayer functionality, you need to run at least two instances of the application: one as the **Host** and one as the **Client**.
